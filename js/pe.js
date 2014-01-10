@@ -187,11 +187,15 @@ function disableSelection(target){
 /* Функция перемещения элемента
 */
 function move(c, ctx){
-  //курсор в режиме рисования
+  // курсор в режиме рисования
   c.style.cursor = 'default';
-  //координаты начала и конца линии
-  var x1, x2; 
-  var y1, y2;
+  // координаты элемента
+  var x, y;
+  // флаг перемещения
+  var drag = false;
+  // идентификатор объекта
+  var id = -1;
+  var obj;
   
   // функция вычесления координаты мыши на холсте
   var f = function(ev, param){
@@ -206,19 +210,42 @@ function move(c, ctx){
   }
   
   this.mousedown = function (ev) {
-    x1 = f(ev, 'x');
-    y1 = f(ev, 'y');
+    x = f(ev, 'x');
+    y = f(ev, 'y');
+	// поиск элемента на холсте
+	obj = findElemenet(x, y);
+	if (!obj || id > 0) return;
+	id = obj.id;
+	// положение мышки на объкте
+	obj.offsetX = x - obj.x;
+	obj.offsetY = y - obj.y;
+	// старт перемещения
+	drag = true;
   };
 
   this.mousemove = function (ev) {
-	x2 = f(ev, 'x');
-	y2 = f(ev, 'y');
-	var e = findElemenet(x2, y2);
+	x = f(ev, 'x');
+	y = f(ev, 'y');
+	
+	var e = findElemenet(x, y);
 	if (e != false)	$("#msgBox").html(e.type);
 	else $("#msgBox").html('canvas');
+	
+	if (drag == false) return;
+	//изменение координат фигуры
+    obj.x = x - obj.offsetX;
+    obj.y = y - obj.offsetY;
+	// перерисовка канваса 
+	update(Canvas, Ctx, list.elements);
   };
 
   this.mouseup = function (ev) {
+    // прекращение перемещения
+    if (drag) drag = false;
+	// перезапись параметров элемента
+	list.elements[id] = new Element(obj.type, obj.x, obj.y, obj.w, obj.h, obj.c, id);
+	// обнуление используемого идентификатора
+	id = -1;
   };
 }
 
