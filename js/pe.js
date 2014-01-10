@@ -56,7 +56,7 @@ function dialog(){
     eventListener("#planEditor");    //обработка событий на канвас
 	addElem();
 	findElemenet();
-    tool = new move(Canvas);
+    tool = new move(Canvas, Ctx);
   }
 }
 
@@ -186,65 +186,54 @@ function disableSelection(target){
 
 /* Функция перемещения элемента
 */
-function move(Draw){
-  var lineArr = [];
+function move(c, ctx){
   //курсор в режиме рисования
-  Draw.style.cursor = 'default';
-  //создание контекста канваса Draw
-  var context = Draw.getContext('2d');
+  c.style.cursor = 'default';
   //координаты начала и конца линии
   var x1, x2; 
   var y1, y2;
-  //флаг начала рисования
-  var started = false;
-  //идентификатор (номер) линии
-  var id = lineArr.length;
-  //смещение холста
-  var top = Draw.offsetTop;
-  var left = Draw.offsetLeft;
+  
+  // функция вычесления координаты мыши на холсте
+  var f = function(ev, param){
+    switch (param){
+	  case 'x':
+        return ev.pageX - c.offsetLeft;
+	    break;
+	  case 'y':
+	    return ev.pageY - c.offsetTop;
+	    break;
+	}
+  }
   
   this.mousedown = function (ev) {
-    started = true;
-    x1 = ev.pageX - left;
-    y1 = ev.pageY - top;
+    x1 = f(ev, 'x');
+    y1 = f(ev, 'y');
   };
 
   this.mousemove = function (ev) {
-    if (!started) return;
-	x2 = ev.pageX - left;
-	y2 = ev.pageY - top;
+	x2 = f(ev, 'x');
+	y2 = f(ev, 'y');
+	var e = findElemenet(x2, y2);
+	if (e != false)	$("#msgBox").html(e.type);
+	else $("#msgBox").html('canvas');
   };
 
   this.mouseup = function (ev) {
-    if (!started) return;
-    this.mousemove(ev);
-    started = false;
   };
 }
 
 /* Функция поиска элемента на холсте
 */
-function findElemenet(){
-  $('#planEditor').click(function(event){
-    var top = Canvas.offsetTop;
-    var left = Canvas.offsetLeft;
-	var x = event.pageX-left;
-	var y = event.pageY-top;
-	
+function findElemenet(x, y){	
 	for (var i in list.elements){
 	  var e = list.elements[i];
-	  var topLine = e.point(e.A, e.B, x, y);
-	  var rightLine = e.point(e.B, e.C, x, y);
-	  var bottomLine = e.point(e.C, e.D, x, y);
-	  var leftLine = e.point(e.D, e.A, x, y);
-	  
 	  if (x > e.A['x'])
 	  if (x < e.C['x'])
 	  if (y > e.A['y'])
 	  if (y < e.C['y'])
-	      alert(e.type);
+		return e;  
 	}
-  });
+	return false;
 }
 /* Функция изменения параметров элемента
 */
