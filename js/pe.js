@@ -94,8 +94,8 @@ function addElem(){
 /* Функция параметров комнаты
 */
 function Room (){
-  this.x = 100;
-  this.y = 50;
+  this.x = 50;
+  this.y = 100;
   this.w = 50;
   this.h = 50;
   this.c = "yellow";
@@ -129,7 +129,7 @@ function update(canvas, context, arrElem){
   for (var i in arrElem){
 	var e = arrElem[i];
 	context.fillStyle = e.c; //Цвет заливки
-	context.fillRect(e.x, e.x, e.w, e.h);
+	context.fillRect(e.x, e.y, e.w, e.h);
   }
   context.drawImage(canvas, 0, 0);
 }
@@ -237,6 +237,12 @@ function findElemenet(){
 	  var rightLine = e.point(e.B, e.C, x, y);
 	  var bottomLine = e.point(e.C, e.D, x, y);
 	  var leftLine = e.point(e.D, e.A, x, y);
+	  
+	  if (x > e.A['x'])
+	  if (x < e.C['x'])
+	  if (y > e.A['y'])
+	  if (y < e.C['y'])
+	      alert(e.type);
 	}
   });
 }
