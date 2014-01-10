@@ -55,7 +55,7 @@ function dialog(){
 	disableSelection(document.body); //запрет выделение текста на странице
     eventListener("#planEditor");    //обработка событий на канвас
 	addElem();
-	
+	findElemenet();
     tool = new move(Canvas);
   }
 }
@@ -94,8 +94,8 @@ function addElem(){
 /* Функция параметров комнаты
 */
 function Room (){
-  this.x = 10;
-  this.y = 10;
+  this.x = 100;
+  this.y = 50;
   this.w = 50;
   this.h = 50;
   this.c = "yellow";
@@ -142,6 +142,7 @@ function Element(type, x, y, w, h, color, count){
   // координаты верхнего левого угла
   this.x = x;
   this.y = y;
+  this.z = 0;
   // размеры элемента
   this.w = w;
   this.h = h;
@@ -153,16 +154,21 @@ function Element(type, x, y, w, h, color, count){
   // смещение елемента при перемещении
   this.offsetX = 0;
   this.offsetY = 0;
-	  
-	  //коэффициенты уравнения прямой
-	  //this.A = Math.round(this.y2 - this.y1);
-	  //this.B = Math.round(this.x1 - this.x2);
-	  //this.C = Math.round(-this.x1*(this.y2 - this.y1) + this.y1*(this.x2 - this.x1));
-	  //минимальное расстояние от точки до прямой
-	  //this.normal_eq = function(mouseX, mouseY){
-	    //return Math.round(Math.abs((this.A*mouseX + this.B*mouseY + this.C))/
-		  //(Math.sqrt(Math.pow(this.A, 2) + Math.pow(this.B, 2))));
-	  //};
+
+  // координаты квадрата
+  this.A = {'x': this.x, 'y': this.y};
+  this.B = {'x': this.x+this.w, 'y': this.y};
+  this.C = {'x': this.x+this.w, 'y': this.y+this.h};
+  this.D = {'x':this.x, 'y': this.y+this.h};
+  
+  this.point = function(P1, P2, mouseX, mouseY) {
+	// коэффициенты уравнения прямой
+	var AA = Math.round(P2['y'] - P1['y']);
+	var BB = Math.round(P1['x'] - P2['x']);
+	var CC = Math.round(-P1['x']*(P2['y'] - P1['y']) + P1['y']*(P2['x'] - P1['x']));
+	// расстояние от точки до прямой
+	return Math.round(Math.abs((AA*mouseX + BB*mouseY + CC))/(Math.sqrt(Math.pow(AA, 2) + Math.pow(BB, 2))));
+  }
 }
 
 /* Функция отключения выделения текста
@@ -218,6 +224,21 @@ function move(Draw){
 
 /* Функция поиска элемента на холсте
 */
-
+function findElemenet(){
+  $('#planEditor').click(function(event){
+    var top = Canvas.offsetTop;
+    var left = Canvas.offsetLeft;
+	var x = event.pageX-left;
+	var y = event.pageY-top;
+	
+	for (var i in list.elements){
+	  var e = list.elements[i];
+	  var topLine = e.point(e.A, e.B, x, y);
+	  var rightLine = e.point(e.B, e.C, x, y);
+	  var bottomLine = e.point(e.C, e.D, x, y);
+	  var leftLine = e.point(e.D, e.A, x, y);
+	}
+  });
+}
 /* Функция изменения параметров элемента
 */
