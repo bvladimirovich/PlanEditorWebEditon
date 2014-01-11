@@ -6,9 +6,7 @@ var list = {}; // список
 list.elements = []; // список элементов
 var count = list.elements.length; // счетчик элементов
 
-/* Функция вывода диалога при создании нового проекта
-Так же включает функцию init()
-*/
+/* Функция диалога при создании нового проекта*/
 function dialog(){
   if (confirm("Создать новый проект?")) { 
     ProjectName = prompt("Укажите имя проекта:");
@@ -80,8 +78,7 @@ function addElem(){
   });
 }
 
-/* Функция параметров комнаты
-*/
+/* Функция параметров комнаты*/
 function Room (){
   this.x = 50;
   this.y = 100;
@@ -92,8 +89,7 @@ function Room (){
     confirm("Введите номер комнаты");
   }
 }
-/* Функция параметров двери
-*/
+/* Функция параметров двери*/
 function Door (){
   this.x = 20;
   this.y = 20;
@@ -101,8 +97,7 @@ function Door (){
   this.h = 10;
   this.c = "black";
 }
-/* Функция параметров проема
-*/
+/* Функция параметров проема*/
 function Hole (){
   this.x = 30;
   this.y = 10;
@@ -111,8 +106,7 @@ function Hole (){
   this.c = "green";
 }
 
-/* Функция обновления холста
-*/
+/* Функция обновления холста*/
 function update(canvas, context, arrElem){
   context.clearRect(0, 0, canvas.width, canvas.height);
   for (var i in arrElem){
@@ -123,8 +117,7 @@ function update(canvas, context, arrElem){
   context.drawImage(canvas, 0, 0);
 }
 
-/* Свойства элемента
-*/
+/* Свойства элемента*/
 function Element(type, x, y, w, h, color, count){
   // тип элемента
   this.type = type;
@@ -172,8 +165,7 @@ function disableSelection(target){
   target.style.cursor = "default"
 }
 
-/* Функция перемещения элемента
-*/
+/* Функция перемещения элемента*/
 function move(c, ctx){
   // курсор в режиме рисования (по умолчанию)
   c.style.cursor = 'default';
@@ -234,8 +226,7 @@ function move(c, ctx){
   };
 }
 
-/* Функция поиска элемента на холсте мышкой
-*/
+/* Функция поиска элемента на холсте мышкой*/
 function findElemenet(x, y){
   for (var i in list.elements){
     var e = list.elements[i];
@@ -245,5 +236,10 @@ function findElemenet(x, y){
   }
   return false;
 }
+
 /* Функция изменения параметров элемента
 */
+
+/* Функция определения заползания (перекрывания) элементов друг на друга*/
+function overlap(){
+}
