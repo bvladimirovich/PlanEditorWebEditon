@@ -4,38 +4,7 @@ var Ctx;
 var tool;
 var list = {}; // список
 list.elements = []; // список элементов
-var count = list.elements; // счетчик элементов
-
-/* Функция инициализации канваса
-Дожидается готовности страницы и создает экземпляр канваса
-Включает в работу функции:
- - запрет выделение текста на странице
- - обработка событий на канвас
-*/
-function init(){
-  
-}
-
-function select(event){if(tool[event.type])tool[event.type](event);}
-
-/* Функция обработки событий на канвас
-Обработка событий:
- - dblclick - двойной клик
- - mousedown - нажатие кнопки на canvas
- - mousemove - движение на canvas
- - mouseup - отпускание кнопки 
-*/
-function eventListener(element){
-  $(element).dblclick(
-    function(event){
-      $("#msgBox").html(event.type);
-    }
-  );
-  
-  $(element).on("mousedown", select);
-  $(element).on("mousemove", select);
-  $(element).on("mouseup", select);
-}
+var count = list.elements.length; // счетчик элементов
 
 /* Функция вывода диалога при создании нового проекта
 Так же включает функцию init()
@@ -54,10 +23,30 @@ function dialog(){
     
 	disableSelection(document.body); //запрет выделение текста на странице
     eventListener("#planEditor");    //обработка событий на канвас
-	addElem();
-	findElemenet();
-    tool = new move(Canvas, Ctx);
+	addElem();  // добавление элемента
+    tool = new move(Canvas, Ctx);  
   }
+}
+
+function select(e){if(tool[e.type])tool[e.type](e);}
+
+/* Функция обработки событий на канвас
+Обработка событий:
+ - dblclick - двойной клик
+ - mousedown - нажатие кнопки на canvas
+ - mousemove - движение на canvas
+ - mouseup - отпускание кнопки 
+*/
+function eventListener(element){
+  $(element).dblclick(
+    function(event){
+      $("#msgBox").html(event.type);
+    }
+  );
+  
+  $(element).on("mousedown", select);
+  $(element).on("mousemove", select);
+  $(element).on("mouseup", select);
 }
 
 /* функция добавления элементов
@@ -142,7 +131,6 @@ function Element(type, x, y, w, h, color, count){
   // координаты верхнего левого угла
   this.x = x;
   this.y = y;
-  this.z = 0;
   // размеры элемента
   this.w = w;
   this.h = h;
@@ -187,14 +175,13 @@ function disableSelection(target){
 /* Функция перемещения элемента
 */
 function move(c, ctx){
-  // курсор в режиме рисования
+  // курсор в режиме рисования (по умолчанию)
   c.style.cursor = 'default';
   // координаты элемента
   var x, y;
   // флаг перемещения
   var drag = false;
-  // идентификатор объекта
-  var id = -1;
+  // объявление объекта
   var obj;
   
   // функция вычесления координаты мыши на холсте
@@ -210,28 +197,28 @@ function move(c, ctx){
   }
   
   this.mousedown = function (ev) {
+    // координаты в момент нажатия ЛКМ
     x = f(ev, 'x');
     y = f(ev, 'y');
 	// поиск элемента на холсте
 	obj = findElemenet(x, y);
-	if (!obj || id > 0) return;
-	id = obj.id;
+	if (!obj) return;
 	// положение мышки на объкте
 	obj.offsetX = x - obj.x;
 	obj.offsetY = y - obj.y;
 	// старт перемещения
-	drag = true;
+	if (!drag) drag = true;
   };
 
   this.mousemove = function (ev) {
+    // координаты в момент перемещения мышки
 	x = f(ev, 'x');
 	y = f(ev, 'y');
-	
+	// информационное сообщение
 	var e = findElemenet(x, y);
-	if (e != false)	$("#msgBox").html(e.type);
-	else $("#msgBox").html('canvas');
+	$("#msgBox").html(e?e.type:'canvas');
 	
-	if (drag == false) return;
+	if (!drag) return;
 	//изменение координат фигуры
     obj.x = x - obj.offsetX;
     obj.y = y - obj.offsetY;
@@ -243,24 +230,20 @@ function move(c, ctx){
     // прекращение перемещения
     if (drag) drag = false;
 	// перезапись параметров элемента
-	list.elements[id] = new Element(obj.type, obj.x, obj.y, obj.w, obj.h, obj.c, id);
-	// обнуление используемого идентификатора
-	id = -1;
+	list.elements[obj.id] = new Element(obj.type, obj.x, obj.y, obj.w, obj.h, obj.c, obj.id);
   };
 }
 
-/* Функция поиска элемента на холсте
+/* Функция поиска элемента на холсте мышкой
 */
-function findElemenet(x, y){	
-	for (var i in list.elements){
-	  var e = list.elements[i];
-	  if (x > e.A['x'])
-	  if (x < e.C['x'])
-	  if (y > e.A['y'])
-	  if (y < e.C['y'])
-		return e;  
-	}
-	return false;
+function findElemenet(x, y){
+  for (var i in list.elements){
+    var e = list.elements[i];
+    if (x > e.A['x'] && x < e.C['x'])
+    if (y > e.A['y'] && y < e.C['y'])
+	  return e;  
+  }
+  return false;
 }
 /* Функция изменения параметров элемента
 */
