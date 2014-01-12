@@ -41,7 +41,6 @@ function eventListener(element){
       $("#msgBox").html(event.type);
     }
   );
-  
   $(element).on("mousedown", select);
   $(element).on("mousemove", select);
   $(element).on("mouseup", select);
@@ -111,8 +110,12 @@ function update(canvas, context, arrElem){
   context.clearRect(0, 0, canvas.width, canvas.height);
   for (var i in arrElem){
 	var e = arrElem[i];
-	context.fillStyle = e.c; //Цвет заливки
+	context.fillStyle = e.c; // цвет заливки
 	context.fillRect(e.x, e.y, e.w, e.h);
+	if (!e.s) continue;
+	context.lineWidth = (e.type=='room')?4:2; // толщина линии обводки
+	context.strokeStyle = 'brown'; // цвет обводки
+	context.strokeRect(e.x+2, e.y+2, e.w-4, e.h-4); 
   }
   context.drawImage(canvas, 0, 0);
 }
@@ -131,7 +134,8 @@ function Element(type, x, y, w, h, color, count){
   this.c = color;
   // идентификатор элемента
   this.id = count;
-  
+  // флаг выделения элемента
+  this.s = false; // select
   // смещение елемента при перемещении
   this.offsetX = 0;
   this.offsetY = 0;
@@ -200,6 +204,8 @@ function move(c, ctx){
 	obj.offsetY = y - obj.y;
 	// старт перемещения
 	if (!drag) drag = true;
+	// выделение элемента
+	obj.s = true;
   };
 
   this.mousemove = function (ev) {
@@ -242,4 +248,8 @@ function findElemenet(x, y){
 
 /* Функция определения заползания (перекрывания) элементов друг на друга*/
 function overlap(){
+}
+
+/* Функция выделения элемента*/
+function selectElem(e, flag) {
 }
