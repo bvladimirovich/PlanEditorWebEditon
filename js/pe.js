@@ -105,7 +105,7 @@ function Hole (){
   this.c = "green";
 }
 
-/* Функция обновления холста*/
+/* Функция обновления холста */
 function update(canvas, context, arrElem){
   context.clearRect(0, 0, canvas.width, canvas.height);
   for (var i in arrElem){
@@ -206,6 +206,8 @@ function move(c, ctx){
 	if (!drag) drag = true;
 	// выделение элемента
 	obj.s = true;
+	/*! Перерисовка производится только для отображения выделения элемента
+	Возможно, это замедлит работу, но пока исправить это не могу*/
 	update(Canvas, Ctx, list.elements);
   };
 
