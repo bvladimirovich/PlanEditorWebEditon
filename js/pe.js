@@ -206,6 +206,7 @@ function move(c, ctx){
 	if (!drag) drag = true;
 	// выделение элемента
 	obj.s = true;
+	update(Canvas, Ctx, list.elements);
   };
 
   this.mousemove = function (ev) {
@@ -248,8 +249,5 @@ function findElemenet(x, y){
 
 /* Функция определения заползания (перекрывания) элементов друг на друга*/
 function overlap(){
-}
 
-/* Функция выделения элемента*/
-function selectElem(e, flag) {
 }
