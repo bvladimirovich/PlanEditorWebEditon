@@ -5,6 +5,7 @@ var tool;
 var list = {}; // список
 list.elements = []; // список элементов
 var count = list.elements.length; // счетчик элементов
+var obj;// объявление объекта
 
 /* Функция диалога при создании нового проекта*/
 function dialog(){
@@ -60,20 +61,27 @@ function addElem(){
 	list.elements.push(new Element(elem, r.x, r.y, r.w, r.h, r.c, count));
 	count++;
 	update(Canvas, Ctx, list.elements);
+	if(obj)obj.s=false;
   });
   $('#door').click(function() {
     elem = 'door';
-	var d = new Door();
-	list.elements.push(new Element(elem, d.x, d.y, d.w, d.h, d.c, count));
-	count++;
-	update(Canvas, Ctx, list.elements);
+	if(!obj)return;
+	if (obj.s && obj.type=='room'){
+	  var d = new Door();
+	  list.elements.push(new Element(elem, d.x, d.y, d.w, d.h, d.c, count));
+	  count++;
+	  update(Canvas, Ctx, list.elements);
+	}
   });
   $('#hole').click(function() {
     elem = 'hole';
-	var h = new Hole();
-	list.elements.push(new Element(elem, h.x, h.y, h.w, h.h, h.c, count));
-	count++;
-	update(Canvas, Ctx, list.elements);
+	if(!obj)return;
+	if (obj.s && obj.type=='room'){
+	  var h = new Hole();
+	  list.elements.push(new Element(elem, h.x, h.y, h.w, h.h, h.c, count));
+	  count++;
+	  update(Canvas, Ctx, list.elements);
+	}
   });
 }
 
@@ -177,8 +185,6 @@ function move(c, ctx){
   var x, y;
   // флаг перемещения
   var drag = false;
-  // объявление объекта
-  var obj;
   
   // функция вычесления координаты мыши на холсте
   var f = function(ev, param){
@@ -228,7 +234,7 @@ function move(c, ctx){
     obj.C = {'x': obj.x+obj.w, 'y': obj.y+obj.h};
     obj.D = {'x':obj.x, 'y': obj.y+obj.h};
 	
-	var o = overlap(/*Element*/obj);
+	var o = overlap(obj);
 	if(o){
 	  $("#msgBox").html('overlap');
 	}
@@ -266,3 +272,6 @@ function overlap(/*Element*/obj){
   if (e=findElemenet(obj.C.x, obj.C.y)) return e;
   if (e=findElemenet(obj.D.x, obj.D.y)) return e;  
 }
+
+/* Функция поворота двери или проема 
+*/
