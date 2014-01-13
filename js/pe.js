@@ -223,6 +223,15 @@ function move(c, ctx){
 	//изменение координат фигуры
     obj.x = x - obj.offsetX;
     obj.y = y - obj.offsetY;
+	obj.A = {'x': obj.x, 'y': obj.y};
+    obj.B = {'x': obj.x+obj.w, 'y': obj.y};
+    obj.C = {'x': obj.x+obj.w, 'y': obj.y+obj.h};
+    obj.D = {'x':obj.x, 'y': obj.y+obj.h};
+	
+	var o = overlap(/*Element*/obj);
+	if(o){
+	  $("#msgBox").html('overlap');
+	}
 	// перерисовка канваса 
 	update(Canvas, Ctx, list.elements);
   };
@@ -249,7 +258,11 @@ function findElemenet(x, y){
 /* Функция изменения параметров элемента
 */
 
-/* Функция определения заползания (перекрывания) элементов друг на друга*/
-function overlap(){
-
+/* Функция определения заползания (перекрывания) элементов друг на друга */
+function overlap(/*Element*/obj){
+  var e;
+  if (e=findElemenet(obj.A.x, obj.A.y)) return e;
+  if (e=findElemenet(obj.B.x, obj.B.y)) return e;
+  if (e=findElemenet(obj.C.x, obj.C.y)) return e;
+  if (e=findElemenet(obj.D.x, obj.D.y)) return e;  
 }
