@@ -65,22 +65,24 @@ function addElem(){
   });
   $('#door').click(function() {
     elem = 'door';
-	if(!obj)return;
-	if (obj.s && obj.type=='room'){
+	if (!obj) return;
+	if (obj.s && obj.type == 'room'){
 	  var d = new Door();
 	  list.elements.push(new Element(elem, d.x, d.y, d.w, d.h, d.c, count));
 	  count++;
 	  update(Canvas, Ctx, list.elements);
+	  obj.s=false;
 	}
   });
   $('#hole').click(function() {
     elem = 'hole';
-	if(!obj)return;
-	if (obj.s && obj.type=='room'){
+	if (!obj) return;
+	if (obj.s && obj.type == 'room'){
 	  var h = new Hole();
 	  list.elements.push(new Element(elem, h.x, h.y, h.w, h.h, h.c, count));
 	  count++;
 	  update(Canvas, Ctx, list.elements);
+	  obj.s=false;
 	}
   });
 }
@@ -152,7 +154,7 @@ function Element(type, x, y, w, h, color, count){
   this.A = {'x': this.x, 'y': this.y};
   this.B = {'x': this.x+this.w, 'y': this.y};
   this.C = {'x': this.x+this.w, 'y': this.y+this.h};
-  this.D = {'x':this.x, 'y': this.y+this.h};
+  this.D = {'x': this.x, 'y': this.y+this.h};
   
   this.point = function(P1, P2, mouseX, mouseY) {
 	// коэффициенты уравнения прямой
@@ -177,6 +179,18 @@ function disableSelection(target){
   target.style.cursor = "default"
 }
 
+/* Функция вычесления координаты мыши на холсте */
+function f (ev, param){
+  switch (param){
+    case 'x':
+	  return ev.pageX - Canvas.offsetLeft;
+	  break;
+    case 'y':
+	  return ev.pageY - Canvas.offsetTop;
+	  break;
+  }
+}
+
 /* Функция перемещения элемента*/
 function move(c, ctx){
   // курсор в режиме рисования (по умолчанию)
@@ -185,18 +199,6 @@ function move(c, ctx){
   var x, y;
   // флаг перемещения
   var drag = false;
-  
-  // функция вычесления координаты мыши на холсте
-  var f = function(ev, param){
-    switch (param){
-	  case 'x':
-        return ev.pageX - c.offsetLeft;
-	    break;
-	  case 'y':
-	    return ev.pageY - c.offsetTop;
-	    break;
-	}
-  }
   
   this.mousedown = function (ev) {
     // координаты в момент нажатия ЛКМ
@@ -232,11 +234,13 @@ function move(c, ctx){
 	obj.A = {'x': obj.x, 'y': obj.y};
     obj.B = {'x': obj.x+obj.w, 'y': obj.y};
     obj.C = {'x': obj.x+obj.w, 'y': obj.y+obj.h};
-    obj.D = {'x':obj.x, 'y': obj.y+obj.h};
+    obj.D = {'x': obj.x, 'y': obj.y+obj.h};
 	
 	var o = overlap(obj);
 	if(o){
-	  $("#msgBox").html('overlap');
+	  if (obj.type == 'door' || obj.type == 'hole'&& o.type == 'room'){
+	    $("#msgBox").html('overlap');
+	  }
 	}
 	// перерисовка канваса 
 	update(Canvas, Ctx, list.elements);
@@ -272,6 +276,3 @@ function overlap(/*Element*/obj){
   if (e=findElemenet(obj.C.x, obj.C.y)) return e;
   if (e=findElemenet(obj.D.x, obj.D.y)) return e;  
 }
-
-/* Функция поворота двери или проема 
-*/
