@@ -320,15 +320,19 @@ function findSide(obj, e){
     var room = new Room();
     switch(s()){
 	  case 'l':
+	    if (obj.h < obj.w) break; // запрет добавления комнаты с торцевой стороны
 	    addElement(obj.A.x-room.w, r(obj.A.y, obj.D.y-room.h), room, 'room', obj);
 	    break;
 	  case 'r':
+	    if (obj.h < obj.w) break;
 	    addElement(obj.B.x, r(obj.B.y, obj.C.y-room.h), room, 'room', obj);
 	    break;
 	  case 't':
+	    if (obj.h > obj.w) break;
 	    addElement(r(obj.A.x, obj.B.x-room.w), obj.B.y-room.h, room, 'room', obj);
 	    break;
 	  case 'b':
+	    if (obj.h > obj.w) break;
 	    addElement(r(obj.D.x, obj.C.x-room.w), obj.D.y, room, 'room', obj);
 	    break;
 	}
