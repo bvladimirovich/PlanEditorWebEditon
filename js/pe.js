@@ -218,6 +218,8 @@ function move(c, ctx){
 	  /*! Перерисовка производится только для отображения выделения элемента
 	  Возможно, это замедлит работу, но пока исправить это не могу*/
 	  update(Canvas, Ctx, list.elements);
+	  // запись выбранного элемента во временную переменную
+	  // для передачи ее в функцию создания элемента в выбранном направлении
 	  this.obj = obj;
 	}
   };
@@ -255,7 +257,7 @@ function move(c, ctx){
 	// перезапись параметров элемента
 	list.elements[obj.id] = new Element(obj.type, obj.x, obj.y, obj.w, obj.h, obj.c, obj.id);
 	
-	alert(findSide(this.obj, ev));
+	findSide(this.obj, ev);
   };
 }
 
@@ -270,6 +272,17 @@ function findElemenet(x, y){
   return false;
 }
 
+/* Функция добавления елемента 
+x, y координаты верхнего левого угла */
+function addElement(x, y, p, elemType, obj){
+  list.elements.push(new Element(elemType, x, y, p.w, p.h, p.c, count));
+  count++;
+  update(Canvas, Ctx, list.elements);
+  /* переменной выделения приравнивается false
+  для исключения добавления элемента к не выделенному*/
+  obj.s = false;
+}
+
 /* Функция создания элемента в выбранном направлении */
 function findSide(obj, e){
   var x = f(e, 'x');
@@ -277,13 +290,40 @@ function findSide(obj, e){
   if (!obj) return;
   if (!obj.s) return;
   if (obj.type == 'room'){ // будут добавляться только двери и проемы
-	return s();
+    var d = new Door();
+	var h = new Hole();
+	switch(s()){
+	  case 'l':
+	    var tmpW = d.w;
+		d.w = d.h;
+		d.h = tmpW;
+	    addElement(obj.A.x-d.w, r(obj.A.y, obj.D.y-d.h), d, 'door', obj);
+	    break;
+	  case 'r':
+	    var tmpW = d.w;
+		d.w = d.h;
+		d.h = tmpW;
+	    addElement(obj.B.x, r(obj.B.y, obj.C.y-d.h), d, 'door', obj);
+	    break;
+	  case 't':
+	    addElement(r(obj.A.x, obj.B.x-d.w), obj.B.y-d.h, d, 'door', obj);
+	    break;
+	  case 'b':
+	    addElement(r(obj.D.x, obj.C.x-d.w), obj.D.y, d, 'door', obj);
+	    break;
+	}
   }else { // будут добавляться только комнаты
     return 'loser';
   }
   
+  /* Функция определения случайного числа для задания координаты элемента*/
+  function r(min, max){
+    var rand = min + Math.random()*(max+1-min);
+    return rand^0; // округление битовым оператором
+  }
+  
   /* Функция определения выбора стороны создания нового элемента */
-  function s() { // side
+  function s() { // s = side
     if (x < obj.A['x'])
     if (y > obj.A['y'] && y < obj.D['y'])
 	  return 'l'; //left
