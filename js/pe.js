@@ -239,12 +239,6 @@ function move(c, ctx){
     obj.C = {'x': obj.x+obj.w, 'y': obj.y+obj.h};
     obj.D = {'x': obj.x, 'y': obj.y+obj.h};
 
-	var o = overlap(obj);
-	if(o){
-	  if (obj.type == 'door' || obj.type == 'hole'&& o.type == 'room'){
-	    $("#msgBox").html('overlap');
-	  }
-	}
 	// перерисовка канваса
 	update(Canvas, Ctx, list.elements);
   };
@@ -254,7 +248,7 @@ function move(c, ctx){
     if (drag) drag = false;
 	// перезапись параметров элемента
 	list.elements[obj.id] = new Element(obj.type, obj.x, obj.y, obj.w, obj.h, obj.c, obj.id, obj.xSlide, obj.ySlide);
-	
+	// добваление элементов
 	findSide(this.obj, ev);
   };
 }
@@ -289,30 +283,31 @@ function addElement(x, y, p, elemType, obj, xSlide, ySlide){
 
 /* Функция создания элемента в выбранном направлении */
 function findSide(obj, e){
-  var x = f(e, 'x');
-  var y = f(e, 'y');
+  var x = f(e, 'x');  // идентификация координаты Х
+  var y = f(e, 'y');  // идентификация координаты Y
   if (!obj) return;
   if (!obj.s) return;
   if (obj.type == 'room'){ // будут добавляться только двери и проемы
-    var d = new Door();
-	var h = new Hole();
+    var d = new Door();  // идентификация двери
+	var h = new Hole();  // идентификация проема (ВРЕМЕННО НЕ ИСПОЛЬЗУЕТСЯ)
 	switch(s()){
-	  case 'l':
+	  case 'l':  // левая стенка
+	    // изменение размеров элемента для поворота
 	    var tmpW = d.w;
 		d.w = d.h;
 		d.h = tmpW;
 	    addElement(obj.A.x-d.w, r(obj.A.y, obj.D.y-d.h), d, 'door', obj, true, false);
 	    break;
-	  case 'r':
+	  case 'r': // правая стенка
 	    var tmpW = d.w;
 		d.w = d.h;
 		d.h = tmpW;
 	    addElement(obj.B.x, r(obj.B.y, obj.C.y-d.h), d, 'door', obj, true, false);
 	    break;
-	  case 't':
+	  case 't': // верхняя стенка
 	    addElement(r(obj.A.x, obj.B.x-d.w), obj.B.y-d.h, d, 'door', obj, false, true);
 	    break;
-	  case 'b':
+	  case 'b':  // нижняя стенка
 	    addElement(r(obj.D.x, obj.C.x-d.w), obj.D.y, d, 'door', obj, false, true);
 	    break;
 	}
