@@ -58,7 +58,7 @@ function addElem(){
   $('#room').click(function() {
     elem = 'room';
 	var r = new Room();
-	list.elements.push(new Element(elem, r.x, r.y, r.w, r.h, r.c, count));
+	list.elements.push(new Element(elem, r.x, r.y, r.w, r.h, r.c, count, null, null, 0));
 	count++;
 	update(Canvas, Ctx, list.elements);
 	if(obj)obj.s=false;
@@ -131,7 +131,7 @@ function update(canvas, context, arrElem){
 }
 
 /* Свойства элемента*/
-function Element(type, x, y, w, h, color, count, xSlide, ySlide){
+function Element(type, x, y, w, h, color, count, xSlide, ySlide, childElems){
   // тип элемента
   this.type = type;
   // координаты верхнего левого угла
@@ -159,8 +159,6 @@ function Element(type, x, y, w, h, color, count, xSlide, ySlide){
   this.B = {'x': this.x+this.w, 'y': this.y};
   this.C = {'x': this.x+this.w, 'y': this.y+this.h};
   this.D = {'x': this.x, 'y': this.y+this.h};
-  // количество дочерних элементов
-  this.childElems = -1;
 }
 
 /* Функция отключения выделения текста
@@ -198,6 +196,7 @@ function move(c, ctx){
   var drag = false;
   // временное хранилище элемента
   this.obj;
+  
   this.mousedown = function (ev) {
     // координаты в момент нажатия кнопки мыши
     x = f(ev, 'x');
@@ -275,10 +274,11 @@ obj - субъект пристыковки
 function addElement(x, y, p, elemType, obj, xSlide, ySlide){
   list.elements.push(new Element(elemType, x, y, p.w, p.h, p.c, count, xSlide, ySlide));
   count++;
-  update(Canvas, Ctx, list.elements);
   /* переменной выделения приравнивается false
   для исключения добавления элемента к не выделенному*/
   obj.s = false;
+  //list.elements[obj.id] = new Element(obj.type, obj.x, obj.y, obj.w, obj.h, 'blue', obj.id, obj.xSlide, obj.ySlide);
+  update(Canvas, Ctx, list.elements);
 }
 
 /* Функция создания элемента в выбранном направлении */
@@ -316,19 +316,19 @@ function findSide(obj, e){
     switch(s()){
 	  case 'l':
 	    if (obj.h < obj.w) break; // запрет добавления комнаты с торцевой стороны
-	    addElement(obj.A.x-room.w, r(obj.A.y, obj.D.y-room.h), room, 'room', obj);
+	    addElement(obj.A.x-room.w, r(obj.A.y, obj.D.y-room.h), room, 'room', obj, true, false);
 	    break;
 	  case 'r':
 	    if (obj.h < obj.w) break;
-	    addElement(obj.B.x, r(obj.B.y, obj.C.y-room.h), room, 'room', obj);
+	    addElement(obj.B.x, r(obj.B.y, obj.C.y-room.h), room, 'room', obj, true, false);
 	    break;
 	  case 't':
 	    if (obj.h > obj.w) break;
-	    addElement(r(obj.A.x, obj.B.x-room.w), obj.B.y-room.h, room, 'room', obj);
+	    addElement(r(obj.A.x, obj.B.x-room.w), obj.B.y-room.h, room, 'room', obj, false, true);
 	    break;
 	  case 'b':
 	    if (obj.h > obj.w) break;
-	    addElement(r(obj.D.x, obj.C.x-room.w), obj.D.y, room, 'room', obj);
+	    addElement(r(obj.D.x, obj.C.x-room.w), obj.D.y, room, 'room', obj, false, true);
 	    break;
 	}
   }
