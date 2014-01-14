@@ -131,7 +131,7 @@ function update(canvas, context, arrElem){
 }
 
 /* Свойства элемента*/
-function Element(type, x, y, w, h, color, count){
+function Element(type, x, y, w, h, color, count, xSlide, ySlide){
   // тип элемента
   this.type = type;
   // координаты верхнего левого угла
@@ -149,21 +149,18 @@ function Element(type, x, y, w, h, color, count){
   // смещение елемента при перемещении
   this.offsetX = 0;
   this.offsetY = 0;
-
+  // блокированная координата
+  // запрет на перемещени вдоль оси
+  // false - перемещение разрешено
+  this.xSlide = xSlide;
+  this.ySlide = ySlide;
   // координаты квадрата
   this.A = {'x': this.x, 'y': this.y};
   this.B = {'x': this.x+this.w, 'y': this.y};
   this.C = {'x': this.x+this.w, 'y': this.y+this.h};
   this.D = {'x': this.x, 'y': this.y+this.h};
-  
-  this.point = function(P1, P2, mouseX, mouseY) {
-	// коэффициенты уравнения прямой
-	var AA = Math.round(P2['y'] - P1['y']);
-	var BB = Math.round(P1['x'] - P2['x']);
-	var CC = Math.round(-P1['x']*(P2['y'] - P1['y']) + P1['y']*(P2['x'] - P1['x']));
-	// расстояние от точки до прямой
-	return Math.round(Math.abs((AA*mouseX + BB*mouseY + CC))/(Math.sqrt(Math.pow(AA, 2) + Math.pow(BB, 2))));
-  }
+  // количество дочерних элементов
+  this.childElems = -1;
 }
 
 /* Функция отключения выделения текста
@@ -234,8 +231,9 @@ function move(c, ctx){
 	
 	if (!drag) return;
 	//изменение координат фигуры
-    obj.x = x - obj.offsetX;
-    obj.y = y - obj.offsetY;
+	obj.x = obj.xSlide?obj.x:(x - obj.offsetX);
+	obj.y = obj.ySlide?obj.y:(y - obj.offsetY);
+	
 	obj.A = {'x': obj.x, 'y': obj.y};
     obj.B = {'x': obj.x+obj.w, 'y': obj.y};
     obj.C = {'x': obj.x+obj.w, 'y': obj.y+obj.h};
@@ -247,7 +245,7 @@ function move(c, ctx){
 	    $("#msgBox").html('overlap');
 	  }
 	}
-	// перерисовка канваса 
+	// перерисовка канваса
 	update(Canvas, Ctx, list.elements);
   };
 
@@ -255,7 +253,7 @@ function move(c, ctx){
     // прекращение перемещения
     if (drag) drag = false;
 	// перезапись параметров элемента
-	list.elements[obj.id] = new Element(obj.type, obj.x, obj.y, obj.w, obj.h, obj.c, obj.id);
+	list.elements[obj.id] = new Element(obj.type, obj.x, obj.y, obj.w, obj.h, obj.c, obj.id, obj.xSlide, obj.ySlide);
 	
 	findSide(this.obj, ev);
   };
@@ -273,9 +271,15 @@ function findElemenet(x, y){
 }
 
 /* Функция добавления елемента 
-x, y координаты верхнего левого угла */
-function addElement(x, y, p, elemType, obj){
-  list.elements.push(new Element(elemType, x, y, p.w, p.h, p.c, count));
+elemType - тип
+x, y координаты верхнего левого угла 
+p.w, p.h - ширина и высота
+p.c - цвет
+count - порядковый номер
+obj - субъект пристыковки
+*/
+function addElement(x, y, p, elemType, obj, xSlide, ySlide){
+  list.elements.push(new Element(elemType, x, y, p.w, p.h, p.c, count, xSlide, ySlide));
   count++;
   update(Canvas, Ctx, list.elements);
   /* переменной выделения приравнивается false
@@ -297,23 +301,37 @@ function findSide(obj, e){
 	    var tmpW = d.w;
 		d.w = d.h;
 		d.h = tmpW;
-	    addElement(obj.A.x-d.w, r(obj.A.y, obj.D.y-d.h), d, 'door', obj);
+	    addElement(obj.A.x-d.w, r(obj.A.y, obj.D.y-d.h), d, 'door', obj, true, false);
 	    break;
 	  case 'r':
 	    var tmpW = d.w;
 		d.w = d.h;
 		d.h = tmpW;
-	    addElement(obj.B.x, r(obj.B.y, obj.C.y-d.h), d, 'door', obj);
+	    addElement(obj.B.x, r(obj.B.y, obj.C.y-d.h), d, 'door', obj, true, false);
 	    break;
 	  case 't':
-	    addElement(r(obj.A.x, obj.B.x-d.w), obj.B.y-d.h, d, 'door', obj);
+	    addElement(r(obj.A.x, obj.B.x-d.w), obj.B.y-d.h, d, 'door', obj, false, true);
 	    break;
 	  case 'b':
-	    addElement(r(obj.D.x, obj.C.x-d.w), obj.D.y, d, 'door', obj);
+	    addElement(r(obj.D.x, obj.C.x-d.w), obj.D.y, d, 'door', obj, false, true);
 	    break;
 	}
   }else { // будут добавляться только комнаты
-    return 'loser';
+    var room = new Room();
+    switch(s()){
+	  case 'l':
+	    addElement(obj.A.x-room.w, r(obj.A.y, obj.D.y-room.h), room, 'room', obj);
+	    break;
+	  case 'r':
+	    addElement(obj.B.x, r(obj.B.y, obj.C.y-room.h), room, 'room', obj);
+	    break;
+	  case 't':
+	    addElement(r(obj.A.x, obj.B.x-room.w), obj.B.y-room.h, room, 'room', obj);
+	    break;
+	  case 'b':
+	    addElement(r(obj.D.x, obj.C.x-room.w), obj.D.y, room, 'room', obj);
+	    break;
+	}
   }
   
   /* Функция определения случайного числа для задания координаты элемента*/
