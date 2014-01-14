@@ -199,24 +199,27 @@ function move(c, ctx){
   var x, y;
   // флаг перемещения
   var drag = false;
-  
+  // временное хранилище элемента
+  this.obj;
   this.mousedown = function (ev) {
-    // координаты в момент нажатия ЛКМ
+    // координаты в момент нажатия кнопки мыши
     x = f(ev, 'x');
     y = f(ev, 'y');
 	// поиск элемента на холсте
 	obj = findElemenet(x, y);
-	if (!obj) return;
-	// положение мышки на объкте
-	obj.offsetX = x - obj.x;
-	obj.offsetY = y - obj.y;
-	// старт перемещения
-	if (!drag) drag = true;
-	// выделение элемента
-	obj.s = true;
-	/*! Перерисовка производится только для отображения выделения элемента
-	Возможно, это замедлит работу, но пока исправить это не могу*/
-	update(Canvas, Ctx, list.elements);
+	if (obj){
+	  // положение мышки на объкте
+	  obj.offsetX = x - obj.x;
+	  obj.offsetY = y - obj.y;
+	  // старт перемещения
+	  if (!drag) drag = true;
+	  // выделение элемента
+	  obj.s = true;
+	  /*! Перерисовка производится только для отображения выделения элемента
+	  Возможно, это замедлит работу, но пока исправить это не могу*/
+	  update(Canvas, Ctx, list.elements);
+	  this.obj = obj;
+	}
   };
 
   this.mousemove = function (ev) {
@@ -235,7 +238,7 @@ function move(c, ctx){
     obj.B = {'x': obj.x+obj.w, 'y': obj.y};
     obj.C = {'x': obj.x+obj.w, 'y': obj.y+obj.h};
     obj.D = {'x': obj.x, 'y': obj.y+obj.h};
-	
+
 	var o = overlap(obj);
 	if(o){
 	  if (obj.type == 'door' || obj.type == 'hole'&& o.type == 'room'){
@@ -251,6 +254,8 @@ function move(c, ctx){
     if (drag) drag = false;
 	// перезапись параметров элемента
 	list.elements[obj.id] = new Element(obj.type, obj.x, obj.y, obj.w, obj.h, obj.c, obj.id);
+	
+	alert(findSide(this.obj, ev));
   };
 }
 
@@ -260,13 +265,39 @@ function findElemenet(x, y){
     var e = list.elements[i];
     if (x > e.A['x'] && x < e.C['x'])
     if (y > e.A['y'] && y < e.C['y'])
-	  return e;  
+	  return e;
   }
   return false;
 }
 
-/* Функция изменения параметров элемента
-*/
+/* Функция создания элемента в выбранном направлении */
+function findSide(obj, e){
+  var x = f(e, 'x');
+  var y = f(e, 'y');
+  if (!obj) return;
+  if (!obj.s) return;
+  if (obj.type == 'room'){ // будут добавляться только двери и проемы
+	return s();
+  }else { // будут добавляться только комнаты
+    return 'loser';
+  }
+  
+  /* Функция определения выбора стороны создания нового элемента */
+  function s() { // side
+    if (x < obj.A['x'])
+    if (y > obj.A['y'] && y < obj.D['y'])
+	  return 'l'; //left
+	if (x > obj.B['x'])
+    if (y > obj.B['y'] && y < obj.C['y'])
+	  return 'r'; //right
+	if (x > obj.A['x'] && x < obj.B['x'])
+    if (y < obj.A['y'])
+	  return 't'; //top
+	if (x > obj.D['x'] && x < obj.C['x'])
+    if (y > obj.D['y'])
+	  return 'b'; //bottom
+  }
+}
 
 /* Функция определения заползания (перекрывания) элементов друг на друга */
 function overlap(/*Element*/obj){
@@ -274,5 +305,5 @@ function overlap(/*Element*/obj){
   if (e=findElemenet(obj.A.x, obj.A.y)) return e;
   if (e=findElemenet(obj.B.x, obj.B.y)) return e;
   if (e=findElemenet(obj.C.x, obj.C.y)) return e;
-  if (e=findElemenet(obj.D.x, obj.D.y)) return e;  
+  if (e=findElemenet(obj.D.x, obj.D.y)) return e;
 }
