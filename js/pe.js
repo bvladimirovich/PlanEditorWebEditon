@@ -91,8 +91,8 @@ function addElem(){
 function Room (){
   this.x = 50;
   this.y = 100;
-  this.w = 50;
-  this.h = 50;
+  this.w = 70;
+  this.h = 70;
   this.c = "yellow";
   function number() {
     confirm("Введите номер комнаты");
@@ -102,15 +102,15 @@ function Room (){
 function Door (){
   this.x = 20;
   this.y = 20;
-  this.w = 30;
-  this.h = 10;
+  this.w = 40;
+  this.h = 15;
   this.c = "black";
 }
 /* Функция параметров проема*/
 function Hole (){
   this.x = 30;
   this.y = 10;
-  this.w = 50;
+  this.w = 70;
   this.h = 6;
   this.c = "green";
 }
@@ -334,7 +334,7 @@ function findSide(obj, e){
 		  hole: function(){
 	        addElement(r(obj.A.x, obj.B.x-h.w), obj.B.y-h.h, h, 'hole', obj, false, true);
 		  }
-		}); 
+		});
 	    break;
 	  case 'b':  // нижняя стенка
 		modalWindow(posXY, {
@@ -352,19 +352,27 @@ function findSide(obj, e){
     switch(s()){
 	  case 'l':
 	    if (obj.h < obj.w) break; // запрет добавления комнаты с торцевой стороны
-	    addElement(obj.A.x-room.w, r(obj.A.y, obj.D.y-room.h), room, 'room', obj, true, false);
+		form([x, y], function(){
+  	      addElement(obj.A.x-room.w, r(obj.A.y, obj.D.y-room.h), room, 'room', obj, true, false);
+		}, '#wrapRoomForm');
 	    break;
 	  case 'r':
 	    if (obj.h < obj.w) break;
-	    addElement(obj.B.x, r(obj.B.y, obj.C.y-room.h), room, 'room', obj, true, false);
+		form([x, y], function(){
+	      addElement(obj.B.x, r(obj.B.y, obj.C.y-room.h), room, 'room', obj, true, false);
+		}, '#wrapRoomForm');
 	    break;
 	  case 't':
 	    if (obj.h > obj.w) break;
-	    addElement(r(obj.A.x, obj.B.x-room.w), obj.B.y-room.h, room, 'room', obj, false, true);
+		form([x, y], function(){
+	      addElement(r(obj.A.x, obj.B.x-room.w), obj.B.y-room.h, room, 'room', obj, false, true);
+		}, '#wrapRoomForm');
 	    break;
 	  case 'b':
 	    if (obj.h > obj.w) break;
-	    addElement(r(obj.D.x, obj.C.x-room.w), obj.D.y, room, 'room', obj, false, true);
+		form([x, y], function(){
+	      addElement(r(obj.D.x, obj.C.x-room.w), obj.D.y, room, 'room', obj, false, true);
+		}, '#wrapRoomForm');
 	    break;
 	}
   }
@@ -410,11 +418,31 @@ function modalWindow(posXY, holeAndDoor){
     buttons: {
 	  'Проем':function(){
 	    $('#modalWindow').dialog('close');
-		holeAndDoor.hole();
+		form(posXY, function(){holeAndDoor.hole()}, '#wrapHoleForm');
 	  },
       'Дверь':function(){
 	    $('#modalWindow').dialog('close');
-		holeAndDoor.door();
+		form(posXY, function(){holeAndDoor.door()}, '#wrapDoorForm');
+	  }
+	}
+  });
+}
+
+/* Функция отображения формы для ввода информации об элементе*/
+function form(posXY, element, selector){
+  var jq = $(selector);
+  jq.dialog({
+    title: selector=='wrapDoorForm'?'Новая дверь':selector=='wrapHoleForm'?'Новый проем':'Новое помещение',
+    position: posXY,
+	modal: true,
+    buttons: {
+	  'Добавить':function(){
+	    jq.dialog('close');
+		element();
+	  },
+      'Отменить':function(){
+	    jq.dialog('close');
+		return false;
 	  }
 	}
   });
