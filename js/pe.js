@@ -285,30 +285,66 @@ function addElement(x, y, p, elemType, obj, xSlide, ySlide){
 function findSide(obj, e){
   var x = f(e, 'x');  // идентификация координаты Х
   var y = f(e, 'y');  // идентификация координаты Y
+  var posXY = [x, y];
   if (!obj) return;
   if (!obj.s) return;
   if (obj.type == 'room'){ // будут добавляться только двери и проемы
     var d = new Door();  // идентификация двери
 	var h = new Hole();  // идентификация проема (ВРЕМЕННО НЕ ИСПОЛЬЗУЕТСЯ)
+	var tmpW;
 	switch(s()){
 	  case 'l':  // левая стенка
-	    // изменение размеров элемента для поворота
-	    var tmpW = d.w;
-		d.w = d.h;
-		d.h = tmpW;
-	    addElement(obj.A.x-d.w, r(obj.A.y, obj.D.y-d.h), d, 'door', obj, true, false);
+	    modalWindow(posXY, {
+		  door: function(){
+			// изменение размеров элемента для поворота
+	        tmpW = d.w;
+		    d.w = d.h;
+		    d.h = tmpW;
+	        addElement(obj.A.x-d.w, r(obj.A.y, obj.D.y-d.h), d, 'door', obj, true, false);
+		  },		
+		  hole: function(){
+			tmpW = h.w;
+		    h.w = h.h;
+		    h.h = tmpW;
+	        addElement(obj.A.x-h.w, r(obj.A.y, obj.D.y-h.h), h, 'hole', obj, true, false);
+		  }
+		}); 
 	    break;
 	  case 'r': // правая стенка
-	    var tmpW = d.w;
-		d.w = d.h;
-		d.h = tmpW;
-	    addElement(obj.B.x, r(obj.B.y, obj.C.y-d.h), d, 'door', obj, true, false);
+		modalWindow(posXY, {
+		  door: function(){
+	        tmpW = d.w;
+		    d.w = d.h;
+		    d.h = tmpW;
+	       addElement(obj.B.x, r(obj.B.y, obj.C.y-d.h), d, 'door', obj, true, false);
+		  },		
+		  hole: function(){
+			tmpW = h.w;
+		    h.w = h.h;
+		    h.h = tmpW;
+	        addElement(obj.B.x, r(obj.B.y, obj.C.y-h.h), h, 'hole', obj, true, false);
+		  }
+		}); 
 	    break;
 	  case 't': // верхняя стенка
-	    addElement(r(obj.A.x, obj.B.x-d.w), obj.B.y-d.h, d, 'door', obj, false, true);
+		modalWindow(posXY, {
+		  door: function(){
+	        addElement(r(obj.A.x, obj.B.x-d.w), obj.B.y-d.h, d, 'door', obj, false, true);
+		  },		
+		  hole: function(){
+	        addElement(r(obj.A.x, obj.B.x-h.w), obj.B.y-h.h, h, 'hole', obj, false, true);
+		  }
+		}); 
 	    break;
 	  case 'b':  // нижняя стенка
-	    addElement(r(obj.D.x, obj.C.x-d.w), obj.D.y, d, 'door', obj, false, true);
+		modalWindow(posXY, {
+		  door: function(){
+		    addElement(r(obj.D.x, obj.C.x-d.w), obj.D.y, d, 'door', obj, false, true);
+		  },
+		  hole: function(){
+		    addElement(r(obj.D.x, obj.C.x-h.w), obj.D.y, h, 'hole', obj, false, true);
+		  }
+		});
 	    break;
 	}
   }else { // будут добавляться только комнаты
@@ -332,7 +368,6 @@ function findSide(obj, e){
 	    break;
 	}
   }
-  
   /* Функция определения случайного числа для задания координаты элемента*/
   function r(min, max){
     var rand = min + Math.random()*(max+1-min);
@@ -363,4 +398,24 @@ function overlap(/*Element*/obj){
   if (e=findElemenet(obj.B.x, obj.B.y)) return e;
   if (e=findElemenet(obj.C.x, obj.C.y)) return e;
   if (e=findElemenet(obj.D.x, obj.D.y)) return e;
+}
+
+/* Функция модального окна*/
+function modalWindow(posXY, holeAndDoor){
+  $('#modalWindow').dialog({
+    title: 'Выберете элемент',
+	position: posXY,
+	height: 110,
+	width: 250,
+    buttons: {
+	  'Проем':function(){
+	    $('#modalWindow').dialog('close');
+		holeAndDoor.hole();
+	  },
+      'Дверь':function(){
+	    $('#modalWindow').dialog('close');
+		holeAndDoor.door();
+	  }
+	}
+  });
 }
