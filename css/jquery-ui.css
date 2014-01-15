@@ -797,8 +797,8 @@ body .ui-tooltip {
 /* Component containers
 ----------------------------------*/
 .ui-widget {
-	font-family: Verdana,Arial,sans-serif/*{ffDefault}*/;
-	font-size: 1.1em/*{fsDefault}*/;
+	font-family: Arial,Verdana,sans-serif/*{ffDefault}*/;
+	font-size: 11px/*{fsDefault}*//*1.1em*/;
 }
 .ui-widget .ui-widget {
 	font-size: 1em;
