@@ -439,10 +439,10 @@ function form(posXY, element, selector){
   var h = selector=='wrapDoorForm'?$('#heightDoor'):$('#heightRoom');
   var l = selector=='wrapDoorForm'?$('#longDoor'):$('#longRoom');
   
-  var n = $('#heightDoor');
-  var t = $('#heightDoor');
-  var st = $('#heightDoor');
-  var p = $('#heightDoor');  
+  var n = $('#name');
+  var t = $('#type');
+  var st = $('#subType');
+  var p = $('#peopleInRoom');
   
   jq.dialog({
     title: selector=='wrapDoorForm'?'Новая дверь':selector=='wrapHoleForm'?'Новый проем':'Новое помещение',
@@ -451,7 +451,7 @@ function form(posXY, element, selector){
     buttons: {
 	  'Добавить':function(){
 	    jq.dialog('close');
-		alert(nameElem.w.val());
+		alert(w.val());
 		element();
 	  },
       'Отменить':function(){
