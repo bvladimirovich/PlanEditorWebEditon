@@ -408,7 +408,7 @@ function overlap(/*Element*/obj){
   if (e=findElemenet(obj.D.x, obj.D.y)) return e;
 }
 
-/* Функция модального окна*/
+/* Функция модального окна выбора Двери или Проема */
 function modalWindow(posXY, holeAndDoor){
   $('#modalWindow').dialog({
     title: 'Выберете элемент',
@@ -428,9 +428,22 @@ function modalWindow(posXY, holeAndDoor){
   });
 }
 
-/* Функция отображения формы для ввода информации об элементе*/
+/* Функция отображения формы для ввода информации об элементе */
 function form(posXY, element, selector){
   var jq = $(selector);
+  var selectors = {};
+  selectors.hole = {w: 'widthHole'};
+  selectors.door = {w: 'widthDoor', l: 'longDoor', h: 'heightDoor'};
+  selectors.room = {n: 'name', t: 'type', st: 'subType', p: 'peopleInRoom', w: 'widthRoom', l: 'longRoom', h: 'heightRoom'};
+  var w = selector=='wrapDoorForm'?$('#widthDoor'):selector=='wrapHoleForm'?$('#widthHole'):$('#widthRoom');
+  var h = selector=='wrapDoorForm'?$('#heightDoor'):$('#heightRoom');
+  var l = selector=='wrapDoorForm'?$('#longDoor'):$('#longRoom');
+  
+  var n = $('#heightDoor');
+  var t = $('#heightDoor');
+  var st = $('#heightDoor');
+  var p = $('#heightDoor');  
+  
   jq.dialog({
     title: selector=='wrapDoorForm'?'Новая дверь':selector=='wrapHoleForm'?'Новый проем':'Новое помещение',
     position: posXY,
@@ -438,6 +451,7 @@ function form(posXY, element, selector){
     buttons: {
 	  'Добавить':function(){
 	    jq.dialog('close');
+		alert(nameElem.w.val());
 		element();
 	  },
       'Отменить':function(){
