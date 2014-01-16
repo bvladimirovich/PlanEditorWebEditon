@@ -105,16 +105,20 @@ function Room (){
   this.x = 50;
   this.y = 100;
   this.w = 70;
+  this.l = 70;
   this.h = 70;
   this.c = "yellow";
+  this.type = 'room';
 }
 /* Функция параметров двери*/
 function Door (){
   this.x = 20;
   this.y = 20;
   this.w = 40;
+  this.l = 15;
   this.h = 15;
   this.c = "black";
+  this.type = 'door';
 }
 /* Функция параметров проема*/
 function Hole (){
@@ -123,6 +127,7 @@ function Hole (){
   this.w = 70;
   this.h = 6;
   this.c = "green";
+  this.type = 'hole';
 }
 
 /* Функция перерисовки холста */
@@ -268,106 +273,47 @@ function findElemenet(x, y){
 
 /* Функция создания элемента в выбранном направлении */
 function addElement(obj, ev){
+  if (!obj) return;
+  if (!obj.s) return;
   var x = f(ev, 'x');  // идентификация координаты Х
   var y = f(ev, 'y');  // идентификация координаты Y
   var posXY = [x, y];
-  if (!obj) return;
-  if (!obj.s) return;
+  var side;
   if (obj.type == el.type.room){ // будут добавляться только двери и проемы
-    var d = new Door();  // идентификация двери
-	var h = new Hole();  // идентификация проема
-	var tmpW;
-	switch(s()){
+	side = s();
+	switch(side){
 	  case 'l':  // левая стенка
-	    createHoleOrDoor(posXY, {
-		  door: function(){
-			// изменение размеров элемента для поворота
-	        tmpW = d.w;
-		    d.w = d.h;
-		    d.h = tmpW;
-	        elem(obj.A.x-d.w, r(obj.A.y, obj.D.y-d.h), d, el.type.door, obj, true, false);
-		  },		
-		  hole: function(){
-			tmpW = h.w;
-		    h.w = h.h;
-		    h.h = tmpW;
-	        elem(obj.A.x-h.w, r(obj.A.y, obj.D.y-h.h), h, el.type.hole, obj, true, false);
-		  }
-		}); 
+	    createHoleOrDoor(posXY, side, obj);
 	    break;
 	  case 'r': // правая стенка
-		createHoleOrDoor(posXY, {
-		  door: function(){
-	        tmpW = d.w;
-		    d.w = d.h;
-		    d.h = tmpW;
-	       elem(obj.B.x, r(obj.B.y, obj.C.y-d.h), d, el.type.door, obj, true, false);
-		  },		
-		  hole: function(){
-			tmpW = h.w;
-		    h.w = h.h;
-		    h.h = tmpW;
-	        elem(obj.B.x, r(obj.B.y, obj.C.y-h.h), h, el.type.door, obj, true, false);
-		  }
-		}); 
+	    createHoleOrDoor(posXY, side, obj);
 	    break;
 	  case 't': // верхняя стенка
-		createHoleOrDoor(posXY, {
-		  door: function(){
-	        elem(r(obj.A.x, obj.B.x-d.w), obj.B.y-d.h, d, el.type.door, obj, false, true);
-		  },		
-		  hole: function(){
-	        elem(r(obj.A.x, obj.B.x-h.w), obj.B.y-h.h, h, el.type.hole, obj, false, true);
-		  }
-		});
+	    createHoleOrDoor(posXY, side, obj);
 	    break;
 	  case 'b':  // нижняя стенка
-		createHoleOrDoor(posXY, {
-		  door: function(){
-		    elem(r(obj.D.x, obj.C.x-d.w), obj.D.y, d, el.type.door, obj, false, true);
-		  },
-		  hole: function(){
-		    elem(r(obj.D.x, obj.C.x-h.w), obj.D.y, h, el.type.hole, obj, false, true);
-		  }
-		});
+		createHoleOrDoor(posXY, side, obj);
 	    break;
 	}
   }else { // будут добавляться только комнаты
     var room = new Room();
 	var selector = '#wrapRoomForm';
-    switch(s()){
+	side = s();
+	switch(side){
 	  case 'l':
-	    if (obj.h < obj.w) break; // запрет добавления комнаты с торцевой стороны
-		form([x, y], function(){
-  	      elem(obj.A.x-room.w, r(obj.A.y, obj.D.y-room.h), room, el.type.room, obj, true, false);
-		}, selector);
-	    break;
-	  case 'r':
-	    if (obj.h < obj.w) break;
-		form([x, y], function(){
-	      elem(obj.B.x, r(obj.B.y, obj.C.y-room.h), room, el.type.room, obj, true, false);
-		}, selector);
+	    form(posXY, selector, {side:side, obj:obj, element:room});
 	    break;
 	  case 't':
-	    if (obj.h > obj.w) break;
-		form([x, y], function(){
-	      elem(r(obj.A.x, obj.B.x-room.w), obj.B.y-room.h, room, el.type.room, obj, false, true);
-		}, selector);
+	    form(posXY, selector, {side:side, obj:obj, element:room});
+	    break;
+	  case 'r':
+	    form(posXY, selector, {side:side, obj:obj, element:room});
 	    break;
 	  case 'b':
-	    if (obj.h > obj.w) break;
-		form([x, y], function(){
-	      elem(r(obj.D.x, obj.C.x-room.w), obj.D.y, room, el.type.room, obj, false, true);
-		}, selector);
+	    form(posXY, selector, {side:side, obj:obj, element:room});
 	    break;
 	}
-  }
-  /* Функция определения случайного числа для задания координаты элемента*/
-  function r(min, max){
-    var rand = min + Math.random()*(max+1-min);
-    return rand^0; // округление битовым оператором
-  }
-  
+  }  
   /* Функция определения выбора стороны создания нового элемента */
   function s() { // s = side
     if (x < obj.A['x'])
@@ -383,22 +329,6 @@ function addElement(obj, ev){
     if (y > obj.D['y'])
 	  return 'b'; //bottom
   }
-  
-  /* Функция добавления елемента 
-  elemType - тип
-  x, y координаты верхнего левого угла 
-  p.w, p.h - ширина и высота
-  p.c - цвет
-  count - порядковый номер
-  obj - субъект пристыковки
-  */
-  function elem(x, y, p, elemType, obj, xSlide, ySlide){
-    el.list.push(new Element(elemType, x, y, p.w, p.h, p.c, el.counter++, xSlide, ySlide));
-    redrawing(canv, ctx, el.list);
-    /* переменной выделения приравнивается false
-    для исключения добавления элемента к не выделенному*/
-    obj.s = false;
-  }
 }
 
 /* Функция определения заползания (перекрывания) элементов друг на друга */
@@ -411,7 +341,7 @@ function overlap(/*Element*/obj){
 }
 
 /* Функция модального окна выбора Двери или Проема */
-function createHoleOrDoor(posXY, holeAndDoor){
+function createHoleOrDoor(posXY, side, obj){
   $('#modalWindow').dialog({
     title: 'Выберете элемент',
 	position: posXY,
@@ -420,40 +350,127 @@ function createHoleOrDoor(posXY, holeAndDoor){
     buttons: {
 	  'Проем':function(){
 	    $('#modalWindow').dialog('close');
-		form(posXY, function(){holeAndDoor.hole()}, '#wrapHoleForm');
+		var hole = new Hole;
+		form(posXY, '#wrapHoleForm', {side:side, obj:obj, element:hole});
 	  },
       'Дверь':function(){
 	    $('#modalWindow').dialog('close');
-		form(posXY, function(){holeAndDoor.door()}, '#wrapDoorForm');
+		var door = new Door;
+		form(posXY, '#wrapDoorForm', {side:side, obj:obj, element:door});
 	  }
 	}
   });
 }
 
 /* Функция отображения формы для ввода информации об элементе */
-function form(posXY, element, selector){
+function form(posXY, selector, listParameters){
   var jq = $(selector);
-  var selectors = {};
-  selectors.hole = {w: 'widthHole'};
-  selectors.door = {w: 'widthDoor', l: 'longDoor', h: 'heightDoor'};
-  selectors.room = {n: 'name', t: 'type', st: 'subType', p: 'peopleInRoom', w: 'widthRoom', l: 'longRoom', h: 'heightRoom'};
-  var w = selector=='wrapDoorForm'?$('#widthDoor'):selector=='wrapHoleForm'?$('#widthHole'):$('#widthRoom');
-  var h = selector=='wrapDoorForm'?$('#heightDoor'):$('#heightRoom');
-  var l = selector=='wrapDoorForm'?$('#longDoor'):$('#longRoom');
+  var v = {};
+  var wH, wD, wR;
+  var hD, hR;
+  var lD, lR;
+  var n, t, st, p;
+  wH = $('#widthHole');
+  wD = $('#widthDoor');
+  wR = $('#widthRoom');
+  hD = $('#heightDoor');
+  hR = $('#heightRoom');
+  lD = $('#longDoor');
+  lR = $('#longRoom');  
+  n = $('#name');
+  t = $('#type');
+  st = $('#subType');
+  p = $('#peopleInRoom');
   
-  var n = $('#name');
-  var t = $('#type');
-  var st = $('#subType');
-  var p = $('#peopleInRoom');
+  var lp = listParameters;
+  var A = lp.obj.A;
+  var B = lp.obj.B;
+  var C = lp.obj.C;
+  var D = lp.obj.D;
+  var els = lp.element;
+  var x, y, tmpW;
   
   jq.dialog({
-    title: selector=='wrapDoorForm'?'Новая дверь':selector=='wrapHoleForm'?'Новый проем':'Новое помещение',
+    title: selector=='#wrapDoorForm'?'Новая дверь':selector=='#wrapHoleForm'?'Новый проем':'Новое помещение',
     position: posXY,
 	modal: true,
     buttons: {
 	  'Добавить':function(){
 	    jq.dialog('close');
-		element();
+		switch(selector){
+		  case '#wrapDoorForm':
+		    els.w = wD.val();
+			els.h = hD.val();
+			v.lD = lD.val();
+			if (lp.side == 'l'){
+			  tmpW = els.w;
+		      els.w = els.h;
+		      els.h = tmpW;
+			  x = A.x-els.w;
+			  y = r(A.y, D.y-els.h);
+			}else if (lp.side == 't'){
+			  x = r(A.x, B.x-els.w); 
+			  y = B.y-els.h;
+			}else if (lp.side == 'r'){
+			  tmpW = els.w;
+		      els.w = els.h;
+		      els.h = tmpW;
+			  x = B.x;
+			  y = r(B.y, C.y-els.h);
+			}else if (lp.side == 'b'){
+			  x = r(D.x, C.x-els.w);
+			  y = D.y;
+			}
+		    break;
+		  case '#wrapHoleForm':
+		    els.w = wH.val();
+			if (lp.side == 'l'){
+			  tmpW = els.w;
+		      els.w = els.h;
+		      els.h = tmpW;
+			  x = A.x-els.w;
+			  y = r(A.y, D.y-els.h);
+			}else if (lp.side == 't'){
+			  x = r(A.x, B.x-els.w); 
+			  y = B.y-els.h;
+			}else if (lp.side == 'r'){
+			  tmpW = els.w;
+		      els.w = els.h;
+		      els.h = tmpW;
+			  x = B.x;
+			  y = r(B.y, C.y-els.h);
+			}else if (lp.side == 'b'){
+			  x = r(D.x, C.x-els.w);
+			  y = D.y;
+			}
+		    break;
+		  case '#wrapRoomForm':
+		    els.w = wR.val();
+			els.h = lR.val(); // НЕ РАБОТАЕТ
+			v.lR = hR.val();
+			if (lp.side == 'l'){
+			  if (lp.obj.h < lp.obj.w) break; // запрет добавления комнаты с торцевой стороны
+			  x = A.x-els.w;
+			  y = r(A.y, D.y-els.h);
+			}else if (lp.side == 't'){
+			  if (lp.obj.h > lp.obj.w) break;
+			  x = r(A.x, B.x-els.w);
+			  y = B.y-els.h;
+			}else if (lp.side == 'r'){
+			  if (lp.obj.h < lp.obj.w) break;
+			  x = B.x;
+			  y = r(B.y, C.y-els.h);
+			}else if (lp.side == 'b'){
+			  if (lp.obj.h > lp.obj.w) break;
+			  x = r(D.x, C.x-els.w);
+			  y = D.y;
+			}
+		    break;
+		}
+		elem(x, y, els, lp.xSlide, lp.ySlide);
+	    /* переменной выделения приравнивается false
+		для исключения добавления элемента к не выделенному*/
+		lp.obj.s = false;
 	  },
       'Отменить':function(){
 	    jq.dialog('close');
@@ -461,4 +478,20 @@ function form(posXY, element, selector){
 	  }
 	}
   });
+  
+   /* Функция добавления елемента 
+  elemType - тип
+  x, y координаты верхнего левого угла 
+  p.w, p.h - ширина и высота
+  p.c - цвет
+  */
+  function elem(x, y, p, xSlide, ySlide){
+    el.list.push(new Element(p.type, x, y, p.w, p.h, p.c, el.counter++, xSlide, ySlide));
+    redrawing(canv, ctx, el.list);
+  }
+  /* Функция определения случайного числа для задания координаты элемента*/
+  function r(min, max){
+    var rand = min + Math.random()*(max+1-min);
+    return rand^0; // округление битовым оператором
+  }
 }
