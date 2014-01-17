@@ -1,13 +1,16 @@
 ﻿/*! Определения:
  - объявление - создание переменной
- - инициализация - присвоение перменной значения
+ - инициализация - присвоение переменной значения
  - элемент - любой объект, который отображается (помещение(комната), дверь, проем(соединение помещение, как-будто это одно помещение))
 
 Главная переменная element. Вариации el, elem, els, elems. Все завязано на ней.
 
+Входные данные и отображение не должно совпадать. Не нужно ставить коэффициенты преобразования
+пикселей в метры. Пользователь изначально все вводит в метрах.
+Нужно метры преобразовывать в пиксели, для приближения к геометрии здания.
 */
-// Глобальные переменные, которые могут использоваться в любом месте
-// после их инициализации
+
+// Глобальные переменные
 var nameProject;
 var canv;
 var ctx;
@@ -16,7 +19,6 @@ el.obj;
 el.list = [];
 el.counter;
 el.type = {room:'room', hole:'hole', door:'door'};
-
 
 /* Функция создания нового проекта */
 function createNewProject(){
@@ -68,6 +70,46 @@ function eventListener(selector){
   function s(e){if(tool[e.type])tool[e.type](e)}
 }
 
+/* Функция параметров комнаты*/
+function Room (){
+  this.x = 50;
+  this.y = 100;
+  this.z = 0; // определяет этаж
+  
+  this.w = 70;
+  this.l = 70;
+  this.h = 70;
+  
+  this.c = "yellow";
+  this.type = el.type.room;
+}
+/* Функция параметров двери*/
+function Door (){
+  this.x = 20;
+  this.y = 20;
+  this.z = 0;
+  
+  this.w = 40;
+  this.l = 15;
+  this.h = 15;
+  
+  this.c = "black";
+  this.type = el.type.door;
+}
+/* Функция параметров проема*/
+function Hole (){
+  this.x = 30;
+  this.y = 10;
+  this.z = 0;
+  
+  this.w = 70;
+  this.h = 6;
+  this.l = 0;
+  
+  this.c = "green";
+  this.type = el.type.hole;
+}
+
 /* функция добавления элементов
  - Room - комната
  - Door - дверь
@@ -100,36 +142,6 @@ function createNewElement(){
   });
 }
 
-/* Функция параметров комнаты*/
-function Room (){
-  this.x = 50;
-  this.y = 100;
-  this.w = 70;
-  this.l = 70;
-  this.h = 70;
-  this.c = "yellow";
-  this.type = 'room';
-}
-/* Функция параметров двери*/
-function Door (){
-  this.x = 20;
-  this.y = 20;
-  this.w = 40;
-  this.l = 15;
-  this.h = 15;
-  this.c = "black";
-  this.type = 'door';
-}
-/* Функция параметров проема*/
-function Hole (){
-  this.x = 30;
-  this.y = 10;
-  this.w = 70;
-  this.h = 6;
-  this.c = "green";
-  this.type = 'hole';
-}
-
 /* Функция перерисовки холста */
 function redrawing(canvas, context, arrElem){
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -145,7 +157,7 @@ function redrawing(canvas, context, arrElem){
   context.drawImage(canvas, 0, 0);
 }
 
-/* Свойства элемента*/
+/* Свойства элемента */
 function Element(type, x, y, w, h, color, counter, xSlide, ySlide, childElems){
   // тип элемента
   this.type = type;
