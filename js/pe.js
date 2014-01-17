@@ -150,7 +150,7 @@ function redrawing(canvas, context, arrElem){
 	context.fillStyle = e.c; // цвет заливки
 	context.fillRect(e.x, e.y, e.w, e.h);
 	if (!e.s) continue;
-	context.lineWidth = (e.type=='room')?4:2; // толщина линии обводки
+	context.lineWidth = (e.type=='room')?3:2; // толщина линии обводки
 	context.strokeStyle = 'brown'; // цвет обводки
 	context.strokeRect(e.x+2, e.y+2, e.w-4, e.h-4); 
   }
@@ -164,10 +164,10 @@ function Element(type, x, y, w, h, color, counter, xSlide, ySlide, childElems){
   // координаты верхнего левого угла
   this.x = x;
   this.y = y;
-  this.z = z;
+  this.z = 0;
   // размеры элемента
   this.w = w;
-  this.l = l;
+  this.l = 0;
   this.h = h;
   // цвет элемента
   this.c = color;
@@ -246,10 +246,7 @@ function draggable(canvas, ctx){
     // координаты в момент перемещения мышки
 	x = f(ev, 'x');
 	y = f(ev, 'y');
-	// информационное сообщение
-	var e = findElemenet(x, y);
-	$("#msgBox").html(e?e.type:'canvas');
-	
+
 	if (!drag) return;
 	//изменение координат фигуры
 	el.obj.x = el.obj.xSlide?el.obj.x:(x - el.obj.offsetX);
@@ -293,7 +290,7 @@ function addElement(obj, ev){
   var y = f(ev, 'y');  // идентификация координаты Y
   var posXY = [x, y];
   var side;
-  if (obj.type == el.type.room){ // будут добавляться только двери и проемы
+  if (obj.type == el.type.room){ // будут добавляться только двери и проёмы
 	side = s();
 	switch(side){
 	  case 'l':  // левая стенка
@@ -317,10 +314,10 @@ function addElement(obj, ev){
 	  case 'l':
 	    form(posXY, selector, {side:side, obj:obj, element:room});
 	    break;
-	  case 't':
+	  case 'r':
 	    form(posXY, selector, {side:side, obj:obj, element:room});
 	    break;
-	  case 'r':
+	  case 't':
 	    form(posXY, selector, {side:side, obj:obj, element:room});
 	    break;
 	  case 'b':
@@ -343,15 +340,6 @@ function addElement(obj, ev){
     if (y > obj.D['y'])
 	  return 'b'; //bottom
   }
-}
-
-/* Функция определения заползания (перекрывания) элементов друг на друга */
-function overlap(/*Element*/obj){
-  var e;
-  if (e=findElemenet(obj.A.x, obj.A.y)) return e;
-  if (e=findElemenet(obj.B.x, obj.B.y)) return e;
-  if (e=findElemenet(obj.C.x, obj.C.y)) return e;
-  if (e=findElemenet(obj.D.x, obj.D.y)) return e;
 }
 
 /* Функция модального окна выбора Двери или Проема */
