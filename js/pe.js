@@ -10,6 +10,7 @@
 Нужно метры преобразовывать в пиксели, для приближения к геометрии здания.
 
  !!! Определить примыкание комнат
+ !! Изменение параметров элемента по двойному клику
  ! Возможность добавления подложки => прозрачные элементы
 */
 
@@ -52,7 +53,7 @@ function createNewProject(){
 		el.counter = 0;
 		ctx.clearRect(0, 0, canv.width, canv.height);
 		var r = new Room();
-	    el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.c, el.counter++, null, null, 0));
+	    el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++, null, null, 0));
 	    redrawing(canv, ctx, el.list);
 	  },
       'Отменить':function(){
@@ -109,7 +110,7 @@ function Hole (){
   
   this.w = 70;
   this.h = 10;
-  this.l = 0;
+  this.l = 10;
   
   this.c = "#FF7A00";
   this.type = el.type.hole;
@@ -121,17 +122,18 @@ function Hole (){
  - Hole - проем
 */
 function createNewElement(){
+  var p;
   $('#room').click(function() {
-	var r = new Room();
-	el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.c, el.counter++));
+	p = new Room();
+	el.list.push(new Element(el.type.room, p.x, p.y, p.w, p.h, p.l, p.c, el.counter++));
 	redrawing(canv, ctx, el.list);
 	if(el.obj)el.obj.s=false;
   });
   $('#door').click(function() {
 	if (!el.obj) return;
 	if (el.obj.s && el.obj.type == 'room'){
-	  var d = new Door();
-	  el.list.push(new Element(el.type.door, d.x, d.y, d.w, d.h, d.c, el.counter++));
+	  p = new Door();
+	  el.list.push(new Element(el.type.door, p.x, p.y, p.w, p.h, p.l, p.c, el.counter++));
 	  redrawing(canv, ctx, el.list);
 	  el.obj.s=false;
 	}
@@ -139,8 +141,8 @@ function createNewElement(){
   $('#hole').click(function() {
 	if (!el.obj) return;
 	if (el.obj.s && el.obj.type == 'room'){
-	  var h = new Hole();
-	  el.list.push(new Element(el.type.hole, h.x, h.y, h.w, h.h, h.c, el.counter++));
+	  p = new Hole();
+	  el.list.push(new Element(el.type.hole, p.x, p.y, p.w, p.h, p.l, p.c, el.counter++));
 	  redrawing(canv, ctx, el.list);
 	  el.obj.s=false;
 	}
@@ -153,17 +155,17 @@ function redrawing(canvas, context, arrElem){
   for (var i in arrElem){
 	var e = arrElem[i];
 	context.fillStyle = e.c; // цвет заливки
-	context.fillRect(e.x, e.y, e.w, e.h);
+	context.fillRect(e.x, e.y, e.w, e.l);
 	context.lineWidth = (e.type=='room')?2:1; // толщина линии обводки
 	if (!e.s) context.strokeStyle = 'black'; // цвет обводки
 	else context.strokeStyle = 'brown'; // цвет обводки
-	context.strokeRect(e.x+1, e.y+1, e.w-2, e.h-2); 
+	context.strokeRect(e.x+1, e.y+1, e.w-2, e.l-2); 
   }
   context.drawImage(canvas, 0, 0);
 }
 
 /* Свойства элемента */
-function Element(type, x, y, w, h, color, counter, xSlide, ySlide){
+function Element(type, x, y, w, h, l, color, counter, xSlide, ySlide){
   // тип элемента
   this.type = type;
   // координаты верхнего левого угла
@@ -172,7 +174,7 @@ function Element(type, x, y, w, h, color, counter, xSlide, ySlide){
   this.z = 0;
   // размеры элемента
   this.w = w;
-  this.l = 0;
+  this.l = l;
   this.h = h;
   // цвет элемента
   this.c = color;
@@ -191,8 +193,8 @@ function Element(type, x, y, w, h, color, counter, xSlide, ySlide){
   // координаты квадрата
   this.A = {'x': this.x, 'y': this.y};
   this.B = {'x': this.x+this.w, 'y': this.y};
-  this.C = {'x': this.x+this.w, 'y': this.y+this.h};
-  this.D = {'x': this.x, 'y': this.y+this.h};
+  this.C = {'x': this.x+this.w, 'y': this.y+this.l};
+  this.D = {'x': this.x, 'y': this.y+this.l};
 }
 
 /* Функция отключения выделения текста
@@ -208,12 +210,12 @@ function disableSelection(target){
   target.style.cursor = "default"
 }
 
-/* Функция вычесления координаты мыши на холсте */
+/* Функция вычисления координаты мыши на холсте */
 function f (ev, p){
   return (p=='x')?ev.pageX-canv.offsetLeft:ev.pageY-canv.offsetTop;
 }
 
-/* Функция перемещения элемента*/
+/* Функция перемещения элемента */
 function draggable(canvas, ctx){
   // курсор в режиме рисования (по умолчанию)
   canvas.style.cursor = 'default';
@@ -259,8 +261,8 @@ function draggable(canvas, ctx){
 	
 	el.obj.A = {'x': el.obj.x, 'y': el.obj.y};
     el.obj.B = {'x': el.obj.x+el.obj.w, 'y': el.obj.y};
-    el.obj.C = {'x': el.obj.x+el.obj.w, 'y': el.obj.y+el.obj.h};
-    el.obj.D = {'x': el.obj.x, 'y': el.obj.y+el.obj.h};
+    el.obj.C = {'x': el.obj.x+el.obj.w, 'y': el.obj.y+el.obj.l};
+    el.obj.D = {'x': el.obj.x, 'y': el.obj.y+el.obj.l};
 
 	// перерисовка канваса
 	redrawing(canvas, ctx, el.list);
@@ -270,7 +272,7 @@ function draggable(canvas, ctx){
     // прекращение перемещения
     if (drag) drag = false;
 	// перезапись параметров элемента
-	el.list[el.obj.id] = new Element(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide);
+	el.list[el.obj.id] = new Element(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.l, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide);
 	// добавление элементов
 	addElement(this.obj, ev);
   };
@@ -295,9 +297,9 @@ function addElement(obj, ev){
 	if(side)createHoleOrDoor(posXY, side, obj);
   }else { // будут добавляться только комнаты
 	if (side=='l'||side=='r'){
-	  if (obj.h > obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Room()});
+	  if (obj.l > obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Room()});
 	}else if (side=='t'||side=='b'){
-	  if (obj.h < obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Room()});
+	  if (obj.l < obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Room()});
 	}
   }
   /* Функция определения выбора стороны создания нового элемента */
@@ -374,19 +376,19 @@ function form(posXY, selector, listParameters){
 		  case '#wrapDoorForm':
 			if (lp.side == 'l'){
 			  tmpW = els.w;
-		      els.w = els.h;
-		      els.h = tmpW;
+		      els.w = els.l;
+		      els.l = tmpW;
 			  x = A.x-els.w;
-			  y = r(A.y, D.y-els.h);
+			  y = r(A.y, D.y-els.l);
 			}else if (lp.side == 'r'){
 			  tmpW = els.w;
-		      els.w = els.h;
-		      els.h = tmpW;
+		      els.w = els.l;
+		      els.l = tmpW;
 			  x = B.x;
-			  y = r(B.y, C.y-els.h);
+			  y = r(B.y, C.y-els.l);
 			}else if (lp.side == 't'){
 			  x = r(A.x, B.x-els.w); 
-			  y = B.y-els.h;
+			  y = B.y-els.l;
 			}else if (lp.side == 'b'){
 			  x = r(D.x, C.x-els.w);
 			  y = D.y;
@@ -395,19 +397,19 @@ function form(posXY, selector, listParameters){
 		  case '#wrapHoleForm':
 			if (lp.side == 'l'){
 			  tmpW = els.w;
-		      els.w = els.h;
-		      els.h = tmpW;
+		      els.w = els.l;
+		      els.l = tmpW;
 			  x = A.x-els.w;
-			  y = r(A.y, D.y-els.h);
+			  y = r(A.y, D.y-els.l);
 			}else if (lp.side == 'r'){
 			  tmpW = els.w;
-		      els.w = els.h;
-		      els.h = tmpW;
+		      els.w = els.l;
+		      els.l = tmpW;
 			  x = B.x;
-			  y = r(B.y, C.y-els.h);
+			  y = r(B.y, C.y-els.l);
 			}else if (lp.side == 't'){
 			  x = r(A.x, B.x-els.w); 
-			  y = B.y-els.h;
+			  y = B.y-els.l;
 			}else if (lp.side == 'b'){
 			  x = r(D.x, C.x-els.w);
 			  y = D.y;
@@ -416,13 +418,13 @@ function form(posXY, selector, listParameters){
 		  case '#wrapRoomForm':
 			if (lp.side == 'l'){
 			  x = A.x-els.w;
-			  y = r(A.y, D.y-els.h);
+			  y = r(A.y, D.y-els.l);
 			}else if (lp.side == 'r'){
 			  x = B.x;
-			  y = r(B.y, C.y-els.h);
+			  y = r(B.y, C.y-els.l);
 			}else if (lp.side == 't'){
 			  x = r(A.x, B.x-els.w);
-			  y = B.y-els.h;
+			  y = B.y-els.l;
 			}else if (lp.side == 'b'){
 			  x = r(D.x, C.x-els.w);
 			  y = D.y;
@@ -448,7 +450,7 @@ function form(posXY, selector, listParameters){
   p.c - цвет
   */
   function elem(x, y, p, xSlide, ySlide){
-    el.list.push(new Element(p.type, x, y, p.w, p.h, p.c, el.counter++, xSlide, ySlide));
+    el.list.push(new Element(p.type, x, y, p.w, p.h, p.l, p.c, el.counter++, xSlide, ySlide));
     redrawing(canv, ctx, el.list);
   }
   /* Функция определения случайного числа для задания координаты элемента*/
