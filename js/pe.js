@@ -8,6 +8,8 @@
 Входные данные и отображение не должно совпадать. Не нужно ставить коэффициенты преобразования
 пикселей в метры. Пользователь изначально все вводит в метрах.
 Нужно метры преобразовывать в пиксели, для приближения к геометрии здания.
+
+ !!!Определить примыкание комнат
 */
 
 // Глобальные переменные
@@ -266,7 +268,7 @@ function draggable(canvas, ctx){
     if (drag) drag = false;
 	// перезапись параметров элемента
 	el.list[el.obj.id] = new Element(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide);
-	// добваление элементов
+	// добавление элементов
 	addElement(this.obj, ev);
   };
 }
@@ -292,38 +294,20 @@ function addElement(obj, ev){
   var side;
   if (obj.type == el.type.room){ // будут добавляться только двери и проёмы
 	side = s();
-	switch(side){
-	  case 'l':  // левая стенка
-	    createHoleOrDoor(posXY, side, obj);
-	    break;
-	  case 'r': // правая стенка
-	    createHoleOrDoor(posXY, side, obj);
-	    break;
-	  case 't': // верхняя стенка
-	    createHoleOrDoor(posXY, side, obj);
-	    break;
-	  case 'b':  // нижняя стенка
-		createHoleOrDoor(posXY, side, obj);
-	    break;
-	}
+	if(side=='l') createHoleOrDoor(posXY, side, obj);
+	else if(side=='r') createHoleOrDoor(posXY, side, obj);
+	else if(side=='t') createHoleOrDoor(posXY, side, obj);
+	else if(side=='b') createHoleOrDoor(posXY, side, obj);
   }else { // будут добавляться только комнаты
     var room = new Room();
 	var selector = '#wrapRoomForm';
 	side = s();
-	switch(side){
-	  case 'l':
-	    form(posXY, selector, {side:side, obj:obj, element:room});
-	    break;
-	  case 'r':
-	    form(posXY, selector, {side:side, obj:obj, element:room});
-	    break;
-	  case 't':
-	    form(posXY, selector, {side:side, obj:obj, element:room});
-	    break;
-	  case 'b':
-	    form(posXY, selector, {side:side, obj:obj, element:room});
-	    break;
-	}
+	if (obj.h < obj.w) return;
+	if(side=='l') form(posXY, selector, {side:side, obj:obj, element:room});
+	else if(side=='r') form(posXY, selector, {side:side, obj:obj, element:room});
+	if (obj.h > obj.w) return;
+	if(side=='t') form(posXY, selector, {side:side, obj:obj, element:room});
+	else if(side=='b') form(posXY, selector, {side:side, obj:obj, element:room});
   }  
   /* Функция определения выбора стороны создания нового элемента */
   function s() { // s = side
@@ -352,13 +336,11 @@ function createHoleOrDoor(posXY, side, obj){
     buttons: {
 	  'Проем':function(){
 	    $('#modalWindow').dialog('close');
-		var hole = new Hole;
-		form(posXY, '#wrapHoleForm', {side:side, obj:obj, element:hole});
+		form(posXY, '#wrapHoleForm', {side:side, obj:obj, element:new Hole});
 	  },
       'Дверь':function(){
 	    $('#modalWindow').dialog('close');
-		var door = new Door;
-		form(posXY, '#wrapDoorForm', {side:side, obj:obj, element:door});
+		form(posXY, '#wrapDoorForm', {side:side, obj:obj, element:new Door});
 	  }
 	}
   });
@@ -401,9 +383,6 @@ function form(posXY, selector, listParameters){
 	    jq.dialog('close');
 		switch(selector){
 		  case '#wrapDoorForm':
-		    els.w = wD.val();
-			els.h = hD.val();
-			v.lD = lD.val();
 			if (lp.side == 'l'){
 			  tmpW = els.w;
 		      els.w = els.h;
@@ -425,7 +404,6 @@ function form(posXY, selector, listParameters){
 			}
 		    break;
 		  case '#wrapHoleForm':
-		    els.w = wH.val();
 			if (lp.side == 'l'){
 			  tmpW = els.w;
 		      els.w = els.h;
@@ -447,23 +425,16 @@ function form(posXY, selector, listParameters){
 			}
 		    break;
 		  case '#wrapRoomForm':
-		    els.w = wR.val();
-			els.h = lR.val(); // НЕ РАБОТАЕТ
-			v.lR = hR.val();
 			if (lp.side == 'l'){
-			  if (lp.obj.h < lp.obj.w) break; // запрет добавления комнаты с торцевой стороны
 			  x = A.x-els.w;
 			  y = r(A.y, D.y-els.h);
 			}else if (lp.side == 't'){
-			  if (lp.obj.h > lp.obj.w) break;
 			  x = r(A.x, B.x-els.w);
 			  y = B.y-els.h;
 			}else if (lp.side == 'r'){
-			  if (lp.obj.h < lp.obj.w) break;
 			  x = B.x;
 			  y = r(B.y, C.y-els.h);
 			}else if (lp.side == 'b'){
-			  if (lp.obj.h > lp.obj.w) break;
 			  x = r(D.x, C.x-els.w);
 			  y = D.y;
 			}
