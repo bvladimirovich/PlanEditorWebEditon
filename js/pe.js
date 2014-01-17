@@ -389,15 +389,15 @@ function form(posXY, selector, listParameters){
 		      els.h = tmpW;
 			  x = A.x-els.w;
 			  y = r(A.y, D.y-els.h);
-			}else if (lp.side == 't'){
-			  x = r(A.x, B.x-els.w); 
-			  y = B.y-els.h;
 			}else if (lp.side == 'r'){
 			  tmpW = els.w;
 		      els.w = els.h;
 		      els.h = tmpW;
 			  x = B.x;
 			  y = r(B.y, C.y-els.h);
+			}else if (lp.side == 't'){
+			  x = r(A.x, B.x-els.w); 
+			  y = B.y-els.h;
 			}else if (lp.side == 'b'){
 			  x = r(D.x, C.x-els.w);
 			  y = D.y;
@@ -410,15 +410,15 @@ function form(posXY, selector, listParameters){
 		      els.h = tmpW;
 			  x = A.x-els.w;
 			  y = r(A.y, D.y-els.h);
-			}else if (lp.side == 't'){
-			  x = r(A.x, B.x-els.w); 
-			  y = B.y-els.h;
 			}else if (lp.side == 'r'){
 			  tmpW = els.w;
 		      els.w = els.h;
 		      els.h = tmpW;
 			  x = B.x;
 			  y = r(B.y, C.y-els.h);
+			}else if (lp.side == 't'){
+			  x = r(A.x, B.x-els.w); 
+			  y = B.y-els.h;
 			}else if (lp.side == 'b'){
 			  x = r(D.x, C.x-els.w);
 			  y = D.y;
@@ -428,12 +428,12 @@ function form(posXY, selector, listParameters){
 			if (lp.side == 'l'){
 			  x = A.x-els.w;
 			  y = r(A.y, D.y-els.h);
-			}else if (lp.side == 't'){
-			  x = r(A.x, B.x-els.w);
-			  y = B.y-els.h;
 			}else if (lp.side == 'r'){
 			  x = B.x;
 			  y = r(B.y, C.y-els.h);
+			}else if (lp.side == 't'){
+			  x = r(A.x, B.x-els.w);
+			  y = B.y-els.h;
 			}else if (lp.side == 'b'){
 			  x = r(D.x, C.x-els.w);
 			  y = D.y;
@@ -452,7 +452,7 @@ function form(posXY, selector, listParameters){
 	}
   });
   
-   /* Функция добавления елемента 
+  /* Функция добавления елемента 
   elemType - тип
   x, y координаты верхнего левого угла 
   p.w, p.h - ширина и высота
