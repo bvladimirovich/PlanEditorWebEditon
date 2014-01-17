@@ -286,35 +286,27 @@ function findElemenet(x, y){
 
 /* Функция создания элемента в выбранном направлении */
 function addElement(obj, ev){
-  if (!obj) return;
-  if (!obj.s) return;
-  var x = f(ev, 'x');  // идентификация координаты Х
-  var y = f(ev, 'y');  // идентификация координаты Y
-  var posXY = [x, y];
-  var side = s();
-  var room = new Room();
-  var selector = '#wrapRoomForm';
+  if (!obj && !obj.s) return;
+  var posXY = [f(ev, 'x'), f(ev, 'y')], side = s(posXY);
   if (obj.type == el.type.room){ // будут добавляться только двери и проёмы
 	if(side)createHoleOrDoor(posXY, side, obj);
   }else { // будут добавляться только комнаты
 	if (side=='l'||side=='r'){
-	  if (obj.h > obj.w) form(posXY, selector, {side:side, obj:obj, element:room});
-	}else if (side=='t'||side=='b')
-	  if (obj.h < obj.w) form(posXY, selector, {side:side, obj:obj, element:room});
+	  if (obj.h > obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Room()});
+	}else if (side=='t'||side=='b'){
+	  if (obj.h < obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Room()});
+	}
   }
   /* Функция определения выбора стороны создания нового элемента */
-  function s() { // s = side
-    if (x < obj.A['x'])
-    if (y > obj.A['y'] && y < obj.D['y'])
+  function s(posXY) { // s = side
+    var x = posXY[0], y = posXY[1];	
+    if (x < obj.A['x'] && y > obj.A['y'] && y < obj.D['y']) 
 	  return 'l'; //left
-	if (x > obj.B['x'])
-    if (y > obj.B['y'] && y < obj.C['y'])
+	if (x > obj.B['x'] && y > obj.B['y'] && y < obj.C['y'])
 	  return 'r'; //right
-	if (x > obj.A['x'] && x < obj.B['x'])
-    if (y < obj.A['y'])
+	if (x > obj.A['x'] && x < obj.B['x'] && y < obj.A['y'])
 	  return 't'; //top
-	if (x > obj.D['x'] && x < obj.C['x'])
-    if (y > obj.D['y'])
+	if (x > obj.D['x'] && x < obj.C['x'] && y > obj.D['y'])
 	  return 'b'; //bottom
 	return false;
   }
