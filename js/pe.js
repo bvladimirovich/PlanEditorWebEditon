@@ -291,24 +291,17 @@ function addElement(obj, ev){
   var x = f(ev, 'x');  // идентификация координаты Х
   var y = f(ev, 'y');  // идентификация координаты Y
   var posXY = [x, y];
-  var side;
+  var side = s();
+  var room = new Room();
+  var selector = '#wrapRoomForm';
   if (obj.type == el.type.room){ // будут добавляться только двери и проёмы
-	side = s();
-	if(side=='l') createHoleOrDoor(posXY, side, obj);
-	else if(side=='r') createHoleOrDoor(posXY, side, obj);
-	else if(side=='t') createHoleOrDoor(posXY, side, obj);
-	else if(side=='b') createHoleOrDoor(posXY, side, obj);
+	if(side)createHoleOrDoor(posXY, side, obj);
   }else { // будут добавляться только комнаты
-    var room = new Room();
-	var selector = '#wrapRoomForm';
-	side = s();
-	if (obj.h < obj.w) return;
-	if(side=='l') form(posXY, selector, {side:side, obj:obj, element:room});
-	else if(side=='r') form(posXY, selector, {side:side, obj:obj, element:room});
-	if (obj.h > obj.w) return;
-	if(side=='t') form(posXY, selector, {side:side, obj:obj, element:room});
-	else if(side=='b') form(posXY, selector, {side:side, obj:obj, element:room});
-  }  
+	if (side=='l'||side=='r'){
+	  if (obj.h > obj.w) form(posXY, selector, {side:side, obj:obj, element:room});
+	}else if (side=='t'||side=='b')
+	  if (obj.h < obj.w) form(posXY, selector, {side:side, obj:obj, element:room});
+  }
   /* Функция определения выбора стороны создания нового элемента */
   function s() { // s = side
     if (x < obj.A['x'])
@@ -323,6 +316,7 @@ function addElement(obj, ev){
 	if (x > obj.D['x'] && x < obj.C['x'])
     if (y > obj.D['y'])
 	  return 'b'; //bottom
+	return false;
   }
 }
 
