@@ -9,7 +9,8 @@
 пикселей в метры. Пользователь изначально все вводит в метрах.
 Нужно метры преобразовывать в пиксели, для приближения к геометрии здания.
 
- !!!Определить примыкание комнат
+ !!! Определить примыкание комнат
+ ! Возможность добавления подложки => прозрачные элементы
 */
 
 // Глобальные переменные
@@ -50,7 +51,9 @@ function createNewProject(){
 		el.obj;
 		el.counter = 0;
 		ctx.clearRect(0, 0, canv.width, canv.height);
-		
+		var r = new Room();
+	    el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.c, el.counter++, null, null, 0));
+	    redrawing(canv, ctx, el.list);
 	  },
       'Отменить':function(){
 	    wds.dialog('close');
@@ -82,7 +85,7 @@ function Room (){
   this.l = 70;
   this.h = 70;
   
-  this.c = "yellow";
+  this.c = "#FFEA73";
   this.type = el.type.room;
 }
 /* Функция параметров двери*/
@@ -92,10 +95,10 @@ function Door (){
   this.z = 0;
   
   this.w = 40;
-  this.l = 15;
-  this.h = 15;
+  this.l = 20;
+  this.h = 20;
   
-  this.c = "black";
+  this.c = "#476BD6";
   this.type = el.type.door;
 }
 /* Функция параметров проема*/
@@ -105,10 +108,10 @@ function Hole (){
   this.z = 0;
   
   this.w = 70;
-  this.h = 6;
+  this.h = 10;
   this.l = 0;
   
-  this.c = "green";
+  this.c = "#FF7A00";
   this.type = el.type.hole;
 }
 
@@ -120,7 +123,7 @@ function Hole (){
 function createNewElement(){
   $('#room').click(function() {
 	var r = new Room();
-	el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.c, el.counter++, null, null, 0));
+	el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.c, el.counter++));
 	redrawing(canv, ctx, el.list);
 	if(el.obj)el.obj.s=false;
   });
@@ -151,16 +154,16 @@ function redrawing(canvas, context, arrElem){
 	var e = arrElem[i];
 	context.fillStyle = e.c; // цвет заливки
 	context.fillRect(e.x, e.y, e.w, e.h);
-	if (!e.s) continue;
-	context.lineWidth = (e.type=='room')?3:2; // толщина линии обводки
-	context.strokeStyle = 'brown'; // цвет обводки
-	context.strokeRect(e.x+2, e.y+2, e.w-4, e.h-4); 
+	context.lineWidth = (e.type=='room')?2:1; // толщина линии обводки
+	if (!e.s) context.strokeStyle = 'black'; // цвет обводки
+	else context.strokeStyle = 'brown'; // цвет обводки
+	context.strokeRect(e.x+1, e.y+1, e.w-2, e.h-2); 
   }
   context.drawImage(canvas, 0, 0);
 }
 
 /* Свойства элемента */
-function Element(type, x, y, w, h, color, counter, xSlide, ySlide, childElems){
+function Element(type, x, y, w, h, color, counter, xSlide, ySlide){
   // тип элемента
   this.type = type;
   // координаты верхнего левого угла
@@ -450,7 +453,6 @@ function form(posXY, selector, listParameters){
   }
   /* Функция определения случайного числа для задания координаты элемента*/
   function r(min, max){
-    var rand = min + Math.random()*(max+1-min);
-    return rand^0; // округление битовым оператором
+	return ((min+max)/2)^0;
   }
 }
