@@ -345,6 +345,7 @@ function form(posXY, selector, listParameters){
   var hD, hR;
   var lD, lR;
   var n, t, st, p;
+  
   wH = $('#widthHole');
   wD = $('#widthDoor');
   wR = $('#widthRoom');
@@ -363,7 +364,7 @@ function form(posXY, selector, listParameters){
   var C = lp.obj.C;
   var D = lp.obj.D;
   var els = lp.element;
-  var x, y, tmpW;
+  var x, y, tmpW = els.w;
   
   jq.dialog({
     title: selector=='#wrapDoorForm'?'Новая дверь':selector=='#wrapHoleForm'?'Новый проем':'Новое помещение',
@@ -372,69 +373,44 @@ function form(posXY, selector, listParameters){
     buttons: {
 	  'Добавить':function(){
 	    jq.dialog('close');
-		switch(selector){
-		  case '#wrapDoorForm':
-			if (lp.side == 'l'){
-			  tmpW = els.w;
-		      els.w = els.l;
-		      els.l = tmpW;
-			  x = A.x-els.w;
-			  y = r(A.y, D.y-els.l);
-			}else if (lp.side == 'r'){
-			  tmpW = els.w;
-		      els.w = els.l;
-		      els.l = tmpW;
-			  x = B.x;
-			  y = r(B.y, C.y-els.l);
-			}else if (lp.side == 't'){
-			  x = r(A.x, B.x-els.w); 
-			  y = B.y-els.l;
-			}else if (lp.side == 'b'){
-			  x = r(D.x, C.x-els.w);
-			  y = D.y;
-			}
-		    break;
-		  case '#wrapHoleForm':
-			if (lp.side == 'l'){
-			  tmpW = els.w;
-		      els.w = els.l;
-		      els.l = tmpW;
-			  x = A.x-els.w;
-			  y = r(A.y, D.y-els.l);
-			}else if (lp.side == 'r'){
-			  tmpW = els.w;
-		      els.w = els.l;
-		      els.l = tmpW;
-			  x = B.x;
-			  y = r(B.y, C.y-els.l);
-			}else if (lp.side == 't'){
-			  x = r(A.x, B.x-els.w); 
-			  y = B.y-els.l;
-			}else if (lp.side == 'b'){
-			  x = r(D.x, C.x-els.w);
-			  y = D.y;
-			}
-		    break;
-		  case '#wrapRoomForm':
-			if (lp.side == 'l'){
-			  x = A.x-els.w;
-			  y = r(A.y, D.y-els.l);
-			}else if (lp.side == 'r'){
-			  x = B.x;
-			  y = r(B.y, C.y-els.l);
-			}else if (lp.side == 't'){
-			  x = r(A.x, B.x-els.w);
-			  y = B.y-els.l;
-			}else if (lp.side == 'b'){
-			  x = r(D.x, C.x-els.w);
-			  y = D.y;
-			}
-		    break;
+		
+		/* Поворот элемента, если это дверь или проем */
+		if(selector=='#wrapDoorForm'||'#wrapHoleForm')
+		if(lp.side=='l'||lp.side=='r'){
+		  els.w = els.l;
+		  els.l = tmpW;
+		} 
+		/*Определение положения нового элемента */
+		if (lp.side == 'l'){
+		  x = A.x-els.w;
+		  y = r(A.y, D.y-els.l);
+		}else if (lp.side == 'r'){
+		  x = B.x;
+		  y = r(B.y, C.y-els.l);
+		}else if (lp.side == 't'){
+		  x = r(A.x, B.x-els.w);
+		  y = B.y-els.l;
+		}else if (lp.side == 'b'){
+		  x = r(D.x, C.x-els.w);
+		  y = D.y;
 		}
+		/* Изменение параметров перемещения относительно другого элемента */
+		if (lp.side=='l'||lp.side=='r'){
+		  // запрет перемещений по оси X
+		  lp.xSlide = true;
+		  lp.obj.xSlide = true;
+		}else if (lp.side=='t'||lp.side=='b'){
+		  // запрет перемещений по оси Y
+		  lp.ySlide = true;
+		  lp.obj.ySlide = true;
+		}
+		
 		elem(x, y, els, lp.xSlide, lp.ySlide);
 	    /* переменной выделения приравнивается false
 		для исключения добавления элемента к не выделенному*/
 		lp.obj.s = false;
+		// перезапись элемента с новыми параметрами xSlide и ySlide
+		el.list[lp.obj.id] = new Element(lp.obj.type, lp.obj.x, lp.obj.y, lp.obj.w, lp.obj.h, lp.obj.l, lp.obj.c, lp.obj.id, lp.obj.xSlide, lp.obj.ySlide);
 	  },
       'Отменить':function(){
 	    jq.dialog('close');
@@ -443,7 +419,8 @@ function form(posXY, selector, listParameters){
 	}
   });
   
-  /* Функция добавления елемента 
+  
+  /* Функция добавления элемента 
   elemType - тип
   x, y координаты верхнего левого угла 
   p.w, p.h - ширина и высота
