@@ -164,8 +164,10 @@ function Element(type, x, y, w, h, color, counter, xSlide, ySlide, childElems){
   // координаты верхнего левого угла
   this.x = x;
   this.y = y;
+  this.z = z;
   // размеры элемента
   this.w = w;
+  this.l = l;
   this.h = h;
   // цвет элемента
   this.c = color;
@@ -173,11 +175,11 @@ function Element(type, x, y, w, h, color, counter, xSlide, ySlide, childElems){
   this.id = counter;
   // флаг выделения элемента
   this.s = false; // select
-  // смещение елемента при перемещении
+  // смещение элемента при перемещении
   this.offsetX = 0;
   this.offsetY = 0;
   // блокированная координата
-  // запрет на перемещени вдоль оси
+  // запрет на перемещение вдоль оси
   // false - перемещение разрешено
   this.xSlide = xSlide;
   this.ySlide = ySlide;
