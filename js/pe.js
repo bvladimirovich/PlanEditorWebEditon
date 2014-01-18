@@ -43,9 +43,9 @@ function createNewProject(){
 		ctx = canv.getContext('2d');
 		
 	    disableSelection(document.body); //запрет выделение текста на странице
-        eventListener('#planEditor'); //обработка событий на канвас
+        eventListener('#planEditor');
 		
-        tool = new draggable(canv, ctx);
+        tool = new Element.draggable(canv, ctx);
 		
 		el.list = [];
 		el.obj;
@@ -90,6 +90,24 @@ function redrawing(canvas, context, arrElem){
   context.drawImage(canvas, 0, 0);
 }
 
+/* Функция отключения выделения текста
+Чтоб придвойном щелчке не выделялся текст на странице
+*/
+function disableSelection(target){
+  if (typeof target.onselectstart!="undefined") // для IE:
+    target.onselectstart=function(){return false}
+  else if (typeof target.style.MozUserSelect!="undefined") //для Firefox:
+    target.style.MozUserSelect="none"
+  else // для всех других (типа Оперы):
+    target.onmousedown=function(){return false}
+  target.style.cursor = "default"
+}
+
+/* Функция вычисления координаты мыши на холсте */
+function f (ev, p){
+  return (p=='x')?ev.pageX-canv.offsetLeft:ev.pageY-canv.offsetTop;
+}
+
 /* Свойства элемента */
 function Element(type, x, y, w, h, l, color, counter, xSlide, ySlide){
   // тип элемента
@@ -123,7 +141,7 @@ function Element(type, x, y, w, h, l, color, counter, xSlide, ySlide){
   this.D = {'x': this.x, 'y': this.y+this.l};
 }
 
-/* Функция параметров комнаты*/
+/* Функция параметров комнаты */
 Element.room = function(){
   this.x = 50;
   this.y = 100;
@@ -136,7 +154,7 @@ Element.room = function(){
   this.c = "#FFEA73";
   this.type = el.type.room;
 }
-/* Функция параметров двери*/
+/* Функция параметров двери */
 Element.door = function(){
   this.x = 20;
   this.y = 20;
@@ -149,7 +167,7 @@ Element.door = function(){
   this.c = "#476BD6";
   this.type = el.type.door;
 }
-/* Функция параметров проема*/
+/* Функция параметров проёма */
 Element.hole = function(){
   this.x = 30;
   this.y = 10;
@@ -163,7 +181,7 @@ Element.hole = function(){
   this.type = el.type.hole;
 }
 
-/* Функция поиска элемента на холсте мышкой*/
+/* Функция поиска элемента на холсте мышкой */
 Element.find = function(x, y){
   for (var i in el.list){
     var e = el.list[i];
@@ -202,26 +220,8 @@ Element.add = function(obj, ev){
   }
 }
 
-/* Функция отключения выделения текста
-Чтоб придвойном щелчке не выделялся текст на странице
-*/
-function disableSelection(target){
-  if (typeof target.onselectstart!="undefined") // для IE:
-    target.onselectstart=function(){return false}
-  else if (typeof target.style.MozUserSelect!="undefined") //для Firefox:
-    target.style.MozUserSelect="none"
-  else // для всех других (типа Оперы):
-    target.onmousedown=function(){return false}
-  target.style.cursor = "default"
-}
-
-/* Функция вычисления координаты мыши на холсте */
-function f (ev, p){
-  return (p=='x')?ev.pageX-canv.offsetLeft:ev.pageY-canv.offsetTop;
-}
-
 /* Функция перемещения элемента */
-function draggable(canvas, ctx){
+Element.draggable = function(canvas, ctx){
   // курсор в режиме рисования (по умолчанию)
   canvas.style.cursor = 'default';
   // координаты элемента
@@ -283,7 +283,7 @@ function draggable(canvas, ctx){
   };
 }
 
-/* Функция модального окна выбора Двери или Проема */
+/* Функция модального окна выбора Двери или Проёма */
 function createHoleOrDoor(posXY, side, obj){
   $('#modalWindow').dialog({
     title: 'Выберете элемент',
