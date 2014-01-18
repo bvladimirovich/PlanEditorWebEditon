@@ -26,7 +26,7 @@ el.counter = 0; // счётчик элементов
 el.type = {room:'room', hole:'hole', door:'door'};
 
 /* Свойства элемента */
-el.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide){
+el.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide, obj){
   // тип элемента
   this.type = type;
   // координаты верхнего левого угла
@@ -56,6 +56,8 @@ el.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide){
   this.B = {'x': this.x+this.w, 'y': this.y};
   this.C = {'x': this.x+this.w, 'y': this.y+this.l};
   this.D = {'x': this.x, 'y': this.y+this.l};
+  
+  this.obj = obj;
 }
 
 /* Функция поиска элемента на холсте мышкой */
@@ -144,6 +146,8 @@ el.del = function(){
   if(!el.obj.s)return;
   // обнуление выделения объектов
   el.obj.s = false;
+  var a = el.obj.obj;
+  el.list[a.id] = new el.set(a.type, a.x, a.y, a.w, a.h, a.l, a.c, a.id, a.xSlide, a.ySlide, a);
   // удаление объекта элемента
   delete el.list[el.obj.id];
   // перерисовка холста для красоты и наглядности удаления
@@ -199,7 +203,7 @@ el.draggable = function(canvas, ctx){
     el.obj.C = {'x': el.obj.x+el.obj.w, 'y': el.obj.y+el.obj.l};
     el.obj.D = {'x': el.obj.x, 'y': el.obj.y+el.obj.l};
 
-	// перерисовка канваса
+	// перерисовка холста
 	redrawing(canvas, ctx, el.list);
   };
 
@@ -207,10 +211,9 @@ el.draggable = function(canvas, ctx){
     // прекращение перемещения
     if (drag) drag = false;
 	// перезапись параметров элемента
-	el.list[el.obj.id] = new el.set(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.l, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide);
+	el.list[el.obj.id] = new el.set(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.l, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide, el.obj);
 	// добавление элементов
 	el.add(this.obj, ev);
-	
   };
 }
   
@@ -243,7 +246,7 @@ function createNewProject(){
 		ctx.clearRect(0, 0, canv.width, canv.height);
 		
 		var r = new el.room();
-	    el.list[el.counter] = new el.set(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++);
+	    el.list[el.counter] = new el.set(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++, null);
 	    redrawing(canv, ctx, el.list);
 	  },
       'Отменить':function(){
@@ -264,7 +267,7 @@ function eventListener(){
   $(selector).on("mousedown", s);
   $(selector).on("mousemove", s);
   $(selector).on("mouseup", s);
-  $('#delete').on("click", el.del);
+  $('#delete').on("click", el.del); // Обработка нажатия кнопки "Удалить"
   function s(e){if(tool[e.type])tool[e.type](e)}
 }
 
@@ -390,12 +393,12 @@ function form(posXY, selector, listParameters){
 		  lp.obj.ySlide = true;
 		}
 
-		el.list[el.counter] = new el.set(els.type, x, y, els.w, els.h, els.l, els.c, el.counter++, lp.xSlide, lp.ySlide);
+		el.list[el.counter] = new el.set(els.type, x, y, els.w, els.h, els.l, els.c, el.counter++, lp.xSlide, lp.ySlide, lp.obj);
 	    /* переменной выделения приравнивается false
 		для исключения добавления элемента к не выделенному*/
 		lp.obj.s = false;
 		// перезапись элемента с новыми параметрами xSlide и ySlide
-		el.list[lp.obj.id] = new el.set(lp.obj.type, lp.obj.x, lp.obj.y, lp.obj.w, lp.obj.h, lp.obj.l, lp.obj.c, lp.obj.id, lp.obj.xSlide, lp.obj.ySlide);
+		el.list[lp.obj.id] = new el.set(lp.obj.type, lp.obj.x, lp.obj.y, lp.obj.w, lp.obj.h, lp.obj.l, lp.obj.c, lp.obj.id, lp.obj.xSlide, lp.obj.ySlide, lp.obj.obj);
 		redrawing(canv, ctx, el.list);
 	  },
       'Отменить':function(){
