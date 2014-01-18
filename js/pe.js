@@ -24,92 +24,8 @@ el.list = [];
 el.counter;
 el.type = {room:'room', hole:'hole', door:'door'};
 
-/* Функция создания нового проекта */
-function createNewProject(){
-  var wds = $('.wrap-dialog-start');
-  wds.dialog({
-    title: 'Укажите имя нового проекта',
-	position: 'top',
-	height: 125,
-	width: 250,
-    buttons: {
-	  'Создать':function(){
-		wds.dialog('close'); // закрытие диалогового окна
-		nameProject = $('#np').val(); // получение имени проекта
-		$('#nameProject').text('<'+nameProject+'>');
-		canv = document.getElementById('planEditor');
-		if (!canv){alert('Ошибка! Canvas элемент не найден!'); return;}
-		if (!canv.getContext){alert('Ошибка! Context не поддерживается!'); return;}
-		ctx = canv.getContext('2d');
-		
-	    disableSelection(document.body); //запрет выделение текста на странице
-        eventListener('#planEditor');
-		
-        tool = new Element.draggable(canv, ctx);
-		
-		el.list = [];
-		el.obj;
-		el.counter = 0;
-		ctx.clearRect(0, 0, canv.width, canv.height);
-		var r = new Element.room();
-	    el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++));
-	    redrawing(canv, ctx, el.list);
-	  },
-      'Отменить':function(){
-	    wds.dialog('close');
-	  }
-	}
-  });
-}
-
-/* Функция обработки событий на канвас
-Обработка событий:
- - mousedown - нажатие кнопки на canvas
- - mousedraggable - движение на canvas
- - mouseup - отпускание кнопки 
-*/
-function eventListener(selector){
-  $(selector).on("mousedown", s);
-  $(selector).on("mousemove", s);
-  $(selector).on("mouseup", s);
-  function s(e){if(tool[e.type])tool[e.type](e)}
-}
-
-/* Функция перерисовки холста */
-function redrawing(canvas, context, arrElem){
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  for (var i in arrElem){
-	var e = arrElem[i];
-	context.fillStyle = e.c; // цвет заливки
-	context.fillRect(e.x, e.y, e.w, e.l);
-	context.lineWidth = (e.type=='room')?2:1; // толщина линии обводки
-	if (!e.s) context.strokeStyle = 'black'; // цвет обводки
-	else context.strokeStyle = 'brown'; // цвет обводки
-	context.strokeRect(e.x+1, e.y+1, e.w-2, e.l-2); 
-  }
-  context.drawImage(canvas, 0, 0);
-}
-
-/* Функция отключения выделения текста
-Чтоб придвойном щелчке не выделялся текст на странице
-*/
-function disableSelection(target){
-  if (typeof target.onselectstart!="undefined") // для IE:
-    target.onselectstart=function(){return false}
-  else if (typeof target.style.MozUserSelect!="undefined") //для Firefox:
-    target.style.MozUserSelect="none"
-  else // для всех других (типа Оперы):
-    target.onmousedown=function(){return false}
-  target.style.cursor = "default"
-}
-
-/* Функция вычисления координаты мыши на холсте */
-function f (ev, p){
-  return (p=='x')?ev.pageX-canv.offsetLeft:ev.pageY-canv.offsetTop;
-}
-
 /* Свойства элемента */
-function Element(type, x, y, w, h, l, color, counter, xSlide, ySlide){
+var Element = function(type, x, y, w, h, l, color, counter, xSlide, ySlide){
   // тип элемента
   this.type = type;
   // координаты верхнего левого угла
@@ -141,7 +57,7 @@ function Element(type, x, y, w, h, l, color, counter, xSlide, ySlide){
   this.D = {'x': this.x, 'y': this.y+this.l};
 }
 
-/* Функция параметров комнаты */
+/* Параметры комнаты */
 Element.room = function(){
   this.x = 50;
   this.y = 100;
@@ -154,7 +70,7 @@ Element.room = function(){
   this.c = "#FFEA73";
   this.type = el.type.room;
 }
-/* Функция параметров двери */
+/* Параметры двери */
 Element.door = function(){
   this.x = 20;
   this.y = 20;
@@ -167,7 +83,7 @@ Element.door = function(){
   this.c = "#476BD6";
   this.type = el.type.door;
 }
-/* Функция параметров проёма */
+/* Параметры проёма */
 Element.hole = function(){
   this.x = 30;
   this.y = 10;
@@ -281,6 +197,90 @@ Element.draggable = function(canvas, ctx){
 	// добавление элементов
 	Element.add(this.obj, ev);
   };
+}
+
+/* Функция создания нового проекта */
+function createNewProject(){
+  var wds = $('.wrap-dialog-start');
+  wds.dialog({
+    title: 'Укажите имя нового проекта',
+	position: 'top',
+	height: 125,
+	width: 250,
+    buttons: {
+	  'Создать':function(){
+		wds.dialog('close'); // закрытие диалогового окна
+		nameProject = $('#np').val(); // получение имени проекта
+		$('#nameProject').text('<'+nameProject+'>');
+		canv = document.getElementById('planEditor');
+		if (!canv){alert('Ошибка! Canvas элемент не найден!'); return;}
+		if (!canv.getContext){alert('Ошибка! Context не поддерживается!'); return;}
+		ctx = canv.getContext('2d');
+		
+	    disableSelection(document.body); //запрет выделение текста на странице
+        eventListener('#planEditor');
+		
+        tool = new Element.draggable(canv, ctx);
+		
+		el.list = [];
+		el.obj;
+		el.counter = 0;
+		ctx.clearRect(0, 0, canv.width, canv.height);
+		var r = new Element.room();
+	    el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++));
+	    redrawing(canv, ctx, el.list);
+	  },
+      'Отменить':function(){
+	    wds.dialog('close');
+	  }
+	}
+  });
+}
+
+/* Функция обработки событий на канвас
+Обработка событий:
+ - mousedown - нажатие кнопки на canvas
+ - mousedraggable - движение на canvas
+ - mouseup - отпускание кнопки 
+*/
+function eventListener(selector){
+  $(selector).on("mousedown", s);
+  $(selector).on("mousemove", s);
+  $(selector).on("mouseup", s);
+  function s(e){if(tool[e.type])tool[e.type](e)}
+}
+
+/* Функция перерисовки холста */
+function redrawing(canvas, context, arrElem){
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  for (var i in arrElem){
+	var e = arrElem[i];
+	context.fillStyle = e.c; // цвет заливки
+	context.fillRect(e.x, e.y, e.w, e.l);
+	context.lineWidth = (e.type=='room')?2:1; // толщина линии обводки
+	if (!e.s) context.strokeStyle = 'black'; // цвет обводки
+	else context.strokeStyle = 'brown'; // цвет обводки
+	context.strokeRect(e.x+1, e.y+1, e.w-2, e.l-2); 
+  }
+  context.drawImage(canvas, 0, 0);
+}
+
+/* Функция отключения выделения текста
+Чтоб придвойном щелчке не выделялся текст на странице
+*/
+function disableSelection(target){
+  if (typeof target.onselectstart!="undefined") // для IE:
+    target.onselectstart=function(){return false}
+  else if (typeof target.style.MozUserSelect!="undefined") //для Firefox:
+    target.style.MozUserSelect="none"
+  else // для всех других (типа Оперы):
+    target.onmousedown=function(){return false}
+  target.style.cursor = "default"
+}
+
+/* Функция вычисления координаты мыши на холсте */
+function f(ev, p){
+  return (p=='x')?ev.pageX-canv.offsetLeft:ev.pageY-canv.offsetTop;
 }
 
 /* Функция модального окна выбора Двери или Проёма */
