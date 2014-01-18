@@ -24,8 +24,10 @@ el.list = [];
 el.counter;
 el.type = {room:'room', hole:'hole', door:'door'};
 
+var Element = {};
+
 /* Свойства элемента */
-var Element = function(type, x, y, w, h, l, color, counter, xSlide, ySlide){
+Element.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide){
   // тип элемента
   this.type = type;
   // координаты верхнего левого угла
@@ -55,6 +57,17 @@ var Element = function(type, x, y, w, h, l, color, counter, xSlide, ySlide){
   this.B = {'x': this.x+this.w, 'y': this.y};
   this.C = {'x': this.x+this.w, 'y': this.y+this.l};
   this.D = {'x': this.x, 'y': this.y+this.l};
+}
+
+/* Функция поиска элемента на холсте мышкой */
+Element.get = function(x, y){
+  for (var i in el.list){
+    var e = el.list[i];
+    if (x > e.A['x'] && x < e.C['x'])
+    if (y > e.A['y'] && y < e.C['y'])
+	  return e;
+  }
+  return false;
 }
 
 /* Параметры комнаты */
@@ -95,17 +108,6 @@ Element.hole = function(){
   
   this.c = "#FF7A00";
   this.type = el.type.hole;
-}
-
-/* Функция поиска элемента на холсте мышкой */
-Element.find = function(x, y){
-  for (var i in el.list){
-    var e = el.list[i];
-    if (x > e.A['x'] && x < e.C['x'])
-    if (y > e.A['y'] && y < e.C['y'])
-	  return e;
-  }
-  return false;
 }
 
 /* Функция создания элемента в выбранном направлении */
@@ -152,7 +154,7 @@ Element.draggable = function(canvas, ctx){
     x = f(ev, 'x');
     y = f(ev, 'y');
 	// поиск элемента на холсте
-	el.obj = Element.find(x, y);
+	el.obj = Element.get(x, y);
 	if (el.obj){
 	  // положение мышки на объкте
 	  el.obj.offsetX = x - el.obj.x;
@@ -193,7 +195,7 @@ Element.draggable = function(canvas, ctx){
     // прекращение перемещения
     if (drag) drag = false;
 	// перезапись параметров элемента
-	el.list[el.obj.id] = new Element(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.l, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide);
+	el.list[el.obj.id] = new Element.set(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.l, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide);
 	// добавление элементов
 	Element.add(this.obj, ev);
   };
@@ -226,8 +228,9 @@ function createNewProject(){
 		el.obj;
 		el.counter = 0;
 		ctx.clearRect(0, 0, canv.width, canv.height);
+		
 		var r = new Element.room();
-	    el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++));
+	    el.list.push(new Element.set(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++));
 	    redrawing(canv, ctx, el.list);
 	  },
       'Отменить':function(){
@@ -376,7 +379,7 @@ function form(posXY, selector, listParameters){
 		для исключения добавления элемента к не выделенному*/
 		lp.obj.s = false;
 		// перезапись элемента с новыми параметрами xSlide и ySlide
-		el.list[lp.obj.id] = new Element(lp.obj.type, lp.obj.x, lp.obj.y, lp.obj.w, lp.obj.h, lp.obj.l, lp.obj.c, lp.obj.id, lp.obj.xSlide, lp.obj.ySlide);
+		el.list[lp.obj.id] = new Element.set(lp.obj.type, lp.obj.x, lp.obj.y, lp.obj.w, lp.obj.h, lp.obj.l, lp.obj.c, lp.obj.id, lp.obj.xSlide, lp.obj.ySlide);
 	  },
       'Отменить':function(){
 	    jq.dialog('close');
@@ -393,7 +396,7 @@ function form(posXY, selector, listParameters){
   p.c - цвет
   */
   function elem(x, y, p, xSlide, ySlide){
-    el.list.push(new Element(p.type, x, y, p.w, p.h, p.l, p.c, el.counter++, xSlide, ySlide));
+    el.list.push(new Element.set(p.type, x, y, p.w, p.h, p.l, p.c, el.counter++, xSlide, ySlide));
     redrawing(canv, ctx, el.list);
   }
   /* Функция определения случайного числа для задания координаты элемента*/
