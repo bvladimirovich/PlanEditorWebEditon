@@ -44,7 +44,6 @@ function createNewProject(){
 		
 	    disableSelection(document.body); //запрет выделение текста на странице
         eventListener('#planEditor'); //обработка событий на канвас
-	    createNewElement();  // добавление элемента
 		
         tool = new draggable(canv, ctx);
 		
@@ -52,8 +51,8 @@ function createNewProject(){
 		el.obj;
 		el.counter = 0;
 		ctx.clearRect(0, 0, canv.width, canv.height);
-		var r = new Room();
-	    el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++, null, null, 0));
+		var r = new Element.room();
+	    el.list.push(new Element(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++));
 	    redrawing(canv, ctx, el.list);
 	  },
       'Отменить':function(){
@@ -74,79 +73,6 @@ function eventListener(selector){
   $(selector).on("mousemove", s);
   $(selector).on("mouseup", s);
   function s(e){if(tool[e.type])tool[e.type](e)}
-}
-
-/* Функция параметров комнаты*/
-function Room (){
-  this.x = 50;
-  this.y = 100;
-  this.z = 0; // определяет этаж
-  
-  this.w = 70;
-  this.l = 70;
-  this.h = 70;
-  
-  this.c = "#FFEA73";
-  this.type = el.type.room;
-}
-/* Функция параметров двери*/
-function Door (){
-  this.x = 20;
-  this.y = 20;
-  this.z = 0;
-  
-  this.w = 40;
-  this.l = 20;
-  this.h = 20;
-  
-  this.c = "#476BD6";
-  this.type = el.type.door;
-}
-/* Функция параметров проема*/
-function Hole (){
-  this.x = 30;
-  this.y = 10;
-  this.z = 0;
-  
-  this.w = 70;
-  this.h = 10;
-  this.l = 10;
-  
-  this.c = "#FF7A00";
-  this.type = el.type.hole;
-}
-
-/* функция добавления элементов
- - Room - комната
- - Door - дверь
- - Hole - проем
-*/
-function createNewElement(){
-  var p;
-  $('#room').click(function() {
-	p = new Room();
-	el.list.push(new Element(el.type.room, p.x, p.y, p.w, p.h, p.l, p.c, el.counter++));
-	redrawing(canv, ctx, el.list);
-	if(el.obj)el.obj.s=false;
-  });
-  $('#door').click(function() {
-	if (!el.obj) return;
-	if (el.obj.s && el.obj.type == 'room'){
-	  p = new Door();
-	  el.list.push(new Element(el.type.door, p.x, p.y, p.w, p.h, p.l, p.c, el.counter++));
-	  redrawing(canv, ctx, el.list);
-	  el.obj.s=false;
-	}
-  });
-  $('#hole').click(function() {
-	if (!el.obj) return;
-	if (el.obj.s && el.obj.type == 'room'){
-	  p = new Hole();
-	  el.list.push(new Element(el.type.hole, p.x, p.y, p.w, p.h, p.l, p.c, el.counter++));
-	  redrawing(canv, ctx, el.list);
-	  el.obj.s=false;
-	}
-  });
 }
 
 /* Функция перерисовки холста */
@@ -197,6 +123,85 @@ function Element(type, x, y, w, h, l, color, counter, xSlide, ySlide){
   this.D = {'x': this.x, 'y': this.y+this.l};
 }
 
+/* Функция параметров комнаты*/
+Element.room = function(){
+  this.x = 50;
+  this.y = 100;
+  this.z = 0; // определяет этаж
+  
+  this.w = 70;
+  this.l = 70;
+  this.h = 70;
+  
+  this.c = "#FFEA73";
+  this.type = el.type.room;
+}
+/* Функция параметров двери*/
+Element.door = function(){
+  this.x = 20;
+  this.y = 20;
+  this.z = 0;
+  
+  this.w = 40;
+  this.l = 20;
+  this.h = 20;
+  
+  this.c = "#476BD6";
+  this.type = el.type.door;
+}
+/* Функция параметров проема*/
+Element.hole = function(){
+  this.x = 30;
+  this.y = 10;
+  this.z = 0;
+  
+  this.w = 70;
+  this.h = 10;
+  this.l = 10;
+  
+  this.c = "#FF7A00";
+  this.type = el.type.hole;
+}
+
+/* Функция поиска элемента на холсте мышкой*/
+Element.find = function(x, y){
+  for (var i in el.list){
+    var e = el.list[i];
+    if (x > e.A['x'] && x < e.C['x'])
+    if (y > e.A['y'] && y < e.C['y'])
+	  return e;
+  }
+  return false;
+}
+
+/* Функция создания элемента в выбранном направлении */
+Element.add = function(obj, ev){
+  if (!obj) return;
+  var posXY = [f(ev, 'x'), f(ev, 'y')], side = s(posXY);
+  if (obj.type == el.type.room){ // будут добавляться только двери и проёмы
+	if(side)createHoleOrDoor(posXY, side, obj);
+  }else { // будут добавляться только комнаты
+	if (side=='l'||side=='r'){
+	  if (obj.l > obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Element.room()});
+	}else if (side=='t'||side=='b'){
+	  if (obj.l < obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Element.room()});
+	}
+  }
+  /* Функция определения выбора стороны создания нового элемента */
+  function s(posXY) { // s = side
+    var x = posXY[0], y = posXY[1];	
+    if (x < obj.A['x'] && y > obj.A['y'] && y < obj.D['y']) 
+	  return 'l'; //left
+	if (x > obj.B['x'] && y > obj.B['y'] && y < obj.C['y'])
+	  return 'r'; //right
+	if (x > obj.A['x'] && x < obj.B['x'] && y < obj.A['y'])
+	  return 't'; //top
+	if (x > obj.D['x'] && x < obj.C['x'] && y > obj.D['y'])
+	  return 'b'; //bottom
+	return false;
+  }
+}
+
 /* Функция отключения выделения текста
 Чтоб придвойном щелчке не выделялся текст на странице
 */
@@ -231,7 +236,7 @@ function draggable(canvas, ctx){
     x = f(ev, 'x');
     y = f(ev, 'y');
 	// поиск элемента на холсте
-	el.obj = findElemenet(x, y);
+	el.obj = Element.find(x, y);
 	if (el.obj){
 	  // положение мышки на объкте
 	  el.obj.offsetX = x - el.obj.x;
@@ -274,47 +279,8 @@ function draggable(canvas, ctx){
 	// перезапись параметров элемента
 	el.list[el.obj.id] = new Element(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.l, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide);
 	// добавление элементов
-	addElement(this.obj, ev);
+	Element.add(this.obj, ev);
   };
-}
-
-/* Функция поиска элемента на холсте мышкой*/
-function findElemenet(x, y){
-  for (var i in el.list){
-    var e = el.list[i];
-    if (x > e.A['x'] && x < e.C['x'])
-    if (y > e.A['y'] && y < e.C['y'])
-	  return e;
-  }
-  return false;
-}
-
-/* Функция создания элемента в выбранном направлении */
-function addElement(obj, ev){
-  if (!obj && !obj.s) return;
-  var posXY = [f(ev, 'x'), f(ev, 'y')], side = s(posXY);
-  if (obj.type == el.type.room){ // будут добавляться только двери и проёмы
-	if(side)createHoleOrDoor(posXY, side, obj);
-  }else { // будут добавляться только комнаты
-	if (side=='l'||side=='r'){
-	  if (obj.l > obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Room()});
-	}else if (side=='t'||side=='b'){
-	  if (obj.l < obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Room()});
-	}
-  }
-  /* Функция определения выбора стороны создания нового элемента */
-  function s(posXY) { // s = side
-    var x = posXY[0], y = posXY[1];	
-    if (x < obj.A['x'] && y > obj.A['y'] && y < obj.D['y']) 
-	  return 'l'; //left
-	if (x > obj.B['x'] && y > obj.B['y'] && y < obj.C['y'])
-	  return 'r'; //right
-	if (x > obj.A['x'] && x < obj.B['x'] && y < obj.A['y'])
-	  return 't'; //top
-	if (x > obj.D['x'] && x < obj.C['x'] && y > obj.D['y'])
-	  return 'b'; //bottom
-	return false;
-  }
 }
 
 /* Функция модального окна выбора Двери или Проема */
@@ -327,11 +293,11 @@ function createHoleOrDoor(posXY, side, obj){
     buttons: {
 	  'Проем':function(){
 	    $('#modalWindow').dialog('close');
-		form(posXY, '#wrapHoleForm', {side:side, obj:obj, element:new Hole});
+		form(posXY, '#wrapHoleForm', {side:side, obj:obj, element:new Element.hole});
 	  },
       'Дверь':function(){
 	    $('#modalWindow').dialog('close');
-		form(posXY, '#wrapDoorForm', {side:side, obj:obj, element:new Door});
+		form(posXY, '#wrapDoorForm', {side:side, obj:obj, element:new Element.door});
 	  }
 	}
   });
