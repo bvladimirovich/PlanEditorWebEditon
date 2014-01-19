@@ -25,6 +25,14 @@ el.list = {}; // список всех элементов
 el.counter = 0; // счётчик элементов
 el.type = {room:'room', hole:'hole', door:'door'};
 
+var opa = function(){};
+opa.prototype.set = function(obj){
+  this.obj = obj;
+}
+opa.prototype.get = function(){
+  alert(this.obj.type);
+}
+
 /* Свойства элемента */
 el.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide, obj){
   // тип элемента
@@ -164,6 +172,7 @@ el.draggable = function(canvas, ctx){
   var drag = false;
   // временное хранилище элемента
   this.obj = {};
+  var o = new opa();
   
   this.mousedown = function (ev) {
     // координаты в момент нажатия кнопки мыши
@@ -172,6 +181,7 @@ el.draggable = function(canvas, ctx){
 	// поиск элемента на холсте
 	el.obj = el.get(x, y);
 	if (el.obj){
+	  o.set(el.obj);
 	  // положение мышки на объкте
 	  el.obj.offsetX = x - el.obj.x;
 	  el.obj.offsetY = y - el.obj.y;
@@ -214,6 +224,7 @@ el.draggable = function(canvas, ctx){
 	el.list[el.obj.id] = new el.set(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.l, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide, el.obj);
 	// добавление элементов
 	el.add(this.obj, ev);
+	o.get();
   };
 }
   
