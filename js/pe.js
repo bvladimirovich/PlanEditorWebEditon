@@ -14,16 +14,14 @@
  ! Возможность добавления подложки => прозрачные элементы
 */
 
-// Глобальные переменные
-var nameProject;
-var canv;
-var ctx;
-
-var el = {};  // элемент
-el.obj = {};  // последний элемент
-el.list = {}; // список всех элементов
-el.counter = 0; // счётчик элементов
-el.type = {room:'room', hole:'hole', door:'door'};
+var Canvas;
+var Context;
+var Counter;
+var List;
+var ActiveObj;
+var ActivEl;
+var Entity;
+var el = {};
 
 /* Свойства элемента */
 el.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide, obj){
@@ -62,8 +60,8 @@ el.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide, obj){
 
 /* Функция поиска элемента на холсте мышкой */
 el.get = function(x, y){
-  for (var i in el.list){
-    var e = el.list[i];
+  for (var i in List){
+    var e = List[i];
     if (x > e.A['x'] && x < e.C['x'])
     if (y > e.A['y'] && y < e.C['y'])
 	  return e;
@@ -71,58 +69,18 @@ el.get = function(x, y){
   return false;
 }
 
-/* Параметры комнаты */
-el.room = function(){
-  this.x = 50;
-  this.y = 100;
-  this.z = 0; // определяет этаж
-  
-  this.w = 70;
-  this.l = 70;
-  this.h = 70;
-  
-  this.c = "#FFEA73";
-  this.type = el.type.room;
-}
-/* Параметры двери */
-el.door = function(){
-  this.x = 20;
-  this.y = 20;
-  this.z = 0;
-  
-  this.w = 40;
-  this.l = 20;
-  this.h = 20;
-  
-  this.c = "#476BD6";
-  this.type = el.type.door;
-}
-/* Параметры проёма */
-el.hole = function(){
-  this.x = 30;
-  this.y = 10;
-  this.z = 0;
-  
-  this.w = 70;
-  this.h = 10;
-  this.l = 20;
-  
-  this.c = "#FF7A00";
-  this.type = el.type.hole;
-}
-
 /* Функция создания элемента в выбранном направлении */
 el.add = function(obj, ev){
   if (!obj) return;
   if (!obj.s) return;
   var posXY = [f(ev, 'x'), f(ev, 'y')], side = s(posXY);
-  if (obj.type == el.type.room){ // будут добавляться только двери и проёмы
+  if (obj.type == 'room'){ // будут добавляться только двери и проёмы
 	if(side)createHoleOrDoor(posXY, side, obj);
   }else { // будут добавляться только комнаты
 	if (side=='l'||side=='r'){
-	  if (obj.l > obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new el.room()});
+	  if (obj.l > obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Entity.room});
 	}else if (side=='t'||side=='b'){
-	  if (obj.l < obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new el.room()});
+	  if (obj.l < obj.w) form(posXY, '#wrapRoomForm', {side:side, obj:obj, element:new Entity.room});
 	}
   }
   /* Функция определения выбора стороны создания нового элемента */
@@ -143,19 +101,19 @@ el.add = function(obj, ev){
 /* Функция удаления элемента */
 el.del = function(){
   // если не выделен ни один объект, удаление не возможно
-  if(!el.obj.s)return;
+  if(!ActiveObj.s)return;
   // обнуление выделения объектов
-  el.obj.s = false;
+  ActiveObj.s = false;
   // удаление объекта элемента
-  delete el.list[el.obj.id];
+  delete List[ActiveObj.id];
   // перерисовка холста для красоты и наглядности удаления
-  redrawing(canv, ctx, el.list);
+  redrawing(Canvas, Context, List);
 }
 
 /* Функция перемещения элемента */
-el.draggable = function(canvas, ctx){
+function draggable(Сanvas, Context){
   // курсор в режиме рисования (по умолчанию)
-  canvas.style.cursor = 'default';
+  Сanvas.style.cursor = 'default';
   // координаты элемента
   var x, y;
   // флаг перемещения
@@ -168,21 +126,21 @@ el.draggable = function(canvas, ctx){
     x = f(ev, 'x');
     y = f(ev, 'y');
 	// поиск элемента на холсте
-	el.obj = el.get(x, y);
-	if (el.obj){
+	ActiveObj = el.get(x, y);
+	if (ActiveObj){
 	  // положение мышки на объекте
-	  el.obj.offsetX = x - el.obj.x;
-	  el.obj.offsetY = y - el.obj.y;
+	  ActiveObj.offsetX = x - ActiveObj.x;
+	  ActiveObj.offsetY = y - ActiveObj.y;
 	  // старт перемещения
 	  if (!drag) drag = true;
 	  // выделение элемента
-	  el.obj.s = true;
+	  ActiveObj.s = true;
 	  /*! Перерисовка производится только для отображения выделения элемента
 	  Возможно, это замедлит работу, но пока исправить это не могу*/
-	  redrawing(canvas, ctx, el.list);
+	  redrawing(Сanvas, Context, List);
 	  // запись выбранного элемента во временную переменную
 	  // для передачи ее в функцию создания элемента в выбранном направлении
-	  this.obj = el.obj;
+	  this.obj = ActiveObj;
 	}
   };
 
@@ -193,23 +151,23 @@ el.draggable = function(canvas, ctx){
 
 	if (!drag) return;
 	//изменение координат фигуры
-	el.obj.x = el.obj.xSlide?el.obj.x:(x - el.obj.offsetX);
-	el.obj.y = el.obj.ySlide?el.obj.y:(y - el.obj.offsetY);
+	ActiveObj.x = ActiveObj.xSlide?ActiveObj.x:(x - ActiveObj.offsetX);
+	ActiveObj.y = ActiveObj.ySlide?ActiveObj.y:(y - ActiveObj.offsetY);
 	
-	el.obj.A = {'x': el.obj.x, 'y': el.obj.y};
-    el.obj.B = {'x': el.obj.x+el.obj.w, 'y': el.obj.y};
-    el.obj.C = {'x': el.obj.x+el.obj.w, 'y': el.obj.y+el.obj.l};
-    el.obj.D = {'x': el.obj.x, 'y': el.obj.y+el.obj.l};
+	ActiveObj.A = {'x': ActiveObj.x, 'y': ActiveObj.y};
+    ActiveObj.B = {'x': ActiveObj.x+ActiveObj.w, 'y': ActiveObj.y};
+    ActiveObj.C = {'x': ActiveObj.x+ActiveObj.w, 'y': ActiveObj.y+ActiveObj.l};
+    ActiveObj.D = {'x': ActiveObj.x, 'y': ActiveObj.y+ActiveObj.l};
 
 	// перерисовка холста
-	redrawing(canvas, ctx, el.list);
+	redrawing(Сanvas, Context, List);
   };
 
   this.mouseup = function (ev) {
     // прекращение перемещения
     if (drag) drag = false;
 	// перезапись параметров элемента
-	el.list[el.obj.id] = new el.set(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.l, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide, el.obj);
+	List[ActiveObj.id] = new el.set(ActiveObj.type, ActiveObj.x, ActiveObj.y, ActiveObj.w, ActiveObj.h, ActiveObj.l, ActiveObj.c, ActiveObj.id, ActiveObj.xSlide, ActiveObj.ySlide, ActiveObj);
 	// добавление элементов
 	el.add(this.obj, ev);
   };
@@ -218,6 +176,7 @@ el.draggable = function(canvas, ctx){
 /* Функция создания нового проекта */
 function createNewProject(){
   var wds = $('.wrap-dialog-start');
+  var NameProject;
   wds.dialog({
     title: 'Укажите имя нового проекта',
 	position: 'top',
@@ -226,26 +185,23 @@ function createNewProject(){
     buttons: {
 	  'Создать':function(){
 		wds.dialog('close'); // закрытие диалогового окна
-		nameProject = $('#np').val(); // получение имени проекта
-		$('#nameProject').text('<'+nameProject+'>');
-		canv = document.getElementById('planEditor');
-		if (!canv){alert('Ошибка! Canvas элемент не найден!'); return;}
-		if (!canv.getContext){alert('Ошибка! Context не поддерживается!'); return;}
-		ctx = canv.getContext('2d');
+		NameProject = $('#np').val(); // получение имени проекта
+		$('#nameProject').text('<'+NameProject+'>');
+		
+		Canvas = new Canva('planEditor');
+		Context = Canvas.getContext('2d');
+		Counter = 0;
+		List = {};
+		ActiveObj = {};
+		ActivEl = new ActiveElement;
+		Entity = new EntityElement;
+		
+		var _r = new Entity.room;
+		List[Counter] = new el.set(_r.type, _r.x, _r.y, _r.w, _r.h, _r.l, _r.c, Counter++, null);
+	    redrawing(Canvas, Context, List);
 		
 	    disableSelection(document.body); //запрет выделение текста на странице
-        eventListener();
-		
-        tool = new el.draggable(canv, ctx);
-		
-		el.list = {};
-		el.obj;
-		el.counter = 0;
-		ctx.clearRect(0, 0, canv.width, canv.height);
-		
-		var r = new el.room();
-		el.list[el.counter] = new el.set(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++, null);
-	    redrawing(canv, ctx, el.list);
+        eventListener(new draggable(Canvas, Context));
 	  },
       'Отменить':function(){
 	    wds.dialog('close');
@@ -260,13 +216,13 @@ function createNewProject(){
  - mousedraggable - движение на canvas
  - mouseup - отпускание кнопки 
 */
-function eventListener(){
+function eventListener(tool){
+  function s(e){if(tool[e.type])tool[e.type](e)}
   var selector = '#planEditor';
   $(selector).on("mousedown", s);
   $(selector).on("mousemove", s);
   $(selector).on("mouseup", s);
   $('#delete').on("click", el.del); // Обработка нажатия кнопки "Удалить"
-  function s(e){if(tool[e.type])tool[e.type](e)}
 }
 
 /* Функция перерисовки холста */
@@ -300,7 +256,7 @@ function disableSelection(target){
 
 /* Функция вычисления координаты мыши на холсте */
 function f(ev, p){
-  return (p=='x')?ev.pageX-canv.offsetLeft:ev.pageY-canv.offsetTop;
+  return (p=='x')?ev.pageX-Canvas.offsetLeft:ev.pageY-Canvas.offsetTop;
 }
 
 /* Функция модального окна выбора Двери или Проёма */
@@ -313,11 +269,11 @@ function createHoleOrDoor(posXY, side, obj){
     buttons: {
 	  'Проем':function(){
 	    $('#modalWindow').dialog('close');
-		form(posXY, '#wrapHoleForm', {side:side, obj:obj, element:new el.hole});
+		form(posXY, '#wrapHoleForm', {side:side, obj:obj, element:new Entity.hole});
 	  },
       'Дверь':function(){
 	    $('#modalWindow').dialog('close');
-		form(posXY, '#wrapDoorForm', {side:side, obj:obj, element:new el.door});
+		form(posXY, '#wrapDoorForm', {side:side, obj:obj, element:new Entity.door});
 	  }
 	}
   });
@@ -361,7 +317,7 @@ function form(posXY, selector, listParameters){
 	    jq.dialog('close');
 		
 		/* Поворот элемента, если это дверь или проем */
-		if(selector=='#wrapDoorForm'||'#wrapHoleForm')
+		if(selector=='#wrapDoorForm'||selector=='#wrapHoleForm')
 		if(lp.side=='l'||lp.side=='r'){
 		  els.w = els.l;
 		  els.l = tmpW;
@@ -391,13 +347,13 @@ function form(posXY, selector, listParameters){
 		  lp.obj.ySlide = true;
 		}
 
-		el.list[el.counter] = new el.set(els.type, x, y, els.w, els.h, els.l, els.c, el.counter++, lp.xSlide, lp.ySlide, lp.obj);
+		List[Counter] = new el.set(els.type, x, y, els.w, els.h, els.l, els.c, Counter++, lp.xSlide, lp.ySlide, lp.obj);
 	    /* переменной выделения приравнивается false
 		для исключения добавления элемента к не выделенному*/
 		lp.obj.s = false;
 		// перезапись элемента с новыми параметрами xSlide и ySlide
-		el.list[lp.obj.id] = new el.set(lp.obj.type, lp.obj.x, lp.obj.y, lp.obj.w, lp.obj.h, lp.obj.l, lp.obj.c, lp.obj.id, lp.obj.xSlide, lp.obj.ySlide, lp.obj.obj);
-		redrawing(canv, ctx, el.list);
+		List[lp.obj.id] = new el.set(lp.obj.type, lp.obj.x, lp.obj.y, lp.obj.w, lp.obj.h, lp.obj.l, lp.obj.c, lp.obj.id, lp.obj.xSlide, lp.obj.ySlide, lp.obj.obj);
+		redrawing(Canvas, Context, List);
 	  },
       'Отменить':function(){
 	    jq.dialog('close');
