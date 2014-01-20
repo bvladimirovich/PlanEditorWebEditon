@@ -172,7 +172,7 @@ el.draggable = function(canvas, ctx){
 	// поиск элемента на холсте
 	el.obj = el.get(x, y);
 	if (el.obj){
-	  // положение мышки на объкте
+	  // положение мышки на объекте
 	  el.obj.offsetX = x - el.obj.x;
 	  el.obj.offsetY = y - el.obj.y;
 	  // старт перемещения
@@ -240,13 +240,13 @@ function createNewProject(){
 		
         tool = new el.draggable(canv, ctx);
 		
-		el.list = [];
+		el.list = {};
 		el.obj;
 		el.counter = 0;
 		ctx.clearRect(0, 0, canv.width, canv.height);
 		
-		var r = new el.room();
-	    el.list[el.counter] = new el.set(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++, null);
+		var r = new el.room;
+		el.list[el.counter] = new el.set(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++, null);
 	    redrawing(canv, ctx, el.list);
 	  },
       'Отменить':function(){
@@ -394,6 +394,7 @@ function form(posXY, selector, listParameters){
 		}
 
 		el.list[el.counter] = new el.set(els.type, x, y, els.w, els.h, els.l, els.c, el.counter++, lp.xSlide, lp.ySlide, lp.obj);
+		
 	    /* переменной выделения приравнивается false
 		для исключения добавления элемента к не выделенному*/
 		lp.obj.s = false;
