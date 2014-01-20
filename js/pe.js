@@ -25,6 +25,46 @@ el.list = {}; // список всех элементов
 el.counter = 0; // счётчик элементов
 el.type = {room:'room', hole:'hole', door:'door'};
 
+var $r, $d, $h; // глобальные переменные для элементов
+
+var _elem = new Element.Properties;
+var _$ = new Element.UI;
+var list = new Element.List;
+var room = new Element.Entity,
+    hole = new Element.Entity,
+    door = new Element.Entity;
+
+$r = room.set({
+  type:'room',
+  x:100,
+  y:100,
+  z:100,
+  color: 'red',
+  _width:50,
+  _length:80,
+  _height:60
+});
+$d = door.set({
+  type:'door',
+  x:100,
+  y:100,
+  z:100,
+  color: '#476BD6',
+  _width:50,
+  _length:80,
+  _height:60
+});
+$h = hole.set({
+  type:'hole',
+  x:100,
+  y:100,
+  z:100,
+  color: '#FF7A00',
+  _width:50,
+  _length:80,
+  _height:60
+});
+
 /* Свойства элемента */
 el.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide, obj){
   // тип элемента
@@ -213,7 +253,8 @@ el.draggable = function(canvas, ctx){
 	// перезапись параметров элемента
 	el.list[el.obj.id] = new el.set(el.obj.type, el.obj.x, el.obj.y, el.obj.w, el.obj.h, el.obj.l, el.obj.c, el.obj.id, el.obj.xSlide, el.obj.ySlide, el.obj);
 	// добавление элементов
-	el.add(this.obj, ev);
+	//el.add(this.obj, ev);
+	_$.add(this.obj, ev);
   };
 }
   
@@ -245,9 +286,19 @@ function createNewProject(){
 		el.counter = 0;
 		ctx.clearRect(0, 0, canv.width, canv.height);
 		
-		var r = new el.room;
-		el.list[el.counter] = new el.set(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++, null);
-	    redrawing(canv, ctx, el.list);
+		$r = room.get();
+		$d = door.get();
+		$h = hole.get();
+		//alert($r.toString());
+	    el.list[el.counter] = new el.set(el.type.room, $r.x, $r.y, $r.w, $r.h, $r.l, $r.c, el.counter++, null);
+		_elem.setProperties('room', $r.x, $r.y, $r.z, $r.w, $r.h, $r.l, $r.c, el.counter);
+		//type, x, y, z, width, height, length, color, counter, xSlide, ySlide, obj
+		var xeraks = _elem.getProperties();
+		list.add(xeraks, el.counter++);
+		var listik = list.getAll();
+		alert(listik.type);
+		
+	    redrawing(canv, ctx, listik);
 	  },
       'Отменить':function(){
 	    wds.dialog('close');
@@ -267,24 +318,32 @@ function eventListener(){
   $(selector).on("mousedown", s);
   $(selector).on("mousemove", s);
   $(selector).on("mouseup", s);
-  $('#delete').on("click", el.del); // Обработка нажатия кнопки "Удалить"
+  $('#delete').on("click", function(){_$.remove(el.obj, canv, ctx, el.list)}); // Обработка нажатия кнопки "Удалить"
   function s(e){if(tool[e.type])tool[e.type](e)}
 }
 
 /* Функция перерисовки холста */
 function redrawing(canvas, context, arrElem){
+  alert('start');
   if(!canvas || !context) return;
+  alert('1');
   context.clearRect(0, 0, canvas.width, canvas.height);
+  alert('2');
   for (var i in arrElem){
+    alert('3');
 	var e = arrElem[i];
+	alert('4 '+e.type);
 	context.fillStyle = e.c; // цвет заливки
+	alert('5 '+e.c);
 	context.fillRect(e.x, e.y, e.w, e.l);
+	alert('6 '+e.x+' '+e.y+' '+e.w+' '+e.l);
 	context.lineWidth = (e.type=='room')?2:1; // толщина линии обводки
 	if (!e.s) context.strokeStyle = 'black'; // цвет обводки
 	else context.strokeStyle = 'brown'; // цвет обводки
 	context.strokeRect(e.x+1, e.y+1, e.w-2, e.l-2); 
   }
   context.drawImage(canvas, 0, 0);
+  alert('end');
 }
 
 /* Функция отключения выделения текста
@@ -394,6 +453,7 @@ function form(posXY, selector, listParameters){
 		}
 
 		el.list[el.counter] = new el.set(els.type, x, y, els.w, els.h, els.l, els.c, el.counter++, lp.xSlide, lp.ySlide, lp.obj);
+		list.add(_elem.setProperties(els.type, x, y, els.w, els.h, els.l, els.c, el.counter, lp.xSlide, lp.ySlide, lp.obj), el.counter++);
 		
 	    /* переменной выделения приравнивается false
 		для исключения добавления элемента к не выделенному*/
