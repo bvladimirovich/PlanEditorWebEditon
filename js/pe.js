@@ -146,8 +146,6 @@ el.del = function(){
   if(!el.obj.s)return;
   // обнуление выделения объектов
   el.obj.s = false;
-  var a = el.obj.obj;
-  el.list[a.id] = new el.set(a.type, a.x, a.y, a.w, a.h, a.l, a.c, a.id, a.xSlide, a.ySlide, a);
   // удаление объекта элемента
   delete el.list[el.obj.id];
   // перерисовка холста для красоты и наглядности удаления
@@ -172,7 +170,7 @@ el.draggable = function(canvas, ctx){
 	// поиск элемента на холсте
 	el.obj = el.get(x, y);
 	if (el.obj){
-	  // положение мышки на объкте
+	  // положение мышки на объекте
 	  el.obj.offsetX = x - el.obj.x;
 	  el.obj.offsetY = y - el.obj.y;
 	  // старт перемещения
@@ -240,13 +238,13 @@ function createNewProject(){
 		
         tool = new el.draggable(canv, ctx);
 		
-		el.list = [];
+		el.list = {};
 		el.obj;
 		el.counter = 0;
 		ctx.clearRect(0, 0, canv.width, canv.height);
 		
 		var r = new el.room();
-	    el.list[el.counter] = new el.set(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++, null);
+		el.list[el.counter] = new el.set(el.type.room, r.x, r.y, r.w, r.h, r.l, r.c, el.counter++, null);
 	    redrawing(canv, ctx, el.list);
 	  },
       'Отменить':function(){
