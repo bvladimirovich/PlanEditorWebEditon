@@ -21,10 +21,9 @@ var List;
 var ActiveObj;
 var ActivEl;
 var Entity;
-var el = {};
 
 /* Свойства элемента */
-el.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide, obj){
+var Element = function(type, x, y, w, h, l, color, counter, xSlide, ySlide, obj){
   // тип элемента
   this.type = type;
   // координаты верхнего левого угла
@@ -59,7 +58,7 @@ el.set = function(type, x, y, w, h, l, color, counter, xSlide, ySlide, obj){
 }
 
 /* Функция поиска элемента на холсте мышкой */
-el.get = function(x, y){
+var FindElement = function(x, y){
   for (var i in List){
     var e = List[i];
     if (x > e.A['x'] && x < e.C['x'])
@@ -70,7 +69,7 @@ el.get = function(x, y){
 }
 
 /* Функция создания элемента в выбранном направлении */
-el.add = function(obj, ev){
+var AddedElement = function(obj, ev){
   if (!obj) return;
   if (!obj.s) return;
   var posXY = [f(ev, 'x'), f(ev, 'y')], side = s(posXY);
@@ -99,7 +98,7 @@ el.add = function(obj, ev){
 }
 
 /* Функция удаления элемента */
-el.del = function(){
+var DeleteElement = function(){
   // если не выделен ни один объект, удаление не возможно
   if(!ActiveObj.s)return;
   // обнуление выделения объектов
@@ -115,7 +114,7 @@ function draggable(Сanvas, Context){
   // курсор в режиме рисования (по умолчанию)
   Сanvas.style.cursor = 'default';
   // координаты элемента
-  var x, y;
+  var _x, _y;
   // флаг перемещения
   var drag = false;
   // временное хранилище элемента
@@ -123,14 +122,14 @@ function draggable(Сanvas, Context){
   
   this.mousedown = function (ev) {
     // координаты в момент нажатия кнопки мыши
-    x = f(ev, 'x');
-    y = f(ev, 'y');
+    _x = f(ev, 'x');
+    _y = f(ev, 'y');
 	// поиск элемента на холсте
-	ActiveObj = el.get(x, y);
+	ActiveObj = FindElement(_x, _y);
 	if (ActiveObj){
 	  // положение мышки на объекте
-	  ActiveObj.offsetX = x - ActiveObj.x;
-	  ActiveObj.offsetY = y - ActiveObj.y;
+	  ActiveObj.offsetX = _x - ActiveObj.x;
+	  ActiveObj.offsetY = _y - ActiveObj.y;
 	  // старт перемещения
 	  if (!drag) drag = true;
 	  // выделение элемента
@@ -146,19 +145,20 @@ function draggable(Сanvas, Context){
 
   this.mousemove = function (ev) {
     // координаты в момент перемещения мышки
-	x = f(ev, 'x');
-	y = f(ev, 'y');
+	_x = f(ev, 'x');
+	_y = f(ev, 'y');
 
 	if (!drag) return;
-	//изменение координат фигуры
-	ActiveObj.x = ActiveObj.xSlide?ActiveObj.x:(x - ActiveObj.offsetX);
-	ActiveObj.y = ActiveObj.ySlide?ActiveObj.y:(y - ActiveObj.offsetY);
+	with(ActiveObj){
+	  //изменение координат фигуры
+	  x = xSlide?x:(_x - offsetX);
+	  y = ySlide?y:(_y - offsetY);
 	
-	ActiveObj.A = {'x': ActiveObj.x, 'y': ActiveObj.y};
-    ActiveObj.B = {'x': ActiveObj.x+ActiveObj.w, 'y': ActiveObj.y};
-    ActiveObj.C = {'x': ActiveObj.x+ActiveObj.w, 'y': ActiveObj.y+ActiveObj.l};
-    ActiveObj.D = {'x': ActiveObj.x, 'y': ActiveObj.y+ActiveObj.l};
-
+	  A = {'x': x, 'y': y};
+      B = {'x': x+w, 'y': y};
+      C = {'x': x+w, 'y': y+l};
+      D = {'x': x, 'y': y+l};
+	}
 	// перерисовка холста
 	redrawing(Сanvas, Context, List);
   };
@@ -167,9 +167,9 @@ function draggable(Сanvas, Context){
     // прекращение перемещения
     if (drag) drag = false;
 	// перезапись параметров элемента
-	List[ActiveObj.id] = new el.set(ActiveObj.type, ActiveObj.x, ActiveObj.y, ActiveObj.w, ActiveObj.h, ActiveObj.l, ActiveObj.c, ActiveObj.id, ActiveObj.xSlide, ActiveObj.ySlide, ActiveObj);
+	List[ActiveObj.id] = new Element(ActiveObj.type, ActiveObj.x, ActiveObj.y, ActiveObj.w, ActiveObj.h, ActiveObj.l, ActiveObj.c, ActiveObj.id, ActiveObj.xSlide, ActiveObj.ySlide, ActiveObj);
 	// добавление элементов
-	el.add(this.obj, ev);
+	AddedElement(this.obj, ev);
   };
 }
   
@@ -197,7 +197,7 @@ function createNewProject(){
 		Entity = new EntityElement;
 		
 		var _r = new Entity.room;
-		List[Counter] = new el.set(_r.type, _r.x, _r.y, _r.w, _r.h, _r.l, _r.c, Counter++, null);
+		List[Counter] = new Element(_r.type, _r.x, _r.y, _r.w, _r.h, _r.l, _r.c, Counter++, null);
 	    redrawing(Canvas, Context, List);
 		
 	    disableSelection(document.body); //запрет выделение текста на странице
@@ -222,7 +222,7 @@ function eventListener(tool){
   $(selector).on("mousedown", s);
   $(selector).on("mousemove", s);
   $(selector).on("mouseup", s);
-  $('#delete').on("click", el.del); // Обработка нажатия кнопки "Удалить"
+  $('#delete').on("click", DeleteElement); // Обработка нажатия кнопки "Удалить"
 }
 
 /* Функция перерисовки холста */
@@ -347,12 +347,12 @@ function form(posXY, selector, listParameters){
 		  lp.obj.ySlide = true;
 		}
 
-		List[Counter] = new el.set(els.type, x, y, els.w, els.h, els.l, els.c, Counter++, lp.xSlide, lp.ySlide, lp.obj);
+		List[Counter] = new Element(els.type, x, y, els.w, els.h, els.l, els.c, Counter++, lp.xSlide, lp.ySlide, lp.obj);
 	    /* переменной выделения приравнивается false
 		для исключения добавления элемента к не выделенному*/
 		lp.obj.s = false;
 		// перезапись элемента с новыми параметрами xSlide и ySlide
-		List[lp.obj.id] = new el.set(lp.obj.type, lp.obj.x, lp.obj.y, lp.obj.w, lp.obj.h, lp.obj.l, lp.obj.c, lp.obj.id, lp.obj.xSlide, lp.obj.ySlide, lp.obj.obj);
+		List[lp.obj.id] = new Element(lp.obj.type, lp.obj.x, lp.obj.y, lp.obj.w, lp.obj.h, lp.obj.l, lp.obj.c, lp.obj.id, lp.obj.xSlide, lp.obj.ySlide, lp.obj.obj);
 		redrawing(Canvas, Context, List);
 	  },
       'Отменить':function(){
