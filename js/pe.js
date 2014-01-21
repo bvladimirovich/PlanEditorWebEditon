@@ -18,6 +18,7 @@ var Canvas;
 var Context;
 var Counter;
 var List;
+var Links;
 var ActiveObj;
 var ActivEl;
 var Entity;
@@ -190,11 +191,12 @@ function createNewProject(){
 		
 		Canvas = new Canva('planEditor');
 		Context = Canvas.getContext('2d');
-		Counter = 0;
 		List = {};
+		Links = {};
 		ActiveObj = {};
 		ActivEl = new ActiveElement;
 		Entity = new EntityElement;
+		Counter = 0;
 		
 		var _r = new Entity.room;
 		List[Counter] = new Element(_r.type, _r.x, _r.y, _r.w, _r.h, _r.l, _r.c, Counter++, null);
