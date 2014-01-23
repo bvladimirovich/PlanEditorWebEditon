@@ -1,23 +1,19 @@
 ﻿var elements = {};
-elements[1] = new Struct().set(1,'A',1,0,1, 2,0,2);
-elements[2] = new Struct().set(2,'B',4,0,1, 1,0,2);
-elements[3] = new Struct().set(3,'C',1,0,4, 4,0,1);
-elements[4] = new Struct().set(4,'D',6,0,1, 4,1,4);
-elements[5] = new Struct().set(5,'E',9,0,2, 3,1,2);
-elements[6] = new Struct().set(6,'F',7,3,2, 1,1,2);
-elements[7] = new Struct().set(7,'G',6,3,4, 1,1,2);
-elements[8] = new Struct().set(8,'H',8,2,4, 1,1,2);
-elements[9] = new Struct().set(8,'H',8,5,4, 1,1,2);
-
+var a = new Struct().set(10, 'a' ,0,0,0, 10,1,10);
+var b1 = new Struct().set(11,'b1',0,1,0, 7,1,7);
+var b2 = new Struct().set(12,'b2',0,2,0, 3,1,3);
+                               
 var e = new List();
-e.add(elements[1]);
-e.add(elements[2]);
-e.add(elements[3]);
-e.add(elements[4]);
-e.add(elements[5]);
-e.add(elements[6]);
-e.add(elements[7]);
-e.add(elements[8]);
-e.add(elements[9]);
 
-alert(e.length());
+console.log('Длина списка '+e.length());
+e.add(a);
+e.add(b1);
+e.add(b2);
+console.log('Длина списка '+e.length());
+
+var s = new Section(e.get);
+var ab1 = s.get(e.get(0), e.get(1));
+var ab2 = s.get(e.get(0), e.get(2));
+console.log(ab1);
+console.log(ab2);
+
