@@ -6,6 +6,7 @@ Struct.prototype.set = function(id,type,x,y,z,lx,ly,lz){
 	x: x,
 	y: y,
 	z: z,
+	w: 1,
 	lx: lx,
 	ly: ly,
 	lz: lz
@@ -45,16 +46,12 @@ List.prototype.remove = function(){
 }
 
 /*Если вершины или стороны прикасаются, считается, что это наезд и возвращает false*/
-var isIntersects = function (a, /*New element*/b) {
+var isIntersects = function (a, /*New element*/b){
   a.x1 = a.x + a.lx;
   a.z1 = a.z + a.lz;
-  b.y1 = b.y + b.ly;
+  a.y1 = a.y + a.ly;
   b.x1 = b.x + b.lx;
   b.z1 = b.z + b.lz;
   b.y1 = b.y + b.ly;
-  var res = true;
-  if(b.x1<a.x || b.x>a.x1) res = false;
-  if(b.z1<a.z || b.z>a.z1) res = false;
-  if(b.y>a.y1 || b.y1<a.y) res = false;
-  return res;
+  return !(b.x1<a.x || b.x>a.x1 || b.z1<a.z || b.z>a.z1 || b.y>a.y1 || b.y1<a.y);
 }
