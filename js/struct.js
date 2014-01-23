@@ -1,4 +1,4 @@
-﻿var Struct = function(){}
+var Struct = function(){}
 Struct.prototype.set = function(id,type,x,y,z,lx,ly,lz){
   return{
     id: id,
@@ -61,9 +61,9 @@ var isIntersects = function (a, /*New element*/b){
   return !(b.x1<=a.x || b.x>=a.x1 || b.z1<=a.z || b.z>=a.z1 || b.y>=a.y1 || b.y1<=a.y);
 }
 
-var Section = function(arr){Section.arr = arr};
+var Section = function(){};
 /* Поиск плоскости перекрытия элементов */
-Section.prototype.get = function(a, b){
+Section.prototype.get = function(a, b, arr){
   if(isIntersects(a, b)) return;
   a.x1 = a.x + a.lx;
   a.z1 = a.z + a.lz;
@@ -103,6 +103,8 @@ Section.prototype.get = function(a, b){
   }else{
     l.z = a.z>b.z1?Math.pow(Math.pow(a.z-b.z1,2),0.5)-(a.lz+b.lz):Math.pow(Math.pow(b.z-a.z1,2),0.5)-(a.lz+b.lz);
   }
-  
-  return {c: c, l:l};
+  for(var i in arr){
+    if(isIntersects(c, arr[i]))return arr[i];
+  }
+  return c;
 }

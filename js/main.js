@@ -1,19 +1,18 @@
 ﻿var elements = {};
-var a = new Struct().set(10, 'a' ,0,0,0, 10,1,10);
-var b1 = new Struct().set(11,'b1',0,1,0, 7,1,7);
-var b2 = new Struct().set(12,'b2',0,2,0, 3,1,3);
+var a = new Struct().set(1, 'a' ,0,0,0, 2,2,2);
+var b1 = new Struct().set(2,'b1',0,3,2, 2,2,2);
+var b2 = new Struct().set(3,'b2',0,0,4, 2,2,2);
                                
 var e = new List();
 
 console.log('Длина списка '+e.length());
 e.add(a);
-e.add(b1);
 e.add(b2);
+e.add(b1);
 console.log('Длина списка '+e.length());
 
-var s = new Section(e.get);
-var ab1 = s.get(e.get(0), e.get(1));
-var ab2 = s.get(e.get(0), e.get(2));
+var s = new Section();
+var ab1 = s.get(e.get(0), e.get(1), e.get());
+var ab2 = s.get(e.get(0), e.get(2), e.get());
 console.log(ab1);
 console.log(ab2);
-
