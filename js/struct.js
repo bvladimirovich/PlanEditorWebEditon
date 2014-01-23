@@ -72,39 +72,58 @@ Section.prototype.get = function(a, b, arr){
   b.z1 = b.z + b.lz;
   b.y1 = b.y + b.ly;
   var c = { // default value
-    x:0, y:0, z:0,
-	lx:0, ly:0, lz:0
+    x:-1, y:-1, z:-1,
+	lx:-1, ly:-1, lz:-1
   };
-  var l = {}; // расстояние между элементами
   var lx = Math.abs(Math.abs(a.x-a.x1) - Math.abs(b.x-b.x1)),
       ly = Math.abs(Math.abs(a.y-a.y1) - Math.abs(b.y-b.y1)),
 	  lz = Math.abs(Math.abs(a.z-a.z1) - Math.abs(b.z-b.z1));
+
+  var h = 0;
   // проекция на ось X
   if(b.x>=a.x && b.x<=a.x1 || b.x1>=a.x && b.x1<=a.x1){
 	c.lx = lx==0?Math.abs(a.x-a.x1):Math.abs(a.x-a.x1)-lx;
-	if(b.x>=a.x && b.x<=a.x1) c.x = b.x;
-	else if(b.x1>=a.x && b.x<=a.x) c.x = a.x;
+	c.x = Math.max(a.x, b.x);
   }else{
-    l.x = a.x>b.x1?Math.pow(Math.pow(a.x-b.x1,2),0.5)-(a.lx+b.lx):Math.pow(Math.pow(b.x-a.x1,2),0.5)-(a.lx+b.lx);
+	if(b.x>=a.x1) c.x = a.x1;
+	else if(a.x>=b.x1) c.x = b.x1;
+    c.lx = distance(a,b,'x');
+	console.log('c.lx '+c.lx);
+	h++;
   }
   // проекция на ось Y
   if(b.y>=a.y && b.y<=a.y1 || b.y1>=a.y && b.y1<=a.y1){
     c.ly = ly==0?Math.abs(a.y-a.y1):Math.abs(a.y-a.y1)-ly;
-	if(b.y>=a.y && b.y<=a.y1) c.y = b.y;
-	else if(b.y1>=a.y && b.y<=a.y) c.y = a.y;
+	c.y = Math.max(a.y, b.y);
   }else{
-    l.y = a.y>b.y1?Math.pow(Math.pow(a.y-b.y1,2),0.5)-(a.ly+b.ly):Math.pow(Math.pow(b.y-a.y1,2),0.5)-(a.ly+b.ly);
+	if(b.y>=a.y1) c.y = a.y1;
+	else if(a.y>=b.y1) c.y = b.y1;
+    c.ly = distance(a,b,'y');
+	console.log('c.ly '+c.ly);
+	h++;
   }
   // проекция на ось Z
   if(b.z>=a.z && b.z<=a.z1 || b.z1>=a.z && b.z1<=a.z1){
     c.lz = lz==0?Math.abs(a.z-a.z1):Math.abs(a.z-a.z1)-lz;
-	if(b.z>=a.z && b.z<=a.z1) c.z = b.z;
-	else if(b.z1>=a.z && b.z<=a.z) c.z = a.z;
+	c.z = Math.max(a.z, b.z);
   }else{
-    l.z = a.z>b.z1?Math.pow(Math.pow(a.z-b.z1,2),0.5)-(a.lz+b.lz):Math.pow(Math.pow(b.z-a.z1,2),0.5)-(a.lz+b.lz);
+	if(b.z>=a.z1) c.z = a.z1;
+	else if(a.z>=b.z1) c.z = b.z1;
+    c.lz = distance(a,b,'z');
+	console.log('c.lz '+c.lz);
+	h++;
   }
-  for(var i in arr){
-    if(isIntersects(c, arr[i]))return arr[i];
-  }
+  if(h==0)c='Элементы прикасаются';
+  if(h>1)c='Элементы не скрещиваются';
+  if(c.lx>=1 || c.ly>=1 || c.lz>=1)
+    for(var i in arr) 
+	if(isIntersects(c, arr[i]))c=arr[i];
+	else if(isIntersects(arr[i], c))c=arr[i];
   return c;
+}
+
+var distance = function(a,b, axis){
+  a[axis+'1'] = a[axis] + a['l'+axis];
+  b[axis+'1'] = b[axis] + b['l'+axis];
+  return Math.sqrt(Math.pow(Math.max(a[axis], b[axis])-Math.min(a[axis+'1'], b[axis+'1']),2));
 }
