@@ -84,19 +84,20 @@ Section.prototype.get = function(a, b, arr){
 
   var c = { // default value
     x:-1, y:-1, z:-1,
-	lx:-1, ly:-1, lz:-1
+	lx:-1, ly:-1, lz:-1,
+	info:0
   };
   
   new Overlap(a, b, c);
   for(var i in c){if(c[i]==-1)new Overlap(b, a, c);}
   for(var i in c){
-    if(c[i]==-1) c.info='Элементы не имеют общих плоскостей';
-	if(c.lx==0 || c.ly==0 || c.lz==0) c.info='Расстояние между элементами равно 0';
+    if(c[i]==-1) c.info=1; // Элементы не имеют общих плоскостей
+	if(c.lx==0 || c.ly==0 || c.lz==0) c.info=2; // Расстояние между элементами равно 0
   }
   for(var k in arr){
 	if(arr[k].id!=a.id&&arr[k].id!=b.id)
 	if(isIntersects(c, arr[k]))
-	  c.info='Расстояние между элементами занято другим элементом';
+	  c.info=3; // Расстояние между элементами занято другим элементом
 	  c.intersectsID = arr[k].id;
   }
   return c;
@@ -155,6 +156,18 @@ var Overlap = function(a,b,c){
 var Building = function(){
   var list = new List;
 };
-Building.prototype.space = function(id,type,x,y,z,lx,ly,lz){
+Building.prototype.addSpace = function(id,type,x,y,z,lx,ly,lz){
   list.add(new Struct().set(id,type,x,y,z,lx,ly,lz));
+}
+Building.prototype.addDoor = function(a,b){
+  var c = new Section().get(a,b,list.get());
+  if(c.info == 0){
+	c.id = list.length() + 1;
+	c.type = 'door';
+	list.add(new Struct().set(c.id,c.type,c.x,c.y,c.z,c.lx,c.ly,c.lz));
+	c.res = '100';
+  }else{
+	c.res = '200';
+  }
+  return c;
 }
