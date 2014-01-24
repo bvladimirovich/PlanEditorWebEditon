@@ -75,50 +75,13 @@ Section.prototype.get = function(a, b, arr){
     x:-1, y:-1, z:-1,
 	lx:-1, ly:-1, lz:-1
   };
-  var lx = Math.abs(Math.abs(a.x-a.x1) - Math.abs(b.x-b.x1)),
-      ly = Math.abs(Math.abs(a.y-a.y1) - Math.abs(b.y-b.y1)),
-	  lz = Math.abs(Math.abs(a.z-a.z1) - Math.abs(b.z-b.z1));
-
-  var h = 0;
-  // проекция на ось X
-  if(b.x>=a.x && b.x<=a.x1 || b.x1>=a.x && b.x1<=a.x1){
-	c.lx = lx==0?Math.abs(a.x-a.x1):Math.abs(a.x-a.x1)-lx;
-	c.x = Math.max(a.x, b.x);
-  }else{
-	if(b.x>=a.x1) c.x = a.x1;
-	else if(a.x>=b.x1) c.x = b.x1;
-    c.lx = distance(a,b,'x');
-	console.log('c.lx '+c.lx);
-	h++;
+  
+  overlap(a, b, c);
+  for(var i in c){
+    if(c.lx==0 || c.ly==0 || c.lz==0)c='Элементы прикасаются';
+    if(c[i]==-1)c='Элементы не скрещиваются';
   }
-  // проекция на ось Y
-  if(b.y>=a.y && b.y<=a.y1 || b.y1>=a.y && b.y1<=a.y1){
-    c.ly = ly==0?Math.abs(a.y-a.y1):Math.abs(a.y-a.y1)-ly;
-	c.y = Math.max(a.y, b.y);
-  }else{
-	if(b.y>=a.y1) c.y = a.y1;
-	else if(a.y>=b.y1) c.y = b.y1;
-    c.ly = distance(a,b,'y');
-	console.log('c.ly '+c.ly);
-	h++;
-  }
-  // проекция на ось Z
-  if(b.z>=a.z && b.z<=a.z1 || b.z1>=a.z && b.z1<=a.z1){
-    c.lz = lz==0?Math.abs(a.z-a.z1):Math.abs(a.z-a.z1)-lz;
-	c.z = Math.max(a.z, b.z);
-  }else{
-	if(b.z>=a.z1) c.z = a.z1;
-	else if(a.z>=b.z1) c.z = b.z1;
-    c.lz = distance(a,b,'z');
-	console.log('c.lz '+c.lz);
-	h++;
-  }
-  if(h==0)c='Элементы прикасаются';
-  if(h>1)c='Элементы не скрещиваются';
-  if(c.lx>=1 || c.ly>=1 || c.lz>=1)
-    for(var i in arr) 
-	if(isIntersects(c, arr[i]))c=arr[i];
-	else if(isIntersects(arr[i], c))c=arr[i];
+	
   return c;
 }
 
@@ -126,4 +89,53 @@ var distance = function(a,b, axis){
   a[axis+'1'] = a[axis] + a['l'+axis];
   b[axis+'1'] = b[axis] + b['l'+axis];
   return Math.sqrt(Math.pow(Math.max(a[axis], b[axis])-Math.min(a[axis+'1'], b[axis+'1']),2));
+}
+var overlap = function(a,b,c){
+  if(a.x<=b.x && b.x<=a.x1 && b.x1>=a.x1 || a.x>=b.x && b.x1<=a.x1 && b.x1>=a.x || a.x<=b.x && a.x1>=b.x1 || a.x>=b.x && a.x1<=b.x1){
+    c.x = Math.max(b.x, a.x);
+	c.lx = Math.pow(Math.pow(Math.min(b.x1, a.x1)-c.x,2),0.5);
+  }else{
+    if(a.x1<b.x){
+ 	  c.lx = Math.pow(Math.pow(b.x-a.x1,2),0.5);
+	  c.x = a.x1;
+	}else if(a.x<b.x1){
+	  c.lx = Math.pow(Math.pow(a.x-b.x1,2),0.5);
+	  c.x = b.x1;
+	}else if(a.x1==b.x || a.x==b.x1){
+	  c.lx = 0;
+	  c.x = Math.max(a.x,b.x);
+	}
+  }
+  
+  if(a.y<=b.y && b.y<=a.y1 && b.y1>=a.y1 || a.y>=b.y && b.y1<=a.y1 && b.y1>=a.y || a.y<=b.y && a.y1>=b.y1 || a.y>=b.y && a.y1<=b.y1){
+    c.y = Math.max(b.y, a.y);
+	c.ly = Math.pow(Math.pow(Math.min(b.y1, a.y1)-c.y,2),0.5);
+  }else{
+    if(a.y1<b.y){
+ 	  c.ly = Math.pow(Math.pow(b.y-a.y1,2),0.5);
+	  c.y = a.y1;
+	}else if(a.y<b.y1){
+	  c.ly = Math.pow(Math.pow(a.y-b.y1,2),0.5);
+	  c.y = b.y1;
+	}else if(a.y1==b.y || a.y==b.y1){
+	  c.ly = 0;
+	  c.y = Math.may(a.y,b.y);
+	}
+  }
+  
+  if(a.z<=b.z && b.z<=a.z1 && b.z1>=a.z1 || a.z>=b.z && b.z1<=a.z1 && b.z1>=a.z || a.z<=b.z && a.z1>=b.z1 || a.z>=b.z && a.z1<=b.z1){
+    c.z = Math.max(b.z, a.z);
+	c.lz = Math.pow(Math.pow(Math.min(b.z1, a.z1)-c.z,2),0.5);
+  }else{
+   if(a.z1<b.z){
+ 	  c.lz = Math.pow(Math.pow(b.z-a.z1,2),0.5);
+	  c.z = a.z1;
+	}else if(a.z<b.z1){
+	  c.lz = Math.pow(Math.pow(a.z-b.z1,2),0.5);
+	  c.z = b.z1;
+	}else if(a.z1==b.z || a.z==b.z1){
+	  c.lz = 0;
+	  c.z = Math.maz(a.z,b.z);
+	}
+  }
 }
