@@ -12,42 +12,6 @@ Struct.prototype.set = function(id,type,x,y,z,lx,ly,lz){
   }
 }
 
-var List = function(){
-  List.counter=0;
-  List.items={};
-}
-List.prototype.add = function(/*element*/e){
-    var bool = true;
-    for(var i in List.items){
-	  if(isIntersects(e, List.items[i])) {
-	    bool=false;
-		console.log('1 MSG: элемент '+e.type+' не добавлен');
-	  }else bool=true;
-    }
-	if(bool){
-	  List.items[List.counter] = e;
-      List.counter++;
-	}
-}
-List.prototype.get = function(/*index*/){
-  if(arguments.length > 1) throw new Error('Количество индексов не должно превышать 1');
-  if(arguments.length == 1){
-    if(arguments[0]>List.counter) throw new Error('Элемент с таким индексом не существует');
-	return List.items[arguments[0]];
-  }else return List.items;
-}
-List.prototype.remove = function(){
-  if(arguments.length > 1) throw new Error('Количество индексов не должно превышать 1');
-  if(arguments.length == 1) delete List.items[arguments[0]];
-  else List.items={};
-}
-List.prototype.replace = function(item1, item2){
-  List.items[item1.id] = item2;
-}
-List.prototype.length = function(){
-  return List.counter;
-}
-
 var isIntersects = function (a, /*New element*/b){
   a.center = {
     x: a.x + a.lx/2.0,
@@ -66,9 +30,9 @@ var isIntersects = function (a, /*New element*/b){
   if (dy < 0.0) dy *= -1.0;
   if (dz < 0.0) dz *= -1.0;
   
-  return (dx <= (a.lx/2.0 + b.lx/2.0)) &&
-		 (dy <= (a.ly/2.0 + b.ly/2.0)) &&
-		 (dz <= (a.lz/2.0 + b.lz/2.0));
+  return (dx < (a.lx/2.0 + b.lx/2.0)) &&
+		 (dy < (a.ly/2.0 + b.ly/2.0)) &&
+		 (dz < (a.lz/2.0 + b.lz/2.0));
 }
 
 var Section = function(){};
@@ -96,9 +60,10 @@ Section.prototype.get = function(a, b, arr){
   }
   for(var k in arr){
 	if(arr[k].id!=a.id&&arr[k].id!=b.id)
-	if(isIntersects(c, arr[k]))
+	if(isIntersects(c, arr[k])){
 	  c.info=3; // Расстояние между элементами занято другим элементом
 	  c.intersectsID = arr[k].id;
+	}
   }
   return c;
 }
@@ -154,23 +119,43 @@ var Overlap = function(a,b,c){
 }
 
 var Building = function(){
-  Building.list = new List();
   Building.ID = 0;
+  Building.list = {};
 }
-Building.prototype.addSpace = function(type,x,y,z,lx,ly,lz){
-  Building.list.add(new Struct().set(Building.ID,type,x,y,z,lx,ly,lz));
-  Building.ID++;
-  return Building.list.get(Building.ID-1);
+Building.prototype.addRoom = function(x,y,z,lx,ly,lz){
+  var b = new Struct().set(Building.ID,'room',x,y,z,lx,ly,lz);
+  if(Building.ID==0){
+	Building.list[Building.ID] = b;
+	Building.ID++;
+	return b;
+  }else if(Building.ID>0){	
+	var isIntersect = false;
+	for(var i in Building.list)	if(isIntersects(Building.list[i], b)) isIntersect = true;
+	if(isIntersect == false){
+	  Building.list[Building.ID] = b;
+	  Building.ID++;
+	  return b;
+	}
+  }
 }
 Building.prototype.addDoor = function(a,b){
-  var c = new Section().get(a,b,Building.list.get());
+  var c = new Section().get(a,b,Building.list);
   if(c.info == 0){
-	c.type = 'door';
-	Building.list.add(new Struct().set(Building.ID,c.type,c.x,c.y,c.z,c.lx,c.ly,c.lz));
-	c.res = '100';
+	Building.list[Building.ID] = new Struct().set(Building.ID,'door',c.x,c.y,c.z,c.lx,c.ly,c.lz);
 	Building.ID++
-  }else{
-	c.res = '200';
+    return Building.list[Building.ID-1];
   }
-  return c;
+}
+Building.prototype.remove = function(id){
+  delete Building.list[id];
+}
+Building.prototype.length = function(){
+  return Building.ID;
+}
+Building.prototype.numberOf = function(type){
+  var counter = 0;
+  for(var i in Building.list){
+    if(Building.list[i].type == type) counter++;
+  }
+  return counter;
 }
