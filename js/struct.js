@@ -146,11 +146,36 @@ Building.prototype.addDoor = function(a,b){
     return Building.list[Building.ID-1];
   }
 }
+Building.prototype.modify = function(id){
+  var c = Building.list[id];
+  return{
+    size: function(lx,ly,lz){
+	  var q = new Struct().set(id,c.type,c.x,c.y,c.z,lx,ly,lz);
+	  var isIntersect = false;
+	  for(var i in Building.list){
+	    if(i==id)continue;
+	    if(isIntersects(q, Building.list[i])) isIntersect = true;
+	  }
+	  if(isIntersect == false){
+	    Building.list[id] = q;
+		Building.list[id].info = 'Размеры были изменены';
+	  }else{
+	    Building.list[id].info = 'Невозможно изменить размеры элемента';
+	  }
+	}
+  }
+}
 Building.prototype.remove = function(id){
   delete Building.list[id];
 }
 Building.prototype.length = function(){
   return Building.ID;
+}
+Building.prototype.getAllItems = function(){
+  return Building.list;
+}
+Building.prototype.getItem = function(id){
+  return Building.list[id];
 }
 Building.prototype.numberOf = function(type){
   var counter = 0;
