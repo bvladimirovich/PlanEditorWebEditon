@@ -154,18 +154,21 @@ var Overlap = function(a,b,c){
 }
 
 var Building = function(){
-  var list = new List;
-};
-Building.prototype.addSpace = function(id,type,x,y,z,lx,ly,lz){
-  list.add(new Struct().set(id,type,x,y,z,lx,ly,lz));
+  Building.list = new List();
+  Building.ID = 0;
+}
+Building.prototype.addSpace = function(type,x,y,z,lx,ly,lz){
+  Building.list.add(new Struct().set(Building.ID,type,x,y,z,lx,ly,lz));
+  Building.ID++;
+  return Building.list.get(Building.ID-1);
 }
 Building.prototype.addDoor = function(a,b){
-  var c = new Section().get(a,b,list.get());
+  var c = new Section().get(a,b,Building.list.get());
   if(c.info == 0){
-	c.id = list.length() + 1;
 	c.type = 'door';
-	list.add(new Struct().set(c.id,c.type,c.x,c.y,c.z,c.lx,c.ly,c.lz));
+	Building.list.add(new Struct().set(Building.ID,c.type,c.x,c.y,c.z,c.lx,c.ly,c.lz));
 	c.res = '100';
+	Building.ID++
   }else{
 	c.res = '200';
   }
