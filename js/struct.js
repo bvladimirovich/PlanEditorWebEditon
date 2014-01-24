@@ -22,9 +22,6 @@ List.prototype.add = function(/*element*/e){
 	  if(isIntersects(e, List.items[i])) {
 	    bool=false;
 		console.log('1 MSG: элемент '+e.type+' не добавлен');
-	  }else if(isIntersects(List.items[i], e)){
-	    bool=false;
-		console.log('2 MSG: элемент '+e.type+' не добавлен');
 	  }else bool=true;
     }
 	if(bool){
@@ -52,13 +49,26 @@ List.prototype.length = function(){
 }
 
 var isIntersects = function (a, /*New element*/b){
-  a.x1 = a.x + a.lx;
-  a.z1 = a.z + a.lz;
-  a.y1 = a.y + a.ly;
-  b.x1 = b.x + b.lx;
-  b.z1 = b.z + b.lz;
-  b.y1 = b.y + b.ly;
-  return !(b.x1<=a.x || b.x>=a.x1 || b.z1<=a.z || b.z>=a.z1 || b.y>=a.y1 || b.y1<=a.y);
+  a.center = {
+    x: a.x + a.lx/2.0,
+	y: a.y + a.ly/2.0, 
+	z: a.z + a.lz/2.0
+  };
+  b.center = {
+    x: b.x + b.lx/2.0,
+	y: b.y + b.ly/2.0, 
+	z: b.z + b.lz/2.0
+  };
+  var dx = a.center.x - b.center.x,
+      dy = a.center.y - b.center.y,
+      dz = a.center.z - b.center.z;
+  if (dx < 0.0) dx *= -1.0;
+  if (dy < 0.0) dy *= -1.0;
+  if (dz < 0.0) dz *= -1.0;
+  
+  return (dx <= (a.lx/2.0 + b.lx/2.0)) &&
+		 (dy <= (a.ly/2.0 + b.ly/2.0)) &&
+		 (dz <= (a.lz/2.0 + b.lz/2.0));
 }
 
 var Section = function(){};
@@ -71,26 +81,28 @@ Section.prototype.get = function(a, b, arr){
   b.x1 = b.x + b.lx;
   b.z1 = b.z + b.lz;
   b.y1 = b.y + b.ly;
+
   var c = { // default value
     x:-1, y:-1, z:-1,
 	lx:-1, ly:-1, lz:-1
   };
   
-  overlap(a, b, c);
+  new Overlap(a, b, c);
+  for(var i in c){if(c[i]==-1)new Overlap(b, a, c);}
   for(var i in c){
-    if(c.lx==0 || c.ly==0 || c.lz==0)c='Элементы прикасаются';
-    if(c[i]==-1)c='Элементы не скрещиваются';
+    if(c[i]==-1) c.info='Элементы не имеют общих плоскостей';
+	if(c.lx==0 || c.ly==0 || c.lz==0) c.info='Расстояние между элементами равно 0';
   }
-	
+  for(var k in arr){
+	if(arr[k].id!=a.id&&arr[k].id!=b.id)
+	if(isIntersects(c, arr[k]))
+	  c.info='Расстояние между элементами занято другим элементом';
+	  c.intersectsID = arr[k].id;
+  }
   return c;
 }
 
-var distance = function(a,b, axis){
-  a[axis+'1'] = a[axis] + a['l'+axis];
-  b[axis+'1'] = b[axis] + b['l'+axis];
-  return Math.sqrt(Math.pow(Math.max(a[axis], b[axis])-Math.min(a[axis+'1'], b[axis+'1']),2));
-}
-var overlap = function(a,b,c){
+var Overlap = function(a,b,c){
   if(a.x<=b.x && b.x<=a.x1 && b.x1>=a.x1 || a.x>=b.x && b.x1<=a.x1 && b.x1>=a.x || a.x<=b.x && a.x1>=b.x1 || a.x>=b.x && a.x1<=b.x1){
     c.x = Math.max(b.x, a.x);
 	c.lx = Math.pow(Math.pow(Math.min(b.x1, a.x1)-c.x,2),0.5);
@@ -138,4 +150,11 @@ var overlap = function(a,b,c){
 	  c.z = Math.maz(a.z,b.z);
 	}
   }
+}
+
+var Building = function(){
+  var list = new List;
+};
+Building.prototype.space = function(id,type,x,y,z,lx,ly,lz){
+  list.add(new Struct().set(id,type,x,y,z,lx,ly,lz));
 }
