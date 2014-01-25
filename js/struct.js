@@ -69,18 +69,21 @@ Section.prototype.get = function(a, b, arr){
 }
 
 var Overlap = function(a,b,c){
+  c.distance = {
+    x: 0, y:0, z:0
+  }; // расстояние между элементами
   if(a.x<=b.x && b.x<=a.x1 && b.x1>=a.x1 || a.x>=b.x && b.x1<=a.x1 && b.x1>=a.x || a.x<=b.x && a.x1>=b.x1 || a.x>=b.x && a.x1<=b.x1){
     c.x = Math.max(b.x, a.x);
 	c.lx = Math.pow(Math.pow(Math.min(b.x1, a.x1)-c.x,2),0.5);
   }else{
     if(a.x1<b.x){
- 	  c.lx = Math.pow(Math.pow(b.x-a.x1,2),0.5);
+ 	  c.distance.x = c.lx = Math.pow(Math.pow(b.x-a.x1,2),0.5);
 	  c.x = a.x1;
 	}else if(a.x<b.x1){
-	  c.lx = Math.pow(Math.pow(a.x-b.x1,2),0.5);
+	  c.distance.x = c.lx = Math.pow(Math.pow(a.x-b.x1,2),0.5);
 	  c.x = b.x1;
 	}else if(a.x1==b.x || a.x==b.x1){
-	  c.lx = 0;
+	  c.distance.x = c.lx = 0;
 	  c.x = Math.max(a.x,b.x);
 	}
   }
@@ -90,13 +93,13 @@ var Overlap = function(a,b,c){
 	c.ly = Math.pow(Math.pow(Math.min(b.y1, a.y1)-c.y,2),0.5);
   }else{
     if(a.y1<b.y){
- 	  c.ly = Math.pow(Math.pow(b.y-a.y1,2),0.5);
+ 	  c.distance.y = c.ly = Math.pow(Math.pow(b.y-a.y1,2),0.5);
 	  c.y = a.y1;
 	}else if(a.y<b.y1){
-	  c.ly = Math.pow(Math.pow(a.y-b.y1,2),0.5);
+	  c.distance.y = c.ly = Math.pow(Math.pow(a.y-b.y1,2),0.5);
 	  c.y = b.y1;
 	}else if(a.y1==b.y || a.y==b.y1){
-	  c.ly = 0;
+	  c.distance.ye = c.ly = 0;
 	  c.y = Math.may(a.y,b.y);
 	}
   }
@@ -106,13 +109,13 @@ var Overlap = function(a,b,c){
 	c.lz = Math.pow(Math.pow(Math.min(b.z1, a.z1)-c.z,2),0.5);
   }else{
    if(a.z1<b.z){
- 	  c.lz = Math.pow(Math.pow(b.z-a.z1,2),0.5);
+ 	  c.distance.z = c.lz = Math.pow(Math.pow(b.z-a.z1,2),0.5);
 	  c.z = a.z1;
 	}else if(a.z<b.z1){
-	  c.lz = Math.pow(Math.pow(a.z-b.z1,2),0.5);
+	  c.distance.z = c.lz = Math.pow(Math.pow(a.z-b.z1,2),0.5);
 	  c.z = b.z1;
 	}else if(a.z1==b.z || a.z==b.z1){
-	  c.lz = 0;
+	  c.distance.z = c.lz = 0;
 	  c.z = Math.maz(a.z,b.z);
 	}
   }
@@ -138,20 +141,38 @@ Building.prototype.addRoom = function(x,y,z,lx,ly,lz){
 	}
   }
 }
-Building.prototype.addDoor = function(a,b){
-  var c = new Section().get(a,b,Building.list);
+Building.prototype.addDoor = function(a,b, lx, ly, lz){
+  var c = new Section().get(a,b,Building.list),
+      q = new Struct().set(Building.ID,'door',c.x,c.y,c.z,lx,ly,lz);
+  q.link = {};
+  q.limit = {};
+  q.distance = {};
   if(c.info == 0){
-	Building.list[Building.ID] = new Struct().set(Building.ID,'door',c.x,c.y,c.z,c.lx,c.ly,c.lz);
-	Building.ID++
-    return Building.list[Building.ID-1];
+	q.link.a = a.id;
+	q.link.b = b.id;
+	if(q.lx<=c.lx && q.ly<=c.ly&&q.lz<=c.lz){
+      q.limit.lx = c.lx;
+	  q.limit.ly = c.ly;
+	  q.limit.lz = c.lz;
+	  q.distance.x = c.distance.x;
+	  q.distance.y = c.distance.y;
+	  q.distance.z = c.distance.z;
+	  Building.list[Building.ID] = q;
+	  Building.ID++
+      return q;
+	}else {
+	  console.log('Невозможно установить размер');
+	  return 'undefined';
+	}
   }
 }
 Building.prototype.modify = function(id){
-  var c = Building.list[id];
+  var c = Building.list[id],
+      q,
+	  isIntersect = false;
   return{
     size: function(lx,ly,lz){
-	  var q = new Struct().set(id,c.type,c.x,c.y,c.z,lx,ly,lz);
-	  var isIntersect = false;
+	  q = new Struct().set(id,c.type,c.x,c.y,c.z,lx,ly,lz);
 	  for(var i in Building.list){
 	    if(i==id)continue;
 	    if(isIntersects(q, Building.list[i])) isIntersect = true;
@@ -159,23 +180,38 @@ Building.prototype.modify = function(id){
 	  if(isIntersect == false){
 	    Building.list[id] = q;
 		Building.list[id].info = 'Размеры были изменены';
+		return q;
 	  }else{
 	    Building.list[id].info = 'Невозможно изменить размеры элемента';
+		return Building.list[id];
 	  }
+	},
+	position: function(x,y,z){
+	  var pos = {x:x,y:y,z:z};
+	  for(var i in c.distance) if(c.distance[i] != 0)
+	  for(var j in pos) if(i == j) pos[j] = c[i];
+	  q = new Struct().set(id,c.type,pos.x,pos.y,pos.z,c.lx,c.ly,c.lz);
+	  Building.list[id] = q;
+	  return q;
+	},
+	type: function(type){
+	  Building.list[id] = new Struct().set(id,type,c.x,c.y,c.z,c.lx,c.ly,c.lz);
+	  return Building.list[id];
 	}
   }
 }
 Building.prototype.remove = function(id){
+  var i = Building.list[id];
   delete Building.list[id];
+  return i;
 }
 Building.prototype.length = function(){
   return Building.ID;
 }
-Building.prototype.getAllItems = function(){
-  return Building.list;
-}
-Building.prototype.getItem = function(id){
-  return Building.list[id];
+Building.prototype.getItem = function(){
+  var b = Building.list;
+  if(arguments.length == 0) return b;
+  else return b[arguments[0]];
 }
 Building.prototype.numberOf = function(type){
   var counter = 0;
