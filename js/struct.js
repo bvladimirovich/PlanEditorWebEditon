@@ -168,7 +168,7 @@ Building.prototype.addDoor = function(a,b, lx, ly, lz){
 }
 Building.prototype.modify = function(id){
   var c = Building.list[id],
-      q,
+      q = {},
 	  isIntersect = false;
   return{
     size: function(lx,ly,lz){
@@ -187,10 +187,16 @@ Building.prototype.modify = function(id){
 	  }
 	},
 	position: function(x,y,z){
-	  var pos = {x:x,y:y,z:z};
-	  for(var i in c.distance) if(c.distance[i] != 0)
-	  for(var j in pos) if(i == j) pos[j] = c[i];
-	  q = new Struct().set(id,c.type,pos.x,pos.y,pos.z,c.lx,c.ly,c.lz);
+	  q = new Struct().set(id,c.type,x,y,z,c.lx,c.ly,c.lz);
+	  q.distance = {};
+	  c.x1 = c.x + c.lx;
+      c.z1 = c.z + c.lz;
+  	  c.y1 = c.y + c.ly;
+	  for(var i in c.distance){
+		q.distance[i] = c.distance[i];
+	    if(c.distance[i] != 0) q[i] = c[i];
+	    if(q[i]<=c[i]||q[i]+q['l'+i]<=c[i]+c['l'+i]) q[i]=c[i];
+	  }
 	  Building.list[id] = q;
 	  return q;
 	},
