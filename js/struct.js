@@ -160,11 +160,15 @@ Building.prototype.addRoom = function (x,y,z,lx,ly,lz) {
   /** TODO - Добавить генерацию ошибок */
   } else if (Building.ID>0) {
 	var isIntersect = false;
-	for(var i in Building.list)	if(isIntersects(Building.list[i], b)) isIntersect = true;
+	for (var i in Building.list) {
+	  if(isIntersects(Building.list[i], b)) isIntersect = true;
+	}
 	if(isIntersect == false){
 	  Building.list[Building.ID] = b;
 	  Building.ID++;
 	  return b;
+	} else if (isIntersect == true){
+	  throw new Error('Невозможно добавить элемент с такими параметрами');
 	}
   }
 }
@@ -199,9 +203,14 @@ Building.prototype.addDoor = function(a,b, lx, ly, lz){
 	  Building.ID++
       return q;
 	}else {
-	  console.log('Невозможно установить размер');
-	  return 'undefined';
+	  throw new Error('Невозможно установить размеры двери');
 	}
+  } else if (c.info == 1) {
+    throw new Error('Невозможно добавить дверь. Элементы не скрещиваются');
+  } else if (c.info == 2) {
+    throw new Error('Невозможно добавить дверь. Расстояние между элементами равно нулю');
+  } else if (c.info == 3) {
+    throw new Error('Невозможно добавить дверь. Между элементами находится другой элемент');
   }
 }
 /**
@@ -226,11 +235,9 @@ Building.prototype.modify = function(id){
 	  }
 	  if(isIntersect == false){
 	    Building.list[id] = q;
-		Building.list[id].info = 'Размеры были изменены';
 		return q;
 	  }else{
-	    Building.list[id].info = 'Невозможно изменить размеры элемента';
-		return Building.list[id];
+	    throw new Error('Невозможно изменить размеры элемента');
 	  }
 	},
 	/* Свойство изменения положения */
