@@ -315,3 +315,23 @@ Building.prototype.numberOf = function(type){
   }
   return counter;
 }
+
+/**
+ Функция списка
+*/
+var list = (function (){
+  var l ={};
+  return{
+    add: function(key, value){
+      for(var k in l){
+        if (k!=key) {
+          l[key] = value;
+        } else throw new Error ('Объект с таким ключом уже существует');
+      }
+    },
+    set: function(){},
+    get: function(){},
+    sort: function(){},
+    remove: function(){}
+  }
+}())
