@@ -317,21 +317,47 @@ Building.prototype.numberOf = function(type){
 }
 
 /**
- Функция списка
+ Конструктор списка элементов
 */
-var list = (function (){
-  var l ={};
+var ListItems = function () {
+  var l = {};
   return{
     add: function(key, value){
-      for(var k in l){
+      for (var k in l) {
         if (k!=key) {
           l[key] = value;
-        } else throw new Error ('Объект с таким ключом уже существует');
+        } else { 
+		  throw new Error ('Доббавление невозможно. Объект с таким ключом уже существует');
+		}
       }
     },
-    set: function(){},
-    get: function(){},
+    set: function(key, value){
+	  for (var k in l) {
+        if (k==key) {
+          l[key] = value;
+        } else { 
+		  throw new Error ('Установка нового значения невозможна. Объект с таким ключом не существует');
+		}
+      }
+	},
+    get: function(/*key*/){
+	  if (arguments.length == 0) {
+	    return l;
+	  } else if (arguments.length == 1) {
+	    return l[arguments[0]];
+	  } else {
+	    throw new Error ('Невозможно вернуть элемент. Недопустимое количество параметров')
+	  }
+	},
     sort: function(){},
-    remove: function(){}
+    remove: function(key){
+	  for (var k in l) {
+        if (k==key) {
+          delete l[key];
+        } else { 
+		  throw new Error ('Удаление невозможно. Объект с таким ключом не существует');
+		}
+      }
+	}
   }
-}())
+}
