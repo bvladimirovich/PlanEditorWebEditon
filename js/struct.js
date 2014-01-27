@@ -5,7 +5,7 @@
  @param {string} type
  @returns экземпляр класса 'Struct'
 */
-var Struct = function(){}
+var Struct = function () {}
 Struct.prototype.set = function(id,type,x,y,z,lx,ly,lz){
   return{
     id: id,
@@ -76,82 +76,59 @@ Section.prototype.get = function(a, b, arr){
 	info:0
   };
   /* Определение координат и размеров общей зоны */
-  new Overlap(a, b, c);
-  for(var i in c){if(c[i]==-1)new Overlap(b, a, c);}
-  for(var i in c){
+  overlap(a, b, c);
+  for (var i in c) {
+    if(c[i]==-1) overlap(b, a, c);
+  }
+  for (var i in c) {
     /* Элементы не скрещиваются */
     if(c[i]==-1) c.info=1;
 	/* Расстояние между элементами равно нулю */
 	if(c.lx==0 || c.ly==0 || c.lz==0) c.info=2;
   }
-  for(var k in arr){
-	if(arr[k].id!=a.id&&arr[k].id!=b.id)
-	if(isIntersects(c, arr[k])){
+  for (var k in arr) {
+	if (arr[k].id!=a.id&&arr[k].id!=b.id)
+	if (isIntersects(c, arr[k])) {
 	  /* Расстояние между элементами занято другим элементом */
 	  c.info=3;
 	  /* Возвращается идентификатор инородного элемента */
 	  c.intersectsID = arr[k].id;
 	}
   }
+  
+  /**
+   Функция определения общего пространства между двумя элементами
+   @param {Struct} a,b
+   @returns {Object} c - с параметрами общей зоны
+  */
+  function overlap(a,b,c){
+    /* Расстояние между элементами */
+    c.distance = {
+      x: 0, y:0, z:0
+    };
+    for (var m in c.distance) {
+  	  if ( (a[m]<=b[m] && b[m]<=a[m+'1'] && b[m+'1']>=a[m+'1']) || 
+  	    (a[m]>=b[m] && b[m+'1']<=a[m+'1'] && b[m+'1']>=a[m]) || 
+  	    (a[m]<=b[m] && a[m+'1']>=b[m+'1']) || 
+  	    (a[m]>=b[m] && a[m+'1']<=b[m+'1']) ) {
+  	    c[m] = Math.max(b[m], a[m]);
+  	    c['l'+m] = Math.pow(Math.pow(Math.min(b[m+'1'], a[m+'1'])-c[m],2),0.5);
+  	  } else {
+  	    if(a[m+'1']<b[m]){
+  	      c.distance[m] = c['l'+m] = Math.pow(Math.pow(b[m]-a[m+'1'],2),0.5);
+  	      c[m] = a[m+'1'];
+  	    }else if(a[m]<b[m+'1']){
+  	      c.distance[m] = c['l'+m] = Math.pow(Math.pow(a[m]-b[m+'1'],2),0.5);
+  	      c[m] = b[m+'1'];
+  	    }else if(a[m+'1']==b[m] || a[m]==b[m+'1']){
+  	      c.distance[m] = c['l'+m] = 0;
+  	      c[m] = Math.max(a[m],b[m]);
+  	    }
+  	  }
+    }
+  }
+  
   return c;
-}
-/**
- Функция определения общего пространства между двумя элементами
- @param {Struct} a,b
- @returns {Object} c - с параметрами общей зоны
-*/
-var Overlap = function(a,b,c){
-  /* Расстояние между элементами */
-  c.distance = {
-    x: 0, y:0, z:0
-  };
-  if(a.x<=b.x && b.x<=a.x1 && b.x1>=a.x1 || a.x>=b.x && b.x1<=a.x1 && b.x1>=a.x || a.x<=b.x && a.x1>=b.x1 || a.x>=b.x && a.x1<=b.x1){
-    c.x = Math.max(b.x, a.x);
-	c.lx = Math.pow(Math.pow(Math.min(b.x1, a.x1)-c.x,2),0.5);
-  }else{
-    if(a.x1<b.x){
- 	  c.distance.x = c.lx = Math.pow(Math.pow(b.x-a.x1,2),0.5);
-	  c.x = a.x1;
-	}else if(a.x<b.x1){
-	  c.distance.x = c.lx = Math.pow(Math.pow(a.x-b.x1,2),0.5);
-	  c.x = b.x1;
-	}else if(a.x1==b.x || a.x==b.x1){
-	  c.distance.x = c.lx = 0;
-	  c.x = Math.max(a.x,b.x);
-	}
-  }
-  
-  if(a.y<=b.y && b.y<=a.y1 && b.y1>=a.y1 || a.y>=b.y && b.y1<=a.y1 && b.y1>=a.y || a.y<=b.y && a.y1>=b.y1 || a.y>=b.y && a.y1<=b.y1){
-    c.y = Math.max(b.y, a.y);
-	c.ly = Math.pow(Math.pow(Math.min(b.y1, a.y1)-c.y,2),0.5);
-  }else{
-    if(a.y1<b.y){
- 	  c.distance.y = c.ly = Math.pow(Math.pow(b.y-a.y1,2),0.5);
-	  c.y = a.y1;
-	}else if(a.y<b.y1){
-	  c.distance.y = c.ly = Math.pow(Math.pow(a.y-b.y1,2),0.5);
-	  c.y = b.y1;
-	}else if(a.y1==b.y || a.y==b.y1){
-	  c.distance.ye = c.ly = 0;
-	  c.y = Math.may(a.y,b.y);
-	}
-  }
-  
-  if(a.z<=b.z && b.z<=a.z1 && b.z1>=a.z1 || a.z>=b.z && b.z1<=a.z1 && b.z1>=a.z || a.z<=b.z && a.z1>=b.z1 || a.z>=b.z && a.z1<=b.z1){
-    c.z = Math.max(b.z, a.z);
-	c.lz = Math.pow(Math.pow(Math.min(b.z1, a.z1)-c.z,2),0.5);
-  }else{
-   if(a.z1<b.z){
- 	  c.distance.z = c.lz = Math.pow(Math.pow(b.z-a.z1,2),0.5);
-	  c.z = a.z1;
-	}else if(a.z<b.z1){
-	  c.distance.z = c.lz = Math.pow(Math.pow(a.z-b.z1,2),0.5);
-	  c.z = b.z1;
-	}else if(a.z1==b.z || a.z==b.z1){
-	  c.distance.z = c.lz = 0;
-	  c.z = Math.maz(a.z,b.z);
-	}
-  }
 }
 
 /**
@@ -164,6 +141,7 @@ var Overlap = function(a,b,c){
 */
 var Building = function(){
   Building.ID = 0;
+  /* Список всех элементов */
   Building.list = {};
 }
 /**
@@ -171,18 +149,16 @@ var Building = function(){
  @param {number} x,y,z,lx,ly,lz - координаты и размеры комнаты
  @returns экземпляр класса 'Struct'
 */
-Building.prototype.addRoom = function(x,y,z,lx,ly,lz){
-  /* Создание нового экземпляра класса 'Struct' */
+Building.prototype.addRoom = function (x,y,z,lx,ly,lz) {
   var b = new Struct().set(Building.ID,'room',x,y,z,lx,ly,lz);
   /* Если элементов не существует, добавляется первый элемент */
-  if(Building.ID==0){
+  if (Building.ID==0) {
 	Building.list[Building.ID] = b;
 	Building.ID++;
 	return b;
-  }else 
   /* Если имеется хотя бы один, проверяется пересечение с существующими */
   /** TODO - Добавить генерацию ошибок */
-  if(Building.ID>0){
+  } else if (Building.ID>0) {
 	var isIntersect = false;
 	for(var i in Building.list)	if(isIntersects(Building.list[i], b)) isIntersect = true;
 	if(isIntersect == false){
