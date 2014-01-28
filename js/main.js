@@ -27,35 +27,35 @@
 
 
 function wheelListener(){
-
 	var elem = document.getElementById('canvas');
 	if (elem.addEventListener) {
-	  if ('onwheel' in document) {
-		elem.addEventListener ("wheel", onWheel, false);
-	  } else if ('onmousewheel' in document) {
-		elem.addEventListener ("mousewheel", onWheel, false);
-	  } else {
-		elem.addEventListener ("MozMousePixelScroll", onWheel, false);
-	  }
+		if ('onwheel' in document) {
+			elem.addEventListener("wheel", onWheel, false);
+		} else if ('onmousewheel' in document) {
+			elem.addEventListener("mousewheel", onWheel, false);
+		} else {
+			elem.addEventListener("MozMousePixelScroll", onWheel, false);
+		}
 	} else {
-	  elem.attachEvent ("onmousewheel", onWheel);
+		elem.attachEvent("onmousewheel", onWheel);
 	}
 
 	function onWheel(e) {
 		e = e || window.event;
 		var delta = e.deltaY || e.detail || e.wheelDelta;
 		cam.setZoom((delta > 0)?1.1:0.9);
-		drawScene(0.0, 0.0);
+		drawScene();
 		e.preventDefault ? e.preventDefault() : (e.returnValue = false);
 	}
 }
 
-function dragRight(tool){
-	var selector = '#canvas';
+function dragRight(){
+	var selector = '#canvas',
+		tool = new draggable();
 	$(selector).on("mousedown", s);
 	$(selector).on("mousemove", s);
 	$(selector).on("mouseup", s);
-
+	
 	function s(e) {
 		if (tool[e.type]) {
 			tool[e.type](e);
@@ -64,38 +64,36 @@ function dragRight(tool){
 }
 
 function draggable(func) {
-  var elem = document.getElementById('canvas');
-  // флаг перемещения
-  var drag = false;
-  var dx, dy,
-	prevX, prevY;
+	var elem = document.getElementById('canvas'),
+		drag = false,
+		dx,
+		dy,
+		prevX,
+		prevY;
   
-  this.mousedown = function (ev) {
-	// старт перемещения
-	if (!drag) drag = true;
-	prevX = f(ev, 'x');
-	prevY = f(ev, 'y');
-  };
-
-  this.mousemove = function (ev) {
-	if (!drag) return;
-	// координаты в момент перемещения мышки
-	var k = elem.width/(cam.update().r-cam.update().l);
-	var nX = f(ev, 'x');
-	var nY = f(ev, 'y');
-	dx = (nX-prevX)/k;
-	dy = (nY-prevY)/k;
-	prevY = nY;
-	prevX = nX;
+	this.mousedown = function (ev) {
+		if (!drag) drag = true;
+		prevX = f(ev, 'x');
+		prevY = f(ev, 'y');
+	}
 	
-	cam.setDxy(dx, dy);
-	drawScene();
-  };
+	this.mousemove = function (ev) {
+		if (!drag) return;
+		var k = elem.width/(cam.update().r-cam.update().l),
+			nX = f(ev, 'x'),
+			nY = f(ev, 'y');
+		dx = (nX-prevX)/k;
+		dy = (nY-prevY)/k;
+		prevY = nY;
+		prevX = nX;
 
-  this.mouseup = function (ev) {
-	// прекращение перемещения
-	if (drag) drag = false;
-  };
+		cam.setDxy(dx, dy);
+		drawScene();
+	}
+
+	this.mouseup = function (ev) {
+		if (drag) drag = false;
+	}
 }
 	
 /* Функция вычисления координаты мыши на холсте */
