@@ -36,16 +36,7 @@
         initGL(canvas);
         initShaders();
         initBuffers();
-
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.enable(gl.DEPTH_TEST);
-		
-		cam.setZoom(10.0);
-		cam.setDxy(0.0, 0.0);
-		drawScene();
-		
-		wheelListener();
-		dragRight();
+		initScene(canvas);
     }
 </script>
 </head>
