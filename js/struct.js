@@ -7,17 +7,31 @@
 */
 var Struct = function () {}
 Struct.prototype.set = function(id,type,x,y,z,lx,ly,lz){
-  return{
-    id: id,
-	type: type,
-	x: x,
-	y: y,
-	z: z,
-	lx: lx,
-	ly: ly,
-	lz: lz
-  }
+	this.id = id;
+	this.type = type;
+	this.x = x; 
+	this.y = y; 
+	this.z = z;
+	this.lx = lx;
+	this.ly = ly;
+	this.lz = lz;
+	return {
+		id: this.id,
+		type: this.type,
+		x: this.x,
+		y: this.y,
+		z: this.z,
+		lx: this.lx,
+		ly: this.ly,
+		lz: this.lz
+	}
 }
+Struct.prototype.setPosition = function (x, y, z) {
+	this.x = x;
+	this.y = y;
+	this.z = z;
+}
+
 /**
  Функция 'isIntersects'.
  Определяет пересечение двух элементов.
@@ -171,7 +185,10 @@ Building.prototype.addRoom = function (x,y,z,lx,ly,lz) {
 	  throw new Error('Невозможно добавить элемент с такими параметрами');
 	}
   }
+  
+  
 }
+
 /**
  Метод добавления двери между двумя комнатами.
  @param {Struct} a,b - экземпляры класса 'Struct'
@@ -243,15 +260,15 @@ Building.prototype.modify = function(id){
 	/* Свойство изменения положения */
 	position: function(x,y,z){
 	  q = new Struct().set(id,c.type,x,y,z,c.lx,c.ly,c.lz);
-	  q.distance = {};
-	  c.x1 = c.x + c.lx;
-      c.z1 = c.z + c.lz;
-  	  c.y1 = c.y + c.ly;
-	  for(var i in c.distance){
-		q.distance[i] = c.distance[i];
-	    if(c.distance[i] != 0) q[i] = c[i];
-	    if(q[i]<=c[i]||q[i]+q['l'+i]<=c[i]+c['l'+i]) q[i]=c[i];
-	  }
+	  // q.distance = {};
+	  // c.x1 = c.x + c.lx;
+      // c.z1 = c.z + c.lz;
+  	  // c.y1 = c.y + c.ly;
+	  // for(var i in c.distance){
+		// q.distance[i] = c.distance[i];
+	    // if(c.distance[i] != 0) q[i] = c[i];
+	    // if(q[i]<=c[i]||q[i]+q['l'+i]<=c[i]+c['l'+i]) q[i]=c[i];
+	  // }
 	  Building.list[id] = q;
 	  return q;
 	},
@@ -298,6 +315,15 @@ Building.prototype.numberOf = function(type){
   }
   return counter;
 }
+Building.prototype.set = function (id) {
+	return {
+		position: function (x, z) {
+			var item = Building.list[id];
+			Building.list[id] = new Struct().set(id, item.type, x, item.y, z, item.lx, item.ly, item.lz);
+		}
+	}
+}
+
 
 /**
 	Класс Camera.
