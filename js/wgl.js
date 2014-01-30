@@ -68,18 +68,15 @@ function initShaders() {
 	shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
 	gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
-	shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-	shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+	shaderProgram.pvMatrixUniform = gl.getUniformLocation(shaderProgram, "uPVMatrix");
+	shaderProgram.mMatrixUniform = gl.getUniformLocation(shaderProgram, "uMMatrix");
+	shaderProgram.uColor = gl.getUniformLocation(shaderProgram, "uColor");
 }
 
 
-var mvMatrix = mat4.create();
-var pMatrix = mat4.create();
+var mMatrix = mat4.create();
+var pvMatrix = mat4.create();
 
-function setMatrixUniforms() {
-	gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-	gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
-}
 
 var squareVertexPositionBuffer;
 
@@ -87,10 +84,10 @@ function initBuffers() {
 	squareVertexPositionBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
 	vertices = [
-		 1.0,  1.0,  0.0,
-		-1.0,  1.0,  0.0,
-		 1.0, -1.0,  0.0,
-		-1.0, -1.0,  0.0
+		 1.0, 0.0,  1.0,
+		-1.0, 0.0,  1.0,
+		 1.0, 0.0, -1.0,
+		-1.0, 0.0, -1.0
 	];
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 	squareVertexPositionBuffer.itemSize = 3;
@@ -105,14 +102,30 @@ function drawScene(cam) {
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    mat4.ortho(cam.get().l, cam.get().r, cam.get().b, cam.get().t, 0.1, 100.0, pMatrix);
-	mat4.identity(mvMatrix);
-    mat4.translate(mvMatrix, [0.0, 0.0, -0.1]);
+	
+    mat4.ortho(cam.get().l, cam.get().r, cam.get().b, cam.get().t, 0.1, 100.0, pvMatrix);
+	mat4.rotateX(pvMatrix, Math.PI/2.0);
+	
+	for (var i = 0; i < build.length(); i++){
+		mat4.identity(mMatrix);
+		var item = build.getItem(i);
+		var	dx = item.x - item.lx * 0.5,
+			dz = item.z - item.lz * 0.5,
+			sx = item.lx * 0.5,
+			sz = item.lz * 0.5;
+			
+		var uColor = [1.0+sx, 0.0+dx, 0.0+dz, 1.0];
+		
+		mat4.translate(mMatrix, [dx, -0.1, dz]);
+		mat4.scale(mMatrix, [sx, 1.0, sz]);
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-	gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	setMatrixUniforms();
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+		gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
+		gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
+		gl.uniform4fv(shaderProgram.uColor, uColor);
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);		
+	}
 }
 
 /**
@@ -184,31 +197,57 @@ function initScene(elem) {
 		
 		function Draggable() {
 			var drag = false,
+				move = false,
+				item,
+				k,
 				prevX,
-				prevY;
+				prevY,
+				x,
+				y;
 		    
 			this.mousedown = function (ev) {
-				if(!fixWhich(ev)) return;
-				drag = true;
-				prevX = f(ev, 'x');
-				prevY = f(ev, 'y');
+				k = gl.viewportWidth / (cam.get().r - cam.get().l)
+				if(fixWhich(ev)) {
+					prevX = f(ev, 'x');
+					prevY = f(ev, 'y');
+					drag = true;
+				} else {
+					x = f(ev, 'x')/k + cam.get().l + 2.0;
+					y = -1.0 * (f(ev, 'y')/k + cam.get().b) + 2.0;
+					item = FindElement(x, y, build.getItem());
+					if (item == 0 || item != false) {
+						move = true;
+						offsetX = x - build.getItem(item).x;
+						offsetY = y - build.getItem(item).y;
+						console.log(offsetX, offsetY, item);
+					}
+				}
 			}
 			this.mousemove = function (ev) {
-				if (!drag) return;
-				var k = gl.viewportWidth / (cam.get().r - cam.get().l),
-					nX = f(ev, 'x'),
-					nY = f(ev, 'y'),
-					dx = (nX-prevX)/k,
-					dy = (nY-prevY)/k;
-
-				prevY = nY;
-				prevX = nX;
-
-				cam.setDxDy(dx, dy);
+					
+				if (drag){
+					var nX = f(ev, 'x'),
+						nY = f(ev, 'y'),
+						dx = (nX-prevX)/k,
+						dy = (nY-prevY)/k;
+					prevY = nY;
+					prevX = nX;
+					cam.setDxDy(dx, dy);
+				} else if (move) {
+					x = f(ev, 'x')/k + cam.get().l+2.0;
+					y = -1.0 * (f(ev, 'y')/k + cam.get().b)+2.0;
+					var dx = x - offsetX,
+						dy = y - offsetY;
+					build.set(item).position(dx, dy);
+				}
 				drawScene(cam);
 			}
 			this.mouseup = function (ev) {
-				if (drag) drag = false;
+				if (drag) {
+					drag = false;
+				} else if (move) {
+					move = false;
+				}
 			}
 		}
 			
@@ -231,6 +270,19 @@ function initScene(elem) {
 			if (e.which == 3) {
 				return true;
 			}
+		}
+		
+		/* Функция поиска элемента на холсте мышкой */
+		var FindElement = function(x, y, obj){
+		  for (var i in obj){
+			var e = obj[i];
+			e.x1 = e.x + e.lx;
+			e.z1 = e.z + e.lz;
+			if ((x > e.x && x < e.x1) && (y > e.z && y < e.z1)) {
+				return e.id;
+			}
+		  }
+		  return false;
 		}
 	}
 }
