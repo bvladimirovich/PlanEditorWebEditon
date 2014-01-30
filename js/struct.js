@@ -300,47 +300,37 @@ Building.prototype.numberOf = function(type){
 }
 
 /**
- Конструктор списка элементов
+	Класс Camera.
+	Устанавливает положение камеры.
+	@param {number} zoom - приближение/отдаление,
+					dx, dy - перемещение центра координатной оси,
+					l, r, b, t - центр координатной системы.
+	Входной параметр для setZoom() - коэффициент изменения приближения/отдаления.
+	Входные параметры для setDxDy() - коэффициенты для изменения положения по осям.
+	Метод update() возвращает параметры положения центра координатной системы.
 */
-var ListItems = function () {
-  var l = {};
-  return{
-    add: function(key, value){
-      for (var k in l) {
-        if (k!=key) {
-          l[key] = value;
-        } else { 
-		  throw new Error ('Доббавление невозможно. Объект с таким ключом уже существует');
-		}
-      }
-    },
-    set: function(key, value){
-	  for (var k in l) {
-        if (k==key) {
-          l[key] = value;
-        } else { 
-		  throw new Error ('Установка нового значения невозможна. Объект с таким ключом не существует');
-		}
-      }
-	},
-    get: function(/*key*/){
-	  if (arguments.length == 0) {
-	    return l;
-	  } else if (arguments.length == 1) {
-	    return l[arguments[0]];
-	  } else {
-	    throw new Error ('Невозможно вернуть элемент. Недопустимое количество параметров')
-	  }
-	},
-    sort: function(){},
-    remove: function(key){
-	  for (var k in l) {
-        if (k==key) {
-          delete l[key];
-        } else { 
-		  throw new Error ('Удаление невозможно. Объект с таким ключом не существует');
-		}
-      }
+var Camera = function (obj) {
+	this.zoom = obj.zoom;
+	this.dx = obj.dx;
+	this.dy = obj.dy;
+
+	this.l = obj.left;
+	this.r = obj.right;
+	this.b = obj.bottom;
+	this.t = obj.top;
+}
+Camera.prototype.setZoom = function (a) {
+	this.zoom = Math.max(Math.min(this.zoom * a, 30.0), 1.0);
+}
+Camera.prototype.setDxDy = function (a, b) {
+	this.dx -= a;
+	this.dy -= b;
+}
+Camera.prototype.get = function () {
+	return{
+		l: this.l*this.zoom + this.dx,
+		r: this.r*this.zoom + this.dx,
+		b: this.b*this.zoom + this.dy,
+		t: this.t*this.zoom + this.dy
 	}
-  }
 }
