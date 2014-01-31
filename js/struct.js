@@ -315,13 +315,8 @@ Building.prototype.numberOf = function(type){
   }
   return counter;
 }
-Building.prototype.set = function (id) {
-	return {
-		position: function (x, z) {
-			var item = Building.list[id];
-			Building.list[id] = new Struct().set(id, item.type, x, item.y, z, item.lx, item.ly, item.lz);
-		}
-	}
+Building.prototype.updateItem = function (item) {
+	Building.list[item.id] = new Struct().set(item.id, item.type, item.x, item.y, item.z, item.lx, item.ly, item.lz);
 }
 
 
@@ -332,13 +327,13 @@ Building.prototype.set = function (id) {
 					dx, dy - перемещение центра координатной оси,
 					l, r, b, t - центр координатной системы.
 	Входной параметр для setZoom() - коэффициент изменения приближения/отдаления.
-	Входные параметры для setDxDy() - коэффициенты для изменения положения по осям.
+	Входные параметры для setDxDz() - коэффициенты для изменения положения по осям.
 	Метод update() возвращает параметры положения центра координатной системы.
 */
 var Camera = function (obj) {
 	this.zoom = obj.zoom;
 	this.dx = obj.dx;
-	this.dy = obj.dy;
+	this.dz = obj.dz;
 
 	this.l = obj.left;
 	this.r = obj.right;
@@ -348,15 +343,15 @@ var Camera = function (obj) {
 Camera.prototype.setZoom = function (a) {
 	this.zoom = Math.max(Math.min(this.zoom * a, 30.0), 1.0);
 }
-Camera.prototype.setDxDy = function (a, b) {
+Camera.prototype.setDxDz = function (a, b) {
 	this.dx -= a;
-	this.dy -= b;
+	this.dz -= b;
 }
 Camera.prototype.get = function () {
 	return{
 		l: this.l*this.zoom + this.dx,
 		r: this.r*this.zoom + this.dx,
-		b: this.b*this.zoom + this.dy,
-		t: this.t*this.zoom + this.dy
+		b: this.b*this.zoom + this.dz,
+		t: this.t*this.zoom + this.dz
 	}
 }

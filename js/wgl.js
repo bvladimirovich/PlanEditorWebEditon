@@ -146,7 +146,7 @@ function initScene(elem) {
 	cam = new Camera({
 		zoom:10.0,
 		dx:0.0,
-		dy:0.0,
+		dz:0.0,
 		left:-1.0,
 		right:1.0,
 		bottom:-1.0,
@@ -200,46 +200,46 @@ function initScene(elem) {
 			var drag = false,
 				move = false,
 				item,
-				k,
-				prevX,
-				prevY,
-				x,
-				y;
+				prevXd,
+				prevZd,
+				prevXm,
+				prevZm;
 		    
 			this.mousedown = function (ev) {
-				k = gl.viewportWidth / (cam.get().r - cam.get().l);
-				if(fixWhich(ev)) {
-					prevX = f(ev, 'x');
-					prevY = f(ev, 'y');
+				
+				if (fixWhich(ev)) {
+					prevXd = fs(ev, 'x');
+					prevZd = gl.viewportHeight - fs(ev, 'z');
 					drag = true;
 				} else {
 					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
-						z = (gl.viewportWidth-fs(ev, 'y'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
+						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
 					console.log('Глобальные  координаты:', 'x =', x, 'z =', z);
 					
-					item = FindElement(x, z, build.getItem());
+					item = findElement(x, z, build.getItem());
 					if (item != false) {
 						move = true;
-						offsetX = x - build.getItem(item.id).x;
-						offsetZ = z - build.getItem(item.id).z;
+						prevXm = x - item.x;
+						prevZm = z - item.z;
 					}
 				}
 			}
 			this.mousemove = function (ev) {
 				if (drag){
-					var nX = f(ev, 'x'),
-						nY = f(ev, 'y'),
-						dx = (nX-prevX)/k,
-						dy = (nY-prevY)/k;
-					prevY = nY;
-					prevX = nX;
-					cam.setDxDy(dx, dy);
+					var k = gl.viewportWidth / (cam.get().r - cam.get().l),
+						nX = fs(ev, 'x'),
+						nZ = gl.viewportHeight - fs(ev, 'z'),
+						dx = (nX-prevXd)/k,
+						dz = (nZ-prevZd)/k;
+					prevXd = nX;
+					prevZd = nZ;
+					cam.setDxDz(dx, dz);
 				} else if (move) {
 					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
-						z = (gl.viewportWidth-fs(ev, 'y'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
-					var dx = x - offsetX,
-						dz = z - offsetZ;
-						build.set(item.id).position(dx, dz);
+						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
+					item.x = x - prevXm,
+					item.z = z - prevZm;
+					build.updateItem(item);
 				}
 				drawScene(cam);
 			}
@@ -252,11 +252,6 @@ function initScene(elem) {
 			}
 		}
 			
-		/* Функция вычисления координаты мыши на холсте */
-		function f(ev, p) {
-		  var elem = document.getElementById('canvas');
-		  return (p=='x') ? ev.pageX-elem.offsetLeft : elem.height-(ev.pageY-elem.offsetTop);
-		}
 		function fs(ev, p) {
 		  var elem = document.getElementById('canvas');
 		  return (p=='x') ? ev.pageX-elem.offsetLeft : ev.pageY-elem.offsetTop;
@@ -278,7 +273,7 @@ function initScene(elem) {
 		}
 		
 		/* Функция поиска элемента на холсте мышкой */
-		var FindElement = function(x, y, obj){
+		var findElement = function(x, y, obj){
 		  for (var i in obj){
 			var e = obj[i];
 			e.x1 = e.x + e.lx;
