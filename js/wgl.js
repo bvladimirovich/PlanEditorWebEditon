@@ -1,12 +1,18 @@
 ﻿var gl;
 	
 function initGL(canvas) {
-	try {
-		gl = canvas.getContext("experimental-webgl");
-		gl.viewportWidth = canvas.width;
-		gl.viewportHeight = canvas.height;
-	} catch (e) {}
-	
+	var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+    gl = null;
+    for (var i = 0; i < names.length; ++i) {
+        try {
+            gl = canvas.getContext(names[i]);
+			gl.viewportWidth = canvas.width;
+			gl.viewportHeight = canvas.height;
+        } catch(e) {}
+        if (gl) {
+            break;
+        }
+    }
 	if (!gl) {
 		alert("Could not initialise WebGL, sorry :-(");
 	}
@@ -124,7 +130,7 @@ function drawScene(cam) {
 		gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
 		gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
 		gl.uniform4fv(shaderProgram.uColor, uColor);
-		gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);		
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
 	}
 }
 
@@ -154,7 +160,7 @@ function initScene(elem) {
 	});
 	
 	wheelListener();
-	dragRight();
+	drag();
 	drawScene(cam);
 	
 	function wheelListener(){
@@ -179,7 +185,7 @@ function initScene(elem) {
 		}
 	}
 
-	function dragRight() {
+	function drag() {
 		var selector = '#canvas';
 		$(selector).on("mousedown", s);
 		$(selector).on("mousemove", s);
@@ -195,7 +201,6 @@ function initScene(elem) {
 			}
 		}
 		
-		/** TODO - переименовать координату y в координату z */
 		function Draggable() {
 			var drag = false,
 				move = false,
@@ -214,7 +219,6 @@ function initScene(elem) {
 				} else {
 					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
 						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
-					console.log('Глобальные  координаты:', 'x =', x, 'z =', z);
 					
 					item = findElement(x, z, build.getItem());
 					if (item != false) {
@@ -228,15 +232,15 @@ function initScene(elem) {
 				if (drag){
 					var k = gl.viewportWidth / (cam.get().r - cam.get().l),
 						nX = fs(ev, 'x'),
-						nZ = gl.viewportHeight - fs(ev, 'z'),
-						dx = (nX-prevXd)/k,
-						dz = (nZ-prevZd)/k;
+						nZ = gl.viewportHeight - fs(ev, 'z');
+						
+					cam.setDxDz((nX-prevXd)/k, (nZ-prevZd)/k);
 					prevXd = nX;
 					prevZd = nZ;
-					cam.setDxDz(dx, dz);
 				} else if (move) {
 					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
 						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
+						
 					item.x = x - prevXm,
 					item.z = z - prevZm;
 					build.updateItem(item);
