@@ -26,11 +26,6 @@ Struct.prototype.set = function(id,type,x,y,z,lx,ly,lz){
 		lz: this.lz
 	}
 }
-Struct.prototype.setPosition = function (x, y, z) {
-	this.x = x;
-	this.y = y;
-	this.z = z;
-}
 
 /**
  Функция 'isIntersects'.
@@ -44,12 +39,12 @@ var isIntersects = function (a,b){
   /* Координаты центра входящих элементов */
   a.center = {
     x: a.x + a.lx/2.0,
-	y: a.y + a.ly/2.0, 
+	y: a.y + a.ly/2.0,
 	z: a.z + a.lz/2.0
   };
   b.center = {
     x: b.x + b.lx/2.0,
-	y: b.y + b.ly/2.0, 
+	y: b.y + b.ly/2.0,
 	z: b.z + b.lz/2.0
   };
   /* Расстояние между центрами элементов */
@@ -126,13 +121,13 @@ Section.prototype.get = function(a, b, arr){
   	    (a[m]<=b[m] && a[m+'1']>=b[m+'1']) || 
   	    (a[m]>=b[m] && a[m+'1']<=b[m+'1']) ) {
   	    c[m] = Math.max(b[m], a[m]);
-  	    c['l'+m] = Math.pow(Math.pow(Math.min(b[m+'1'], a[m+'1'])-c[m],2),0.5);
+  	    c['l'+m] = Math.pow(Math.pow(Math.min(b[m+'1'], a[m+'1'])-c[m],2.0),0.5);
   	  } else {
   	    if(a[m+'1']<b[m]){
-  	      c.distance[m] = c['l'+m] = Math.pow(Math.pow(b[m]-a[m+'1'],2),0.5);
+  	      c.distance[m] = c['l'+m] = Math.pow(Math.pow(b[m]-a[m+'1'],2.0),0.5);
   	      c[m] = a[m+'1'];
   	    }else if(a[m]<b[m+'1']){
-  	      c.distance[m] = c['l'+m] = Math.pow(Math.pow(a[m]-b[m+'1'],2),0.5);
+  	      c.distance[m] = c['l'+m] = Math.pow(Math.pow(a[m]-b[m+'1'],2.0),0.5);
   	      c[m] = b[m+'1'];
   	    }else if(a[m+'1']==b[m] || a[m]==b[m+'1']){
   	      c.distance[m] = c['l'+m] = 0;
@@ -196,20 +191,24 @@ Building.prototype.addRoom = function (x,y,z,lx,ly,lz) {
  @returns экземпляр класса 'Struct'
 */
 Building.prototype.addDoor = function(a,b, lx, ly, lz){
-  var c = new Section().get(a,b,Building.list),
-      q = new Struct().set(Building.ID,'door',c.x,c.y,c.z,lx,ly,lz);
-  /* Идентификаторы элементов между которыми создана дверь */
-  q.link = {};
-  /* Предел перемещения двери по осям */
-  q.limit = {};
-  /* Расстояние между объектами */
-  q.distance = {};
+	var c = new Section().get(a,b,Building.list);
+	lx = lx || c.lx;
+	ly = ly || c.ly;
+	lz = lz || c.lz;
+	var q = new Struct().set(Building.ID,'door',c.x,c.y,c.z,lx,ly,lz);
+	
+	/* Идентификаторы элементов между которыми создана дверь */
+	q.link = {};
+	/* Предел перемещения двери по осям */
+	q.limit = {};
+	/* Расстояние между объектами */
+	q.distance = {};
   /** Проверка на отсутствие ошибок*/
   /*** TODO - Применить класс Error и try/catch **/
-  if(c.info == 0){
+  if (c.info == 0) {
 	q.link.a = a.id;
 	q.link.b = b.id;
-	if(q.lx<=c.lx && q.ly<=c.ly&&q.lz<=c.lz){
+	if(q.lx<=c.lx && q.ly<=c.ly && q.lz<=c.lz){
       q.limit.lx = c.lx;
 	  q.limit.ly = c.ly;
 	  q.limit.lz = c.lz;
@@ -220,63 +219,14 @@ Building.prototype.addDoor = function(a,b, lx, ly, lz){
 	  Building.ID++
       return q;
 	}else {
-	  throw new Error('Невозможно установить размеры двери');
+	  throw 'Невозможно установить размеры двери';
 	}
   } else if (c.info == 1) {
-    throw new Error('Невозможно добавить дверь. Элементы не скрещиваются');
+    throw 'Невозможно добавить дверь. Элементы не скрещиваются';
   } else if (c.info == 2) {
-    throw new Error('Невозможно добавить дверь. Расстояние между элементами равно нулю');
+    throw 'Невозможно добавить дверь. Расстояние между элементами равно нулю';
   } else if (c.info == 3) {
-    throw new Error('Невозможно добавить дверь. Между элементами находится другой элемент');
-  }
-}
-/**
- Метод модификации параметров элемента.
- Заменяется предыдущий экземпляр 'Struct' с идентификатором id
- новым экземпляром 'Struct' с таким же id, но новыми параметрами
- @param {number} id - идентификатор объекта
-*/
-Building.prototype.modify = function(id){
-  var c = Building.list[id],
-      q = {},
-	  isIntersect = false;
-  /** TODO - Применить this вместо return */
-  return{
-    /* Свойство изменения размера */
-	/** TODO - Добавить обработку исключений и вывод сообщений */
-    size: function(lx,ly,lz){
-	  q = new Struct().set(id,c.type,c.x,c.y,c.z,lx,ly,lz);
-	  for(var i in Building.list){
-	    if(i==id)continue;
-	    if(isIntersects(q, Building.list[i])) isIntersect = true;
-	  }
-	  if(isIntersect == false){
-	    Building.list[id] = q;
-		return q;
-	  }else{
-	    throw new Error('Невозможно изменить размеры элемента');
-	  }
-	},
-	/* Свойство изменения положения */
-	position: function(x,y,z){
-	  q = new Struct().set(id,c.type,x,y,z,c.lx,c.ly,c.lz);
-	  // q.distance = {};
-	  // c.x1 = c.x + c.lx;
-      // c.z1 = c.z + c.lz;
-  	  // c.y1 = c.y + c.ly;
-	  // for(var i in c.distance){
-		// q.distance[i] = c.distance[i];
-	    // if(c.distance[i] != 0) q[i] = c[i];
-	    // if(q[i]<=c[i]||q[i]+q['l'+i]<=c[i]+c['l'+i]) q[i]=c[i];
-	  // }
-	  Building.list[id] = q;
-	  return q;
-	},
-	/* Свойство изменения типа */
-	type: function(type){
-	  Building.list[id] = new Struct().set(id,type,c.x,c.y,c.z,c.lx,c.ly,c.lz);
-	  return Building.list[id];
-	}
+    throw 'Невозможно добавить дверь. Между элементами находится другой элемент';
   }
 }
 /**
@@ -284,18 +234,20 @@ Building.prototype.modify = function(id){
  @param {number} id - идентификатор объекта
  @returns удалённый объект
 */
-Building.prototype.remove = function(id){
-  var i = Building.list[id];
-  delete Building.list[id];
-  return i;
+Building.prototype.removeItem = function(id){
+	var i = Building.list[id];
+	delete Building.list[id];
+	return i;
 }
 /**
  Метод возвращает количество существующих элементов
 */
-Building.prototype.length = function(){
-  var counter = 0;
-  for(var i in Building.list) counter++;
-  return counter;
+Building.prototype.numberOfItems = function(){
+	var counter = 0;
+	for (var i in Building.list) {
+		counter++;
+	}
+	return counter;
 }
 /**
  Метод возвращает элемент по идентификатору или список всех элементов.
@@ -306,19 +258,11 @@ Building.prototype.getItem = function(){
   else return b[arguments[0]];
 }
 /**
- Метод подсчитывает количество элементов определённого типа
+	Метод обновления параметров элемента
 */
-Building.prototype.numberOf = function(type){
-  var counter = 0;
-  for(var i in Building.list){
-    if(Building.list[i].type == type) counter++;
-  }
-  return counter;
-}
 Building.prototype.updateItem = function (item) {
 	Building.list[item.id] = new Struct().set(item.id, item.type, item.x, item.y, item.z, item.lx, item.ly, item.lz);
 }
-
 
 /**
 	Класс Camera.
