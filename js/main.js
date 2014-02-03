@@ -8,5 +8,5 @@ var r3 = build.addRoom(0.0,0.0,5.0, 2.0,1.0,2.0);
 //console.log(r2);
 //console.log(r3);
 //console.log('--------------Добавление двери между комнатами-----------');
-//var door = build.addDoor(r1, r2, 1.0,1.0,1.0);
+var door = build.addDoor(r1, r2);
 //console.log(door);
