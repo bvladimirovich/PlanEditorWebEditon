@@ -112,15 +112,19 @@ function drawScene(cam) {
     mat4.ortho(cam.get().l, cam.get().r, cam.get().b, cam.get().t, 0.1, 100.0, pvMatrix);
 	mat4.rotateX(pvMatrix, Math.PI/2.0);
 	
-	for (var i = 0; i < build.length(); i++){
+	for (var i = 0; i < build.numberOfItems(); i++){
 		mat4.identity(mMatrix);
 		var item = build.getItem(i);
 		var	dx = item.x + item.lx * 0.5,
 			dz = item.z + item.lz * 0.5,
 			sx = item.lx * 0.5,
 			sz = item.lz * 0.5;
-			
-		var uColor = [1.0+sx, 0.0+dx, 0.0+dz, 1.0];
+		
+		if (item.type == 'door') {
+			var uColor = [1.0, 0.5, 0.0, 1.0];
+		} else {
+			var uColor = [0.0+sx, 0.0+dx, 0.0+dz, 1.0];
+		}
 		
 		mat4.translate(mMatrix, [dx, -0.1, dz]);
 		mat4.scale(mMatrix, [sx, 1.0, sz]);
