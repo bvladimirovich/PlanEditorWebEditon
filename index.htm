@@ -1,5 +1,4 @@
-﻿
-<html>
+﻿<html>
 
 <head>
 <title>WebGL</title>
@@ -38,12 +37,30 @@
         initGL(canvas);
         initShaders();
         initBuffers();
+		initBuffersLine();
+		initTest();
 		initScene(canvas);
     }
 </script>
+<style>
+	div{
+		float: left;
+	}
+</style>
 </head>
 <body onload="webGLStart();">
-    <canvas id="canvas" style="border: none;" width="500" height="500"></canvas>
+    <div>
+		<canvas id="canvas" style="border: none;" width="500" height="500"></canvas>
+	</div>
+	<div style='width:30px; height:500px;'></div>
+	<div>
+		Размеры: <br>
+		lx: <input id='lx' type='text' size='5'>
+		ly: <input id='ly' type='text' size='5'>
+		lz: <input id='lz' type='text' size='5'>
+		<br>
+		<button id='addRoom'>Добавить комнату</button>
+	</div>
 </body>
 
 </html>
