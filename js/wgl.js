@@ -85,6 +85,7 @@ var pvMatrix = mat4.create();
 
 
 var squareVertexPositionBuffer;
+var lineVertexPositionBuffer;
 
 function initBuffers() {
 	squareVertexPositionBuffer = gl.createBuffer();
@@ -98,6 +99,21 @@ function initBuffers() {
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 	squareVertexPositionBuffer.itemSize = 3;
 	squareVertexPositionBuffer.numItems = 4;
+}
+
+function initBuffersLine() {
+	lineVertexPositionBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, lineVertexPositionBuffer);
+	vertices = [
+		 1.0, 0.0,  1.0,
+		-1.0, 0.0,  1.0,
+		-1.0, 0.0, -1.0,
+		 1.0, 0.0, -1.0,
+		 1.0, 0.0,  1.0,
+	];
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+	lineVertexPositionBuffer.itemSize = 3;
+	lineVertexPositionBuffer.numItems = 4;
 }
 
 function drawScene(cam) {
@@ -129,12 +145,19 @@ function drawScene(cam) {
 		mat4.translate(mMatrix, [dx, -0.1, dz]);
 		mat4.scale(mMatrix, [sx, 1.0, sz]);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		// gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+		// gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		// gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
+		// gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
+		// gl.uniform4fv(shaderProgram.uColor, uColor);
+		gl.bindBuffer(gl.ARRAY_BUFFER, lineVertexPositionBuffer);
+		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, lineVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
 		gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
 		gl.uniform4fv(shaderProgram.uColor, uColor);
-		gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+		
+		//gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+		gl.drawArrays(gl.LINE_STRIP, 0, lineVertexPositionBuffer.numItems);
 	}
 }
 
