@@ -254,26 +254,29 @@ function initScene(elem) {
 					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
 						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
 					
-					item = findElement(x, z, build.getItem());
+					item = findElement(x, z, build.getItem());					
 					if (item != false) {
 						move = true;
 						prevXm = x - item.x;
 						prevZm = z - item.z;
+
+						sel.set(item.id);						
+						if (build.updateItem(item) == 'error') {
+							sel.error();
+						} else {
+							sel.noerror();
+						}
 					}
-					sel.set(item.id);
-					drawScene(cam, sel);
 					
-					var r = findBorder(x, z, build.getItem(sel.get()));
-					if (r > -1) {
-						resize = r;
-						move = false;
-						console.log(resize);
+					if (sel.get() !== undefined) {
+						var r = findBorder(x, z, build.getItem(sel.get()));
+						if (r != -1) {
+							resize = r;
+							move = false;
+						}					
 					}
-					if (build.updateItem(item) == 'error') {
-						sel.error();
-					} else {
-						sel.noerror();
-					}
+					
+					drawScene(cam, sel);
 				}
 			}
 			this.mousemove = function (ev) {
@@ -298,37 +301,77 @@ function initScene(elem) {
 						sel.noerror();
 					}
 					drawScene(cam, sel);
-				} else if (resize > -1) {
+				} else if (resize != -1) {
 					var minSize = {
 						lx: 0.6,
 						lz: 0.6
-					};
+					}, dlx, dlz;
 					switch (resize) {
-						case 00: // изменяем размер влево
-							var dlx = item.lx + (item.x-x);
+						case 'left': // изменяем размер влево
+							dlx = item.lx + (item.x-x);
 							if (dlx > minSize.lx) {
 								item.lx = dlx;
 								item.x = x;
 							}
 							break;
-						case 01: // изменяем размер вправо
-							var dlx = item.lx + (x - item.x1);
+						case 'right': // изменяем размер вправо
+							dlx = item.lx + (x - item.x1);
 							if (dlx > minSize.lx) {
 								item.lx = dlx;
 								item.x1 = x;
 							}
 							break;
-						case 10: // изменяем размер вверх
-							var dlz = item.lz + (item.z-z);
+						case 'top': // изменяем размер вверх
+							dlz = item.lz + (item.z-z);
 							if (dlz > minSize.lz) {
 								item.lz = dlz;
 								item.z = z;
 							}
 							break;
-						case 11: // изменяем размер вниз
-							var dlz = item.lz + (z - item.z1);
+						case 'bottom': // изменяем размер вниз
+							dlz = item.lz + (z - item.z1);
 							if (dlz > minSize.lz) {
 								item.lz = dlz;
+								item.z1 = z;
+							}
+							break;
+						case 'topLeft':
+							dlx = item.lx + (item.x-x);
+							dlz = item.lz + (item.z-z);
+							if (dlx > minSize.lx && dlz > minSize.lz) {
+								item.lx = dlx;
+								item.lz = dlz;
+								item.x = x;
+								item.z = z;
+							}
+							break;
+						case 'bottomLeft':
+							dlx = item.lx + (item.x-x);
+							dlz = item.lz + (z - item.z1);
+							if (dlx > minSize.lx && dlz > minSize.lz) {
+								item.lx = dlx;
+								item.lz = dlz;
+								item.x = x;
+								item.z1 = z;
+							}
+							break;
+						case 'topRight':
+							dlx = item.lx + (x - item.x1);
+							dlz = item.lz + (item.z-z);
+							if (dlx > minSize.lx && dlz > minSize.lz) {
+								item.lx = dlx;
+								item.lz = dlz;
+								item.x1 = x;
+								item.z = z;
+							}
+							break;
+						case 'bottomRight':
+							dlx = item.lx + (x - item.x1);
+							dlz = item.lz + (z - item.z1);
+							if (dlx > minSize.lx && dlz > minSize.lz) {
+								item.lx = dlx;
+								item.lz = dlz;
+								item.x1 = x;
 								item.z1 = z;
 							}
 							break;
@@ -350,7 +393,7 @@ function initScene(elem) {
 					drag = false;
 				} else if (move) {
 					move = false;
-				} else if (resize > -1) {
+				} else if (resize != -1) {
 					resize = -1;
 				}
 			}
@@ -391,23 +434,35 @@ function initScene(elem) {
 		
 		function findBorder(x, y, e) {
 			if (e === undefined) return;
-			var dx = 0.2,
+			var dx = 0.18,
 				canvas = document.getElementById('canvas');
 				
 			e.x1 = e.x + e.lx;
 			e.z1 = e.z + e.lz;
-			if ((x < e.x+dx && x > e.x) && (y > e.z && y < e.z1)) {
+			if ((x < e.x+dx && x > e.x) && (y > e.z+dx && y < e.z1-dx)) {
 				canvas.style.cursor = 'w-resize';
-				return 00;
-			} else if ((x > e.x1-dx && x < e.x1) && (y > e.z && y < e.z1)) {
+				return 'left';
+			} else if ((x > e.x1-dx && x < e.x1) && (y > e.z+dx && y < e.z1-dx)) {
 				canvas.style.cursor = 'w-resize';
-				return 01;
-			} else if ((x > e.x && x < e.x1) && (y < e.z+dx && y >= e.z)) {
+				return 'right';
+			} else if ((x > e.x+dx && x < e.x1-dx) && (y < e.z+dx && y > e.z)) {
 				canvas.style.cursor = 's-resize';
-				return 10;
-			} else if ((x > e.x && x < e.x1) && (y > e.z1-dx && y <= e.z1)) {
+				return 'top';
+			} else if ((x > e.x+dx && x < e.x1-dx) && (y > e.z1-dx && y < e.z1)) {
 				canvas.style.cursor = 's-resize';
-				return 11;
+				return 'bottom';
+			} else if ((x < e.x+dx && x > e.x) && (y < e.z+dx && y > e.z)){
+				canvas.style.cursor = 'se-resize';
+				return 'topLeft';
+			} else if ((x < e.x+dx && x > e.x) && (y > e.z1-dx && y < e.z1)){
+				canvas.style.cursor = 'sw-resize';
+				return 'bottomLeft';
+			} else if ((y < e.z+dx && y > e.z) && (x > e.x1-dx && x < e.x1)){
+				canvas.style.cursor = 'sw-resize';
+				return 'topRight';
+			} else if ((y > e.z1-dx && y < e.z1) && (x > e.x1-dx && x < e.x1)){
+				canvas.style.cursor = 'se-resize';
+				return 'bottomRight';
 			} else {
 				canvas.style.cursor = 'default';
 				return -1;
