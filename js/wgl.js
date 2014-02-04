@@ -105,11 +105,11 @@ function initBuffersBorder() {
 	borderVertexPositionBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
 	vertices = [
-		 1.1, 0.0,  1.1,
-		-1.1, 0.0,  1.1,
-		-1.1, 0.0, -1.1,
-		 1.1, 0.0, -1.1,
-		 1.1, 0.0,  1.1,
+		 1.0, 0.0,  1.0,
+		-1.0, 0.0,  1.0,
+		-1.0, 0.0, -1.0,
+		 1.0, 0.0, -1.0,
+		 1.0, 0.0,  1.0,
 	];
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 	borderVertexPositionBuffer.itemSize = 3;
@@ -123,13 +123,11 @@ function drawScene(cam, sel) {
 	
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
 	
     mat4.ortho(cam.get().l, cam.get().r, cam.get().b, cam.get().t, 0.1, 100.0, pvMatrix);
 	mat4.rotateX(pvMatrix, Math.PI/2.0);
 	
 	for (var i = 0; i < build.numberOfItems(); i++){
-		mat4.identity(mMatrix);
 		var item = build.getItem(i);
 		var	dx = item.x + item.lx * 0.5,
 			dz = item.z + item.lz * 0.5,
@@ -139,10 +137,11 @@ function drawScene(cam, sel) {
 		if (item.type == 'door') {
 			var uColor = [1.0, 0.5, 0.0, 1.0];
 		} else {
-			var uColor = [0.0+sx, 0.0+dx, 0.0+dz, 1.0];
+			var uColor = [1.0, 1.0, 0.7, 1.0];
 		}
 		
-		mat4.translate(mMatrix, [dx, -0.1, dz]);
+		mat4.identity(mMatrix);
+		mat4.translate(mMatrix, [dx, -0.2, dz]);
 		mat4.scale(mMatrix, [sx, 1.0, sz]);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
@@ -154,12 +153,14 @@ function drawScene(cam, sel) {
 		
 		var selectedItem = sel.get();
 		if (selectedItem != -1 && selectedItem == item.id) {
-			var uColorBorder = [0.0, 1.0, 1.0, 1.0];
+			mat4.identity(mMatrix);
+			mat4.translate(mMatrix, [dx, -0.1, dz]);
+			mat4.scale(mMatrix, [sx, 1.0, sz]);
 			gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
 			gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, borderVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 			gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
 			gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
-			gl.uniform4fv(shaderProgram.uColor, uColorBorder);
+			gl.uniform4fv(shaderProgram.uColor, sel.color);
 			gl.drawArrays(gl.LINE_STRIP, 0, borderVertexPositionBuffer.numItems);
 		}
 	}
@@ -237,6 +238,7 @@ function initScene(elem) {
 		function Draggable() {
 			var drag = false,
 				move = false,
+				resize = -1,
 				item,
 				prevXd,
 				prevZd,
@@ -244,7 +246,6 @@ function initScene(elem) {
 				prevZm;
 		    
 			this.mousedown = function (ev) {
-				
 				if (fixWhich(ev)) {
 					prevXd = fs(ev, 'x');
 					prevZd = gl.viewportHeight - fs(ev, 'z');
@@ -261,9 +262,24 @@ function initScene(elem) {
 					}
 					sel.set(item.id);
 					drawScene(cam, sel);
+					
+					var r = findBorder(x, z, build.getItem(sel.get()));
+					if (r > -1) {
+						resize = r;
+						move = false;
+						console.log(resize);
+					}
+					if (build.updateItem(item) == 'error') {
+						sel.error();
+					} else {
+						sel.noerror();
+					}
 				}
 			}
 			this.mousemove = function (ev) {
+				var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
+					z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
+					
 				if (drag){
 					var k = gl.viewportWidth / (cam.get().r - cam.get().l),
 						nX = fs(ev, 'x'),
@@ -272,21 +288,70 @@ function initScene(elem) {
 					cam.setDxDz((nX-prevXd)/k, (nZ-prevZd)/k);
 					prevXd = nX;
 					prevZd = nZ;
+					drawScene(cam, sel);
 				} else if (move) {
-					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
-						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
-						
 					item.x = x - prevXm,
 					item.z = z - prevZm;
-					build.updateItem(item);
+					if (build.updateItem(item) == 'error') {
+						sel.error();
+					} else {
+						sel.noerror();
+					}
+					drawScene(cam, sel);
+				} else if (resize > -1) {
+					var minSize = {
+						lx: 0.6,
+						lz: 0.6
+					};
+					switch (resize) {
+						case 00: // изменяем размер влево
+							var dlx = item.lx + (item.x-x);
+							if (dlx > minSize.lx) {
+								item.lx = dlx;
+								item.x = x;
+							}
+							break;
+						case 01: // изменяем размер вправо
+							var dlx = item.lx + (x - item.x1);
+							if (dlx > minSize.lx) {
+								item.lx = dlx;
+								item.x1 = x;
+							}
+							break;
+						case 10: // изменяем размер вверх
+							var dlz = item.lz + (item.z-z);
+							if (dlz > minSize.lz) {
+								item.lz = dlz;
+								item.z = z;
+							}
+							break;
+						case 11: // изменяем размер вниз
+							var dlz = item.lz + (z - item.z1);
+							if (dlz > minSize.lz) {
+								item.lz = dlz;
+								item.z1 = z;
+							}
+							break;
+					}
+					if (build.updateItem(item) == 'error') {
+						sel.error();
+					} else {
+						sel.noerror();
+					}
+					drawScene(cam, sel);
+				} else {
+					if (sel.get() > -1) {
+						findBorder(x, z, build.getItem(sel.get()));
+					}
 				}
-				drawScene(cam, sel);
 			}
 			this.mouseup = function (ev) {
 				if (drag) {
 					drag = false;
 				} else if (move) {
 					move = false;
+				} else if (resize > -1) {
+					resize = -1;
 				}
 			}
 		}
@@ -312,7 +377,7 @@ function initScene(elem) {
 		}
 		
 		/* Функция поиска элемента на холсте мышкой */
-		var findElement = function(x, y, obj){
+		function findElement(x, y, obj){
 		  for (var i in obj){
 			var e = obj[i];
 			e.x1 = e.x + e.lx;
@@ -322,6 +387,31 @@ function initScene(elem) {
 			}
 		  }
 		  return false;
+		}
+		
+		function findBorder(x, y, e) {
+			if (e === undefined) return;
+			var dx = 0.2,
+				canvas = document.getElementById('canvas');
+				
+			e.x1 = e.x + e.lx;
+			e.z1 = e.z + e.lz;
+			if ((x < e.x+dx && x > e.x) && (y > e.z && y < e.z1)) {
+				canvas.style.cursor = 'w-resize';
+				return 00;
+			} else if ((x > e.x1-dx && x < e.x1) && (y > e.z && y < e.z1)) {
+				canvas.style.cursor = 'w-resize';
+				return 01;
+			} else if ((x > e.x && x < e.x1) && (y < e.z+dx && y >= e.z)) {
+				canvas.style.cursor = 's-resize';
+				return 10;
+			} else if ((x > e.x && x < e.x1) && (y > e.z1-dx && y <= e.z1)) {
+				canvas.style.cursor = 's-resize';
+				return 11;
+			} else {
+				canvas.style.cursor = 'default';
+				return -1;
+			}
 		}
 	}
 }

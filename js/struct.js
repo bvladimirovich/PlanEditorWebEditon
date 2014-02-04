@@ -262,6 +262,12 @@ Building.prototype.getItem = function(){
 */
 Building.prototype.updateItem = function (item) {
 	Building.list[item.id] = new Struct().set(item.id, item.type, item.x, item.y, item.z, item.lx, item.ly, item.lz);
+	for (var i in Building.list) {
+		if (item.id == i) continue;
+		if (isIntersects(item, Building.list[i])) {
+			return 'error';
+		}
+	}
 }
 
 /**
@@ -303,15 +309,18 @@ Camera.prototype.get = function () {
 var Select = function () {
 	this.select = false;
 	this.id = -1;
+	this.color = [0.0, 1.0, 1.0, 1.0];
 }
 Select.prototype.set = function (idItem) {
 	this.id = idItem;
 	this.select = true;
 }
-Select.prototype.clear = function () {
-	this.id = -1;
-	this.select = false;
-}
 Select.prototype.get = function () {
 	return this.id;
+}
+Select.prototype.error = function () {
+	this.color = [1.0, 0.0, 0.0, 1.0];
+}
+Select.prototype.noerror = function () {
+	this.color = [0.0, 1.0, 1.0, 1.0];
 }
