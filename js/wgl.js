@@ -85,7 +85,7 @@ var pvMatrix = mat4.create();
 
 
 var squareVertexPositionBuffer;
-var lineVertexPositionBuffer;
+var borderVertexPositionBuffer;
 
 function initBuffers() {
 	squareVertexPositionBuffer = gl.createBuffer();
@@ -101,9 +101,9 @@ function initBuffers() {
 	squareVertexPositionBuffer.numItems = 4;
 }
 
-function initBuffersLine() {
-	lineVertexPositionBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, lineVertexPositionBuffer);
+function initBuffersBorder() {
+	borderVertexPositionBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
 	vertices = [
 		 1.1, 0.0,  1.1,
 		-1.1, 0.0,  1.1,
@@ -112,11 +112,11 @@ function initBuffersLine() {
 		 1.1, 0.0,  1.1,
 	];
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-	lineVertexPositionBuffer.itemSize = 3;
-	lineVertexPositionBuffer.numItems = 5;
+	borderVertexPositionBuffer.itemSize = 3;
+	borderVertexPositionBuffer.numItems = 5;
 }
 
-function drawScene(cam) {
+function drawScene(cam, sel) {
 	if (cam.constructor != Camera) {
 		throw new Error('Входящий параметр не верного типа. Ожидался экземпляр класса Camera.');
 	}
@@ -136,7 +136,6 @@ function drawScene(cam) {
 			sx = item.lx * 0.5,
 			sz = item.lz * 0.5;
 		
-		var uColorBorder = [0.0, 1.0, 0.0, 1.0];
 		if (item.type == 'door') {
 			var uColor = [1.0, 0.5, 0.0, 1.0];
 		} else {
@@ -153,13 +152,16 @@ function drawScene(cam) {
 		gl.uniform4fv(shaderProgram.uColor, uColor);
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
 		
-		gl.lineWidth(3);
-		gl.bindBuffer(gl.ARRAY_BUFFER, lineVertexPositionBuffer);
-		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, lineVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
-		gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
-		gl.uniform4fv(shaderProgram.uColor, uColorBorder);
-		gl.drawArrays(gl.LINE_STRIP, 0, lineVertexPositionBuffer.numItems);
+		var selectedItem = sel.get();
+		if (selectedItem != -1 && selectedItem == item.id) {
+			var uColorBorder = [0.0, 1.0, 1.0, 1.0];
+			gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
+			gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, borderVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+			gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
+			gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
+			gl.uniform4fv(shaderProgram.uColor, uColorBorder);
+			gl.drawArrays(gl.LINE_STRIP, 0, borderVertexPositionBuffer.numItems);
+		}
 	}
 }
 
@@ -173,7 +175,7 @@ function drawScene(cam) {
 	Функция drawScene(cam) отрисовывает сцену. Входной параметр - объект класса Camera.
 */
 var cam;
-
+var sel;
 function initScene(elem) {
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -188,9 +190,11 @@ function initScene(elem) {
 		top:1.0
 	});
 	
+	sel = new Select();
+	
 	wheelListener();
 	drag();
-	drawScene(cam);
+	drawScene(cam, sel);
 	
 	function wheelListener(){
 		if (elem.addEventListener) {
@@ -209,7 +213,7 @@ function initScene(elem) {
 			e = e || window.event;
 			var delta = e.deltaY || e.detail || e.wheelDelta;
 			cam.setZoom((delta > 0)?1.1:0.9);
-			drawScene(cam);
+			drawScene(cam, sel);
 			e.preventDefault ? e.preventDefault() : (e.returnValue = false);
 		}
 	}
@@ -255,6 +259,8 @@ function initScene(elem) {
 						prevXm = x - item.x;
 						prevZm = z - item.z;
 					}
+					sel.set(item.id);
+					drawScene(cam, sel);
 				}
 			}
 			this.mousemove = function (ev) {
@@ -274,7 +280,7 @@ function initScene(elem) {
 					item.z = z - prevZm;
 					build.updateItem(item);
 				}
-				drawScene(cam);
+				drawScene(cam, sel);
 			}
 			this.mouseup = function (ev) {
 				if (drag) {
