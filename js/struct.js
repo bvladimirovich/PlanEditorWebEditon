@@ -299,3 +299,19 @@ Camera.prototype.get = function () {
 		t: this.t*this.zoom + this.dz
 	}
 }
+
+var Select = function () {
+	this.select = false;
+	this.id = -1;
+}
+Select.prototype.set = function (idItem) {
+	this.id = idItem;
+	this.select = true;
+}
+Select.prototype.clear = function () {
+	this.id = -1;
+	this.select = false;
+}
+Select.prototype.get = function () {
+	return this.id;
+}
