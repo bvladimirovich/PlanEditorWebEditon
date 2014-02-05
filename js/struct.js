@@ -291,7 +291,10 @@ var Camera = function (obj) {
 	this.t = obj.top;
 }
 Camera.prototype.setZoom = function (a) {
-	this.zoom = Math.max(Math.min(this.zoom * a, 30.0), 1.0);
+	this.zoom = Math.max(Math.min(this.zoom * a, 40.0), 1.0);
+}
+Camera.prototype.getZoom = function (a) {
+	return this.zoom;
 }
 Camera.prototype.setDxDz = function (a, b) {
 	this.dx -= a;
@@ -323,4 +326,8 @@ Select.prototype.error = function () {
 }
 Select.prototype.noerror = function () {
 	this.color = [0.0, 1.0, 1.0, 1.0];
+}
+Select.prototype.reset = function () {
+	this.select = false;
+	this.id = -1;
 }

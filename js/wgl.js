@@ -181,6 +181,7 @@ function initScene(elem) {
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
 	
+	sel = new Select();
 	cam = new Camera({
 		zoom:10.0,
 		dx:0.0,
@@ -190,8 +191,6 @@ function initScene(elem) {
 		bottom:-1.0,
 		top:1.0
 	});
-	
-	sel = new Select();
 	
 	wheelListener();
 	drag();
@@ -256,24 +255,25 @@ function initScene(elem) {
 					
 					item = findElement(x, z, build.getItem());					
 					if (item != false) {
+						sel.set(item.id);						
+						
 						move = true;
 						prevXm = x - item.x;
 						prevZm = z - item.z;
-
-						sel.set(item.id);						
+						
+						var r = findBorder(x, z, build.getItem(item.id), cam.getZoom());
+						if (r != -1) {
+							resize = r;
+							move = false;
+						}
+						
 						if (build.updateItem(item) == 'error') {
 							sel.error();
 						} else {
 							sel.noerror();
 						}
-					}
-					
-					if (sel.get() !== undefined) {
-						var r = findBorder(x, z, build.getItem(sel.get()));
-						if (r != -1) {
-							resize = r;
-							move = false;
-						}					
+					} else {
+						sel.reset();
 					}
 					
 					drawScene(cam, sel);
@@ -308,7 +308,7 @@ function initScene(elem) {
 					}, dlx, dlz;
 					switch (resize) {
 						case 'left': // изменяем размер влево
-							dlx = item.lx + (item.x-x);
+							dlx = item.lx + (item.x - x);
 							if (dlx > minSize.lx) {
 								item.lx = dlx;
 								item.x = x;
@@ -322,7 +322,7 @@ function initScene(elem) {
 							}
 							break;
 						case 'top': // изменяем размер вверх
-							dlz = item.lz + (item.z-z);
+							dlz = item.lz + (item.z - z);
 							if (dlz > minSize.lz) {
 								item.lz = dlz;
 								item.z = z;
@@ -336,8 +336,8 @@ function initScene(elem) {
 							}
 							break;
 						case 'topLeft':
-							dlx = item.lx + (item.x-x);
-							dlz = item.lz + (item.z-z);
+							dlx = item.lx + (item.x - x);
+							dlz = item.lz + (item.z - z);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
 								item.lx = dlx;
 								item.lz = dlz;
@@ -346,7 +346,7 @@ function initScene(elem) {
 							}
 							break;
 						case 'bottomLeft':
-							dlx = item.lx + (item.x-x);
+							dlx = item.lx + (item.x - x);
 							dlz = item.lz + (z - item.z1);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
 								item.lx = dlx;
@@ -357,7 +357,7 @@ function initScene(elem) {
 							break;
 						case 'topRight':
 							dlx = item.lx + (x - item.x1);
-							dlz = item.lz + (item.z-z);
+							dlz = item.lz + (item.z - z);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
 								item.lx = dlx;
 								item.lz = dlz;
@@ -384,7 +384,7 @@ function initScene(elem) {
 					drawScene(cam, sel);
 				} else {
 					if (sel.get() > -1) {
-						findBorder(x, z, build.getItem(sel.get()));
+						findBorder(x, z, build.getItem(sel.get()), cam.getZoom());
 					}
 				}
 			}
@@ -398,9 +398,10 @@ function initScene(elem) {
 				}
 			}
 		}
-			
+		
+		/* Функция определения координат мыши на холсте */
 		function fs(ev, p) {
-		  var elem = document.getElementById('canvas');
+		  //var elem = document.getElementById('canvas');
 		  return (p=='x') ? ev.pageX-elem.offsetLeft : ev.pageY-elem.offsetTop;
 		}
 		/* Функция определения нажатой на мыши кнопки */
@@ -432,9 +433,9 @@ function initScene(elem) {
 		  return false;
 		}
 		
-		function findBorder(x, y, e) {
+		function findBorder(x, y, e, zoom) {
 			if (e === undefined) return;
-			var dx = 0.18,
+			var dx = (zoom <= 1.2) ? 0.04 : 0.18,
 				canvas = document.getElementById('canvas');
 				
 			e.x1 = e.x + e.lx;
