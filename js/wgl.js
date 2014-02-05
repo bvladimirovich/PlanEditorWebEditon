@@ -250,7 +250,7 @@ function initScene(elem) {
 				move = false,
 				resize = -1,
 				item,
-				lastItem,
+				oldParameters = {},
 				prevXd,
 				prevZd,
 				prevXm,
@@ -279,12 +279,10 @@ function initScene(elem) {
 							move = false;
 						}
 						
-						if (build.updateItem(item) == 'error') {
-							sel.error();
-						} else {
-							sel.noerror();
-						}
-						lastItem = item;
+						oldParameters = {
+							x: item.x, y: item.y, z: item.z,
+							lx: item.lx, ly: item.ly, lz: item.lz
+						};
 					} else {
 						sel.reset();
 					}
@@ -295,7 +293,6 @@ function initScene(elem) {
 						var lz = 2.0;
 						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
 						move = false;
-						console.log(build.getItem());
 					}
 					
 					drawScene(cam, sel);
@@ -415,8 +412,27 @@ function initScene(elem) {
 					drag = false;
 				} else if (move) {
 					move = false;
+					if (build.updateItem(item) == 'error') {
+						item.x = oldParameters.x;
+						item.y = oldParameters.y;
+						item.z = oldParameters.z;
+						build.updateItem(item);
+						sel.noerror();
+						drawScene(cam, sel);
+					}
 				} else if (resize != -1) {
 					resize = -1;
+					if (build.updateItem(item) == 'error') {
+						item.x = oldParameters.x;
+						item.y = oldParameters.y;
+						item.z = oldParameters.z;
+						item.lx = oldParameters.lx;
+						item.ly = oldParameters.ly;
+						item.lz = oldParameters.lz;
+						build.updateItem(item);
+						sel.noerror();
+						drawScene(cam, sel);
+					}
 				}
 			}
 		}
