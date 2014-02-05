@@ -242,7 +242,6 @@ function initScene(elem) {
 				drag = false,
 				move = false,
 				resize = -1,
-				unresaze = true;
 				item,
 				oldParameters = {},
 				prevXd,
