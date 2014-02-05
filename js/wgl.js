@@ -182,6 +182,7 @@ function initScene(elem) {
     gl.enable(gl.DEPTH_TEST);
 	
 	sel = new Select();
+	key = new Keyboard();
 	cam = new Camera({
 		zoom:10.0,
 		dx:0.0,
@@ -193,10 +194,11 @@ function initScene(elem) {
 	});
 	
 	wheelListener();
-	drag();
+	keyboardListener();
+	mouseListener();
 	drawScene(cam, sel);
 	
-	function wheelListener(){
+	function wheelListener (){
 		if (elem.addEventListener) {
 			if ('onwheel' in document) {
 				elem.addEventListener("wheel", onWheel, false);
@@ -218,7 +220,16 @@ function initScene(elem) {
 		}
 	}
 
-	function drag() {
+	function keyboardListener () {
+		window.addEventListener('keydown', function (e) {
+			key.setKeyCode(e.keyCode);
+		}, false);
+		window.addEventListener('keyup', function (e) {
+			key.setKeyCode();
+		}, false);
+	}
+		
+	function mouseListener() {
 		var selector = '#canvas';
 		$(selector).on("mousedown", s);
 		$(selector).on("mousemove", s);
@@ -239,6 +250,7 @@ function initScene(elem) {
 				move = false,
 				resize = -1,
 				item,
+				lastItem,
 				prevXd,
 				prevZd,
 				prevXm,
@@ -255,12 +267,12 @@ function initScene(elem) {
 					
 					item = findElement(x, z, build.getItem());					
 					if (item != false) {
-						sel.set(item.id);						
+						sel.set(item.id);
 						
 						move = true;
 						prevXm = x - item.x;
 						prevZm = z - item.z;
-						
+					
 						var r = findBorder(x, z, build.getItem(item.id), cam.getZoom());
 						if (r != -1) {
 							resize = r;
@@ -272,8 +284,18 @@ function initScene(elem) {
 						} else {
 							sel.noerror();
 						}
+						lastItem = item;
 					} else {
 						sel.reset();
+					}
+					
+					if (key.getKeyCode() == 17) {
+						var lx = (sel.get() != undefined) ? lastItem.lx : 2.0;
+						var ly = 0.0;
+						var lz = (sel.get() != undefined) ? lastItem.lz : 2.0;
+						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
+						move = false;
+						console.log(build.getItem());
 					}
 					
 					drawScene(cam, sel);
@@ -401,7 +423,6 @@ function initScene(elem) {
 		
 		/* Функция определения координат мыши на холсте */
 		function fs(ev, p) {
-		  //var elem = document.getElementById('canvas');
 		  return (p=='x') ? ev.pageX-elem.offsetLeft : ev.pageY-elem.offsetTop;
 		}
 		/* Функция определения нажатой на мыши кнопки */
