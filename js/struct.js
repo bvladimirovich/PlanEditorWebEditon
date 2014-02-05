@@ -35,7 +35,7 @@ Struct.prototype.set = function(id,type,x,y,z,lx,ly,lz){
  @param {Struct} a,b
  @returns false - нет пересечения, true - есть пересечение.
 */
-var isIntersects = function (a,b){
+var isIntersects = function (a, b){
   /* Координаты центра входящих элементов */
   a.center = {
     x: a.x + a.lx/2.0,
@@ -264,7 +264,6 @@ Building.prototype.updateItem = function (item) {
 	Building.list[item.id] = new Struct().set(item.id, item.type, item.x, item.y, item.z, item.lx, item.ly, item.lz);
 	for (var i in Building.list) {
 		if (item.id == i) continue;
-		console.log(Building.list[i], item.id);
 		if (isIntersects(item, Building.list[i])) {
 			return 'error';
 		}
