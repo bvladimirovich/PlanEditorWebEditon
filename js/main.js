@@ -9,10 +9,10 @@
 var build = new Building();
 function initTest(){
 
-	var r1 = build.addRoom(0.0,0.0,0.0, 2.0,1.0,2.0);
-	var r2 = build.addRoom(5.0,0.0,0.0, 2.0,1.0,2.0);
-	var r3 = build.addRoom(0.0,0.0,5.0, 2.0,1.0,2.0);
-			 build.addRoom(5.0,0.0,5.0, 2.0,1.0,2.0);
+	var r1 = build.addRoom(0.0,0.0,0.0, 2.0,0.1,2.0);
+	var r2 = build.addRoom(5.0,0.0,0.0, 2.0,0.1,2.0);
+	var r3 = build.addRoom(0.0,0.0,5.0, 2.0,0.1,2.0);
+			 build.addRoom(5.0,0.0,5.0, 2.0,0.1,2.0);
 			 
 	$('#addRoom').click(function () {
 		console.log('start');
