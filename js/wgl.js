@@ -160,7 +160,7 @@ function drawScene(cam, sel) {
 			gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, borderVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 			gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
 			gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
-			gl.uniform4fv(shaderProgram.uColor, sel.color);
+			gl.uniform4fv(shaderProgram.uColor, sel.getColor());
 			gl.drawArrays(gl.LINE_STRIP, 0, borderVertexPositionBuffer.numItems);
 		}
 	}
@@ -182,6 +182,7 @@ function initScene(elem) {
     gl.enable(gl.DEPTH_TEST);
 	
 	sel = new Select();
+	sel.setColor();
 	key = new Keyboard();
 	cam = new Camera({
 		zoom:10.0,
@@ -194,7 +195,6 @@ function initScene(elem) {
 	});
 	
 	wheelListener();
-	keyboardListener();
 	mouseListener();
 	drawScene(cam, sel);
 	
@@ -219,15 +219,6 @@ function initScene(elem) {
 			e.preventDefault ? e.preventDefault() : (e.returnValue = false);
 		}
 	}
-
-	function keyboardListener () {
-		window.addEventListener('keydown', function (e) {
-			key.setKeyCode(e.keyCode);
-		}, false);
-		window.addEventListener('keyup', function (e) {
-			key.setKeyCode();
-		}, false);
-	}
 		
 	function mouseListener() {
 		var selector = '#canvas';
@@ -246,16 +237,19 @@ function initScene(elem) {
 		}
 		
 		function Draggable() {
-			var drag = false,
+			var boxItems = [], 
+				count = 0,
+				drag = false,
 				move = false,
 				resize = -1,
+				unresaze = true;
 				item,
 				oldParameters = {},
 				prevXd,
 				prevZd,
 				prevXm,
 				prevZm;
-		    
+				
 			this.mousedown = function (ev) {
 				if (fixWhich(ev)) {
 					prevXd = fs(ev, 'x');
@@ -279,20 +273,32 @@ function initScene(elem) {
 							move = false;
 						}
 						
+						if (key.getKeyCode() == 16 && item.type != 'door') { // Shift
+							if (count == 0) {
+								boxItems[0] = item;
+								count++;
+							} else if (boxItems[0].id != item.id) {
+								build.addDoor(boxItems[0], item);
+								count = 0;
+							}
+						}
+						
 						oldParameters = {
 							x: item.x, y: item.y, z: item.z,
 							lx: item.lx, ly: item.ly, lz: item.lz
 						};
 					} else {
 						sel.reset();
+						count = 0;
 					}
 					
-					if (key.getKeyCode() == 17) {
+					if (key.getKeyCode() == 17) { // Ctrl
 						var lx = 2.0;
 						var ly = 0.1;
 						var lz = 2.0;
 						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
 						move = false;
+						count = 0;
 					}
 					
 					drawScene(cam, sel);
@@ -314,11 +320,7 @@ function initScene(elem) {
 				} else if (move) {
 					item.x = x - prevXm,
 					item.z = z - prevZm;
-					if (build.updateItem(item) == 'error') {
-						sel.error();
-					} else {
-						sel.noerror();
-					}
+					sel.setColor(build.updateItem(item) ? 'error' : 'default');
 					drawScene(cam, sel);
 				} else if (resize != -1) {
 					var minSize = {
@@ -395,11 +397,7 @@ function initScene(elem) {
 							}
 							break;
 					}
-					if (build.updateItem(item) == 'error') {
-						sel.error();
-					} else {
-						sel.noerror();
-					}
+					sel.setColor(build.updateItem(item) ? 'error' : 'default');
 					drawScene(cam, sel);
 				} else {
 					if (sel.get() > -1) {
@@ -412,17 +410,17 @@ function initScene(elem) {
 					drag = false;
 				} else if (move) {
 					move = false;
-					if (build.updateItem(item) == 'error') {
+					if (build.updateItem(item)) {
 						item.x = oldParameters.x;
 						item.y = oldParameters.y;
 						item.z = oldParameters.z;
 						build.updateItem(item);
-						sel.noerror();
+						sel.setColor('default');
 						drawScene(cam, sel);
 					}
 				} else if (resize != -1) {
 					resize = -1;
-					if (build.updateItem(item) == 'error') {
+					if (build.updateItem(item)) {
 						item.x = oldParameters.x;
 						item.y = oldParameters.y;
 						item.z = oldParameters.z;
@@ -430,7 +428,7 @@ function initScene(elem) {
 						item.ly = oldParameters.ly;
 						item.lz = oldParameters.lz;
 						build.updateItem(item);
-						sel.noerror();
+						sel.setColor('default');
 						drawScene(cam, sel);
 					}
 				}
