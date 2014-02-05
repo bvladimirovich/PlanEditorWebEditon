@@ -264,6 +264,7 @@ Building.prototype.updateItem = function (item) {
 	Building.list[item.id] = new Struct().set(item.id, item.type, item.x, item.y, item.z, item.lx, item.ly, item.lz);
 	for (var i in Building.list) {
 		if (item.id == i) continue;
+		console.log(Building.list[i], item.id);
 		if (isIntersects(item, Building.list[i])) {
 			return 'error';
 		}
@@ -289,17 +290,17 @@ var Camera = function (obj) {
 	this.r = obj.right;
 	this.b = obj.bottom;
 	this.t = obj.top;
-}
+};
 Camera.prototype.setZoom = function (a) {
 	this.zoom = Math.max(Math.min(this.zoom * a, 40.0), 1.0);
-}
+};
 Camera.prototype.getZoom = function (a) {
 	return this.zoom;
-}
+};
 Camera.prototype.setDxDz = function (a, b) {
 	this.dx -= a;
 	this.dz -= b;
-}
+};
 Camera.prototype.get = function () {
 	return{
 		l: this.l*this.zoom + this.dx,
@@ -307,27 +308,36 @@ Camera.prototype.get = function () {
 		b: this.b*this.zoom + this.dz,
 		t: this.t*this.zoom + this.dz
 	}
-}
+};
 
 var Select = function () {
 	this.select = false;
 	this.id = -1;
 	this.color = [0.0, 1.0, 1.0, 1.0];
-}
+};
 Select.prototype.set = function (idItem) {
 	this.id = idItem;
 	this.select = true;
-}
+};
 Select.prototype.get = function () {
 	return this.id;
-}
+};
 Select.prototype.error = function () {
 	this.color = [1.0, 0.0, 0.0, 1.0];
-}
+};
 Select.prototype.noerror = function () {
 	this.color = [0.0, 1.0, 1.0, 1.0];
-}
+};
 Select.prototype.reset = function () {
 	this.select = false;
 	this.id = -1;
-}
+};
+
+var Keyboard = function () {};
+Keyboard.prototype.setKeyCode = function (keyCode) {
+	keyCode = keyCode || undefined;
+	this.key = keyCode;
+};
+Keyboard.prototype.getKeyCode = function () {
+	return this.key;
+};
