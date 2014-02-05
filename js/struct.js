@@ -263,9 +263,8 @@ Building.prototype.getItem = function(){
 Building.prototype.updateItem = function (item) {
 	Building.list[item.id] = new Struct().set(item.id, item.type, item.x, item.y, item.z, item.lx, item.ly, item.lz);
 	for (var i in Building.list) {
-		if (item.id == i) continue;
-		if (isIntersects(item, Building.list[i])) {
-			return 'error';
+		if (item.id != i && isIntersects(item, Building.list[i])) {
+			return true;
 		}
 	}
 }
@@ -312,7 +311,6 @@ Camera.prototype.get = function () {
 var Select = function () {
 	this.select = false;
 	this.id = -1;
-	this.color = [0.0, 1.0, 1.0, 1.0];
 };
 Select.prototype.set = function (idItem) {
 	this.id = idItem;
@@ -321,22 +319,31 @@ Select.prototype.set = function (idItem) {
 Select.prototype.get = function () {
 	return this.id;
 };
-Select.prototype.error = function () {
-	this.color = [1.0, 0.0, 0.0, 1.0];
+Select.prototype.setColor = function (color) {
+	if (color == 'error') {
+		this.color = [1.0, 0.0, 0.0, 1.0];
+	} else if (color == 'default') {
+		this.color = [0.0, 1.0, 1.0, 1.0];
+	} else {
+		this.color = color || [0.0, 1.0, 1.0, 1.0];
+	}
 };
-Select.prototype.noerror = function () {
-	this.color = [0.0, 1.0, 1.0, 1.0];
+Select.prototype.getColor = function () {
+	return this.color;
 };
 Select.prototype.reset = function () {
 	this.select = false;
 	this.id = -1;
 };
 
-var Keyboard = function () {};
-Keyboard.prototype.setKeyCode = function (keyCode) {
-	keyCode = keyCode || undefined;
-	this.key = keyCode;
+var Keyboard = function () {
+	window.addEventListener('keydown', function (e) {
+		Keyboard.key = e.keyCode;
+	}, false);
+	window.addEventListener('keyup', function (e) {
+		Keyboard.key = undefined;
+	}, false);
 };
 Keyboard.prototype.getKeyCode = function () {
-	return this.key;
+	return Keyboard.key;
 };
