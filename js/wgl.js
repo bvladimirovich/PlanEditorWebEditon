@@ -290,9 +290,9 @@ function initScene(elem) {
 					}
 					
 					if (key.getKeyCode() == 17) {
-						var lx = (sel.get() != undefined) ? lastItem.lx : 2.0;
-						var ly = 0.0;
-						var lz = (sel.get() != undefined) ? lastItem.lz : 2.0;
+						var lx = 2.0;
+						var ly = 0.1;
+						var lz = 2.0;
 						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
 						move = false;
 						console.log(build.getItem());
