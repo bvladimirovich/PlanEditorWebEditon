@@ -187,7 +187,8 @@ function initScene(elem) {
 	
 	sel = new Select();
 	sel.setColor();
-	key = new Keyboard();
+	var key = new Keyboard();
+	var frag = new Fragment();
 	cam = new Camera({
 		zoom:10.0,
 		dx:0.0,
@@ -243,7 +244,7 @@ function initScene(elem) {
 		function Draggable() {
 			var drag = false,
 				move = false,
-				resize = -1,
+				resize = undefined,
 				item,
 				oldParameters = {},
 				prevXd,
@@ -260,22 +261,23 @@ function initScene(elem) {
 					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
 						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
 					
-					item = findElement(x, z, build.getItem());					
+					item = findElement(x, z, build.getItem());
 					if (item != false) {
 						move = true;
 						prevXm = x - item.x;
 						prevZm = z - item.z;
 					
 						var r = findBorder(x, z, build.getItem(item.id), cam.getZoom());
-						if (r != -1) {
+						if (r != undefined) {
 							resize = r;
 							move = false;
 						}
 						
 						sel.set(item.id);
 						if (key.getKeyCode() == 16 && item.type != 'door') { // Shift
-							if (sel.get().length == 2) {
-								sel.set(build.addDoor(build.getItem(sel.get(0)), item).id);
+							if (sel.get().length == 2 && sel.get(0) != item.id) {
+								var door = build.addDoor(build.getItem(sel.get(0)), item);
+								sel.set(door.id);
 							} else {
 								sel.reset();
 								sel.set(item.id);
@@ -294,12 +296,11 @@ function initScene(elem) {
 					}
 					
 					if (key.getKeyCode() == 17) { // Ctrl
-						var lx = 2.0;
-						var ly = 0.1;
-						var lz = 2.0;
-						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
 						move = false;
-						count = 0;
+						var lx = 2.0,
+							ly = 0.1,
+							lz = 2.0;
+						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
 					}
 					
 					drawScene(cam, sel);
@@ -323,7 +324,7 @@ function initScene(elem) {
 					item.z = z - prevZm;
 					sel.setColor(build.updateItem(item) ? 'error' : 'default');
 					drawScene(cam, sel);
-				} else if (resize != -1) {
+				} else if (resize != undefined) {
 					var minSize = {
 						lx: 0.6,
 						lz: 0.6
@@ -419,8 +420,8 @@ function initScene(elem) {
 						sel.setColor('default');
 						drawScene(cam, sel);
 					}
-				} else if (resize != -1) {
-					resize = -1;
+				} else if (resize != undefined) {
+					resize = undefined;
 					if (build.updateItem(item)) {
 						item.x = oldParameters.x;
 						item.y = oldParameters.y;
@@ -501,7 +502,7 @@ function initScene(elem) {
 				return 'bottomRight';
 			} else {
 				elem.style.cursor = 'default';
-				return -1;
+				return undefined;
 			}
 		}
 	}

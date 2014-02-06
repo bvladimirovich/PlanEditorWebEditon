@@ -356,3 +356,20 @@ var Keyboard = function () {
 Keyboard.prototype.getKeyCode = function () {
 	return Keyboard.key;
 };
+
+var Fragment = function () {
+	Fragment.counter = 0;
+	Fragment.list = {};
+};
+Fragment.prototype.add = function (arreyItems) {
+	Fragment.list[Fragment.counter] = arreyItems;
+};
+Fragment.prototype.get = function (idItem) {
+	for (var i in Fragment.list) {
+		for (var k = 0; k < Fragment.list[i].length; k++) {
+			if (idItem == Fragment.list[i][k]) {
+				return Fragment.list[i];
+			}
+		}
+	}
+};
