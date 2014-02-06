@@ -188,7 +188,7 @@ function initScene(elem) {
 	sel = new Select();
 	sel.setColor();
 	var key = new Keyboard();
-	var frag = new Fragment();
+	var graph_ = new Graph();
 	cam = new Camera({
 		zoom:10.0,
 		dx:0.0,
@@ -278,6 +278,8 @@ function initScene(elem) {
 							if (sel.get().length == 2 && sel.get(0) != item.id) {
 								var door = build.addDoor(build.getItem(sel.get(0)), item);
 								sel.set(door.id);
+								graph_.Edge({edge: door.id, node1:sel.get(0), node2:sel.get(1)});
+								
 							} else {
 								sel.reset();
 								sel.set(item.id);
@@ -291,6 +293,8 @@ function initScene(elem) {
 							x: item.x, y: item.y, z: item.z,
 							lx: item.lx, ly: item.ly, lz: item.lz
 						};
+						
+						graph_.get(item.id);
 					} else {
 						sel.reset();
 					}

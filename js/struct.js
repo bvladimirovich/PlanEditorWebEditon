@@ -357,19 +357,39 @@ Keyboard.prototype.getKeyCode = function () {
 	return Keyboard.key;
 };
 
-var Fragment = function () {
-	Fragment.counter = 0;
-	Fragment.list = {};
+
+var Graph = function () {
+	Graph.list = {};
+	Graph.counter = 0;
 };
-Fragment.prototype.add = function (arreyItems) {
-	Fragment.list[Fragment.counter] = arreyItems;
+Graph.prototype.Node = function (nodes) {
 };
-Fragment.prototype.get = function (idItem) {
-	for (var i in Fragment.list) {
-		for (var k = 0; k < Fragment.list[i].length; k++) {
-			if (idItem == Fragment.list[i][k]) {
-				return Fragment.list[i];
+Graph.prototype.Edge = function (obj) {
+	Graph.list[Graph.counter] = {edge: obj.edge, node:{1: obj.node1, 2: obj.node2}};
+	Graph.counter++;
+};
+Graph.prototype.get = function (idItem) {
+	for (var i in Graph.list) {
+		for (var k in Graph.list[i].node){
+			if (idItem == Graph.list[i].node[k]) {
+				console.log(idItem);
 			}
 		}
 	}
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
