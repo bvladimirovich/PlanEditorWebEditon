@@ -151,17 +151,21 @@ function drawScene(cam, sel) {
 		gl.uniform4fv(shaderProgram.uColor, uColor);
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
 		
-		var selectedItem = sel.get();
-		if (selectedItem != -1 && selectedItem == item.id) {
-			mat4.identity(mMatrix);
-			mat4.translate(mMatrix, [dx, -0.1, dz]);
-			mat4.scale(mMatrix, [sx, 1.0, sz]);
-			gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
-			gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, borderVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-			gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
-			gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
-			gl.uniform4fv(shaderProgram.uColor, sel.getColor());
-			gl.drawArrays(gl.LINE_STRIP, 0, borderVertexPositionBuffer.numItems);
+		if (sel.get().length != 0) {
+			for (var k in sel.get().list) {
+				if (sel.get(k) == item.id) {
+					mat4.identity(mMatrix);
+					mat4.translate(mMatrix, [dx, -0.1, dz]);
+					mat4.scale(mMatrix, [sx, 1.0, sz]);
+					
+					gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
+					gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, borderVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+					gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
+					gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
+					gl.uniform4fv(shaderProgram.uColor, sel.getColor());
+					gl.drawArrays(gl.LINE_STRIP, 0, borderVertexPositionBuffer.numItems);
+				}
+			}
 		}
 	}
 }
@@ -194,11 +198,11 @@ function initScene(elem) {
 		top:1.0
 	});
 	
-	wheelListener();
-	mouseListener();
+	wheelListener(elem);
+	mouseListener(elem);
 	drawScene(cam, sel);
 	
-	function wheelListener (){
+	function wheelListener (elem){
 		if (elem.addEventListener) {
 			if ('onwheel' in document) {
 				elem.addEventListener("wheel", onWheel, false);
@@ -220,7 +224,7 @@ function initScene(elem) {
 		}
 	}
 		
-	function mouseListener() {
+	function mouseListener(elem) {
 		var selector = '#canvas';
 		$(selector).on("mousedown", s);
 		$(selector).on("mousemove", s);
@@ -237,9 +241,7 @@ function initScene(elem) {
 		}
 		
 		function Draggable() {
-			var boxItems = [], 
-				count = 0,
-				drag = false,
+			var drag = false,
 				move = false,
 				resize = -1,
 				item,
@@ -260,8 +262,6 @@ function initScene(elem) {
 					
 					item = findElement(x, z, build.getItem());					
 					if (item != false) {
-						sel.set(item.id);
-						
 						move = true;
 						prevXm = x - item.x;
 						prevZm = z - item.z;
@@ -272,14 +272,17 @@ function initScene(elem) {
 							move = false;
 						}
 						
+						sel.set(item.id);
 						if (key.getKeyCode() == 16 && item.type != 'door') { // Shift
-							if (count == 0) {
-								boxItems[0] = item;
-								count++;
-							} else if (boxItems[0].id != item.id) {
-								build.addDoor(boxItems[0], item);
-								count = 0;
+							if (sel.get().length == 2) {
+								sel.set(build.addDoor(build.getItem(sel.get(0)), item).id);
+							} else {
+								sel.reset();
+								sel.set(item.id);
 							}
+						} else if (sel.get().length != 0) {
+							sel.reset();
+							sel.set(item.id);
 						}
 						
 						oldParameters = {
@@ -288,7 +291,6 @@ function initScene(elem) {
 						};
 					} else {
 						sel.reset();
-						count = 0;
 					}
 					
 					if (key.getKeyCode() == 17) { // Ctrl
@@ -399,8 +401,8 @@ function initScene(elem) {
 					sel.setColor(build.updateItem(item) ? 'error' : 'default');
 					drawScene(cam, sel);
 				} else {
-					if (sel.get() > -1) {
-						findBorder(x, z, build.getItem(sel.get()), cam.getZoom());
+					if (sel.get().length > 0) {
+						findBorder(x, z, build.getItem(sel.get(sel.get().length-1)), cam.getZoom());
 					}
 				}
 			}
@@ -469,37 +471,36 @@ function initScene(elem) {
 		
 		function findBorder(x, y, e, zoom) {
 			if (e === undefined) return;
-			var dx = (zoom <= 1.2) ? 0.04 : 0.18,
-				canvas = document.getElementById('canvas');
+			var dx = (zoom <= 1.2) ? 0.04 : 0.18;
 				
 			e.x1 = e.x + e.lx;
 			e.z1 = e.z + e.lz;
 			if ((x < e.x+dx && x > e.x) && (y > e.z+dx && y < e.z1-dx)) {
-				canvas.style.cursor = 'w-resize';
+				elem.style.cursor = 'w-resize';
 				return 'left';
 			} else if ((x > e.x1-dx && x < e.x1) && (y > e.z+dx && y < e.z1-dx)) {
-				canvas.style.cursor = 'w-resize';
+				elem.style.cursor = 'w-resize';
 				return 'right';
 			} else if ((x > e.x+dx && x < e.x1-dx) && (y < e.z+dx && y > e.z)) {
-				canvas.style.cursor = 's-resize';
+				elem.style.cursor = 's-resize';
 				return 'top';
 			} else if ((x > e.x+dx && x < e.x1-dx) && (y > e.z1-dx && y < e.z1)) {
-				canvas.style.cursor = 's-resize';
+				elem.style.cursor = 's-resize';
 				return 'bottom';
 			} else if ((x < e.x+dx && x > e.x) && (y < e.z+dx && y > e.z)){
-				canvas.style.cursor = 'se-resize';
+				elem.style.cursor = 'se-resize';
 				return 'topLeft';
 			} else if ((x < e.x+dx && x > e.x) && (y > e.z1-dx && y < e.z1)){
-				canvas.style.cursor = 'sw-resize';
+				elem.style.cursor = 'sw-resize';
 				return 'bottomLeft';
 			} else if ((y < e.z+dx && y > e.z) && (x > e.x1-dx && x < e.x1)){
-				canvas.style.cursor = 'sw-resize';
+				elem.style.cursor = 'sw-resize';
 				return 'topRight';
 			} else if ((y > e.z1-dx && y < e.z1) && (x > e.x1-dx && x < e.x1)){
-				canvas.style.cursor = 'se-resize';
+				elem.style.cursor = 'se-resize';
 				return 'bottomRight';
 			} else {
-				canvas.style.cursor = 'default';
+				elem.style.cursor = 'default';
 				return -1;
 			}
 		}

@@ -309,15 +309,22 @@ Camera.prototype.get = function () {
 };
 
 var Select = function () {
-	this.select = false;
-	this.id = -1;
+	Select.counter = 0;
+	Select.list = {};
 };
 Select.prototype.set = function (idItem) {
-	this.id = idItem;
-	this.select = true;
+	Select.list[Select.counter] = {id: idItem, flag: true};
+	Select.counter++;
 };
-Select.prototype.get = function () {
-	return this.id;
+Select.prototype.get = function (idItem) {
+	if (idItem === undefined) {
+		return {
+			length: Select.counter,
+			list: Select.list
+		};
+	} else {
+		return Select.list[idItem].id;
+	}
 };
 Select.prototype.setColor = function (color) {
 	if (color == 'error') {
@@ -332,8 +339,10 @@ Select.prototype.getColor = function () {
 	return this.color;
 };
 Select.prototype.reset = function () {
-	this.select = false;
-	this.id = -1;
+	for (var i in Select.list) {
+		delete Select.list[i];
+	}
+	Select.counter = 0;
 };
 
 var Keyboard = function () {
