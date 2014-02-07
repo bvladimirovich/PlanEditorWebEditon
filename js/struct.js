@@ -362,24 +362,16 @@ var Graph = function () {
 	Graph.list = {};
 	Graph.counter = 0;
 };
-Graph.prototype.Node = function (nodes) {
-};
-Graph.prototype.Edge = function (obj) {
-	Graph.list[Graph.counter] = {edge: obj.edge, node:{1: obj.node1, 2: obj.node2}};
+Graph.prototype.add = function (obj) {
+	Graph.list[Graph.counter] = {e: obj.e, v1: obj.v1, v2: obj.v2};
 	Graph.counter++;
 };
-Graph.prototype.get = function (idItem) {
-	for (var i in Graph.list) {
-		for (var k in Graph.list[i].node){
-			if (idItem == Graph.list[i].node[k]) {
-				console.log(idItem);
-			}
-		}
-	}
+Graph.prototype.getAllItems = function (start) {
+	
 };
-
-
-
+Graph.prototype.get = function () {
+	console.log(Graph.list);
+};
 
 
 
