@@ -159,29 +159,29 @@ var Building = function(){
  @returns экземпляр класса 'Struct'
 */
 Building.prototype.addRoom = function (x,y,z,lx,ly,lz) {
-  var b = new Struct().set(Building.ID,'room',x,y,z,lx,ly,lz);
-  /* Если элементов не существует, добавляется первый элемент */
-  if (Building.ID==0) {
-	Building.list[Building.ID] = b;
-	Building.ID++;
-	return b;
-  /* Если имеется хотя бы один, проверяется пересечение с существующими */
-  /** TODO - Добавить генерацию ошибок */
-  } else if (Building.ID>0) {
-	var isIntersect = false;
-	for (var i in Building.list) {
-	  if(isIntersects(Building.list[i], b)) isIntersect = true;
+	var b = new Struct().set(Building.ID,'room',x,y,z,lx,ly,lz);
+	/* Если элементов не существует, добавляется первый элемент */
+	if (Building.ID == 0) {
+		Building.list[Building.ID] = b;
+		Building.ID++;
+		return b;
+	/* Если имеется хотя бы один, проверяется пересечение с существующими */
+	/** TODO - Добавить генерацию ошибок */
+	} else if (Building.ID > 0) {
+		var isIntersect = false;
+		for (var i in Building.list) {
+			if (isIntersects(Building.list[i], b)) {
+				isIntersect = true;
+			}
+		}
+		if (isIntersect == false) {
+			Building.list[Building.ID] = b;
+			Building.ID++;
+			return b;
+		} else if (isIntersect == true) {
+			throw new Error('Невозможно добавить элемент с такими параметрами');
+		}
 	}
-	if(isIntersect == false){
-	  Building.list[Building.ID] = b;
-	  Building.ID++;
-	  return b;
-	} else if (isIntersect == true){
-	  throw new Error('Невозможно добавить элемент с такими параметрами');
-	}
-  }
-  
-  
 }
 
 /**
@@ -190,35 +190,25 @@ Building.prototype.addRoom = function (x,y,z,lx,ly,lz) {
  @param {number} lx,ly,lz - размеры комнаты
  @returns экземпляр класса 'Struct'
 */
-Building.prototype.addDoor = function(a,b, lx, ly, lz){
-	var c = new Section().get(a,b,Building.list);
+Building.prototype.addDoor = function(a, b, lx, ly, lz){
+	if (a.type == 'door' || b.type == 'door') {
+		return false;
+	}
+	
+	var c = new Section().get(a, b, Building.list);
 	lx = lx || c.lx;
 	ly = ly || c.ly;
 	lz = lz || c.lz;
-	var q = new Struct().set(Building.ID,'door',c.x,c.y,c.z,lx,ly,lz);
-	
-	/* Идентификаторы элементов между которыми создана дверь */
-	q.link = {};
-	/* Предел перемещения двери по осям */
-	q.limit = {};
-	/* Расстояние между объектами */
-	q.distance = {};
+	var q = new Struct().set(Building.ID, 'door', c.x, c.y, c.z, lx, ly, lz);
+
   /** Проверка на отсутствие ошибок*/
-  /*** TODO - Применить класс Error и try/catch **/
+  /*** TODO - Применить Error и try/catch **/
   if (c.info == 0) {
-	q.link.a = a.id;
-	q.link.b = b.id;
-	if(q.lx<=c.lx && q.ly<=c.ly && q.lz<=c.lz){
-      q.limit.lx = c.lx;
-	  q.limit.ly = c.ly;
-	  q.limit.lz = c.lz;
-	  q.distance.x = c.distance.x;
-	  q.distance.y = c.distance.y;
-	  q.distance.z = c.distance.z;
+	if (q.lx <= c.lx && q.ly <= c.ly && q.lz <= c.lz) {
 	  Building.list[Building.ID] = q;
 	  Building.ID++
       return q;
-	}else {
+	} else {
 	  throw 'Невозможно установить размеры двери';
 	}
   } else if (c.info == 1) {
@@ -252,10 +242,8 @@ Building.prototype.numberOfItems = function(){
 /**
  Метод возвращает элемент по идентификатору или список всех элементов.
 */
-Building.prototype.getItem = function(){
-  var b = Building.list;
-  if(arguments.length == 0) return b;
-  else return b[arguments[0]];
+Building.prototype.getItem = function(idItem){
+  return idItem === undefined ? Building.list : Building.list[idItem];
 }
 /**
 	Метод обновления параметров элемента
@@ -329,10 +317,10 @@ Select.prototype.get = function (idItem) {
 Select.prototype.setColor = function (color) {
 	if (color == 'error') {
 		this.color = [1.0, 0.0, 0.0, 1.0];
-	} else if (color == 'default') {
+	} else if (color == 'default' || color === undefined) {
 		this.color = [0.0, 1.0, 1.0, 1.0];
 	} else {
-		this.color = color || [0.0, 1.0, 1.0, 1.0];
+		this.color = color;
 	}
 };
 Select.prototype.getColor = function () {
@@ -357,31 +345,14 @@ Keyboard.prototype.getKeyCode = function () {
 	return Keyboard.key;
 };
 
-
-var Graph = function () {
-	Graph.list = {};
-	Graph.counter = 0;
+var OldItem = function () {
+	this.oldItem = {};
 };
-Graph.prototype.add = function (obj) {
-	Graph.list[Graph.counter] = {e: obj.e, v1: obj.v1, v2: obj.v2};
-	Graph.counter++;
+OldItem.prototype.setOldItem = function (item) {
+	for (var i in item) {
+		this.oldItem[i] = item[i];
+	}
 };
-Graph.prototype.getAllItems = function (start) {
-	
+OldItem.prototype.getOldItem =  function () {
+	return this.oldItem;
 };
-Graph.prototype.get = function () {
-	console.log(Graph.list);
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
