@@ -1,4 +1,4 @@
-﻿var gl;
+var gl;
 	
 function initGL(canvas) {
 	var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
@@ -189,16 +189,17 @@ function initScene(elem) {
 	sel = new Select();
 	sel.setColor();
 	var key = new Keyboard();
-	var graph_ = new Graph();
+	var oldItem = new OldItem();
 	cam = new Camera({
-		zoom:10.0,
-		dx:0.0,
-		dz:0.0,
-		left:-1.0,
-		right:1.0,
-		bottom:-1.0,
-		top:1.0
+		zoom: 10.0,
+		dx: 0.0,
+		dz: 0.0,
+		left: -1.0,
+		right: 1.0,
+		bottom: -1.0,
+		top: 1.0
 	});
+	
 	build = new Building();
 	build.addRoom(0.0,0.0,0.0, 2.0,0.1,2.0);
 	build.addRoom(5.0,0.0,0.0, 2.0,0.1,2.0);
@@ -225,7 +226,7 @@ function initScene(elem) {
 		function onWheel(e) {
 			e = e || window.event;
 			var delta = e.deltaY || e.detail || e.wheelDelta;
-			cam.setZoom((delta > 0)?1.1:0.9);
+			cam.setZoom((delta > 0) ? 1.1 : 0.9);
 			drawScene(cam, sel);
 			e.preventDefault ? e.preventDefault() : (e.returnValue = false);
 		}
@@ -252,11 +253,13 @@ function initScene(elem) {
 				move = false,
 				resize = undefined,
 				item,
-				oldParameters = {},
 				prevXd,
 				prevZd,
 				prevXm,
 				prevZm;
+			
+			var SHIFT = 16,
+				CTRL = 17;
 				
 			this.mousedown = function (ev) {
 				if (fixWhich(ev)) {
@@ -270,7 +273,7 @@ function initScene(elem) {
 					item = findElement(x, z, build.getItem());
 					if (item != false) {
 						move = true;
-						prevXm = x - item.x;
+						prevXm = x - item.x; // координаты мышки на элементе
 						prevZm = z - item.z;
 					
 						var r = findBorder(x, z, build.getItem(item.id), cam.getZoom());
@@ -280,13 +283,11 @@ function initScene(elem) {
 						}
 						
 						sel.set(item.id);
-						if (key.getKeyCode() == 16 && item.type != 'door') { // Shift
-							if (sel.get().length == 2 && sel.get(0) != item.id) {
+						
+						if (key.getKeyCode() == SHIFT && build.getItem(sel.get(0)).type != 'door') {
+							if (sel.get().length == 2 && sel.get(0) != item.id && item.type != 'door') {
 								var door = build.addDoor(build.getItem(sel.get(0)), item);
 								sel.set(door.id);
-								graph_.add({e:door.id, v1:sel.get(0), v2:sel.get(1)});
-								graph_.get();
-								graph_.getAllItems(item);
 							} else {
 								sel.reset();
 								sel.set(item.id);
@@ -296,15 +297,12 @@ function initScene(elem) {
 							sel.set(item.id);
 						}
 						
-						oldParameters = {
-							x: item.x, y: item.y, z: item.z,
-							lx: item.lx, ly: item.ly, lz: item.lz
-						};
+						oldItem.setOldItem(item);
 					} else {
 						sel.reset();
 					}
 					
-					if (key.getKeyCode() == 17) { // Ctrl
+					if (key.getKeyCode() == CTRL) {
 						move = false;
 						var lx = 2.0,
 							ly = 0.1,
@@ -422,23 +420,14 @@ function initScene(elem) {
 				} else if (move) {
 					move = false;
 					if (build.updateItem(item)) {
-						item.x = oldParameters.x;
-						item.y = oldParameters.y;
-						item.z = oldParameters.z;
-						build.updateItem(item);
+						build.updateItem(oldItem.getOldItem());
 						sel.setColor('default');
 						drawScene(cam, sel);
 					}
 				} else if (resize != undefined) {
 					resize = undefined;
 					if (build.updateItem(item)) {
-						item.x = oldParameters.x;
-						item.y = oldParameters.y;
-						item.z = oldParameters.z;
-						item.lx = oldParameters.lx;
-						item.ly = oldParameters.ly;
-						item.lz = oldParameters.lz;
-						build.updateItem(item);
+						build.updateItem(oldItem.getOldItem());
 						sel.setColor('default');
 						drawScene(cam, sel);
 					}
