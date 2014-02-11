@@ -239,20 +239,14 @@ Building.prototype.numberOfItems = function(){
 	}
 	return counter;
 }
-/**
- Метод возвращает элемент по идентификатору или список всех элементов.
-*/
-Building.prototype.getItem = function(idItem){
+Building.prototype.getItem = function(idItem){	// получение списка элементов или одного по id
   return idItem === undefined ? Building.list : Building.list[idItem];
 }
-/**
-	Метод обновления параметров элемента
-*/
-Building.prototype.updateItem = function (item) {
+Building.prototype.updateItem = function (item) {	// обновление параметров элементов
 	Building.list[item.id] = new Struct().set(item.id, item.type, item.x, item.y, item.z, item.lx, item.ly, item.lz);
 	for (var i in Building.list) {
-		if (item.id != i && isIntersects(item, Building.list[i])) {
-			return true;
+		if (item.id != i && isIntersects(item, Building.list[i])) {	// проверка, не создаёт ли помех элемент с новыми параметрами существующим
+			return true; // возвращает true, если элемент создаёт помехи
 		}
 	}
 }
@@ -272,22 +266,22 @@ var Camera = function (obj) {
 	this.dx = obj.dx;
 	this.dz = obj.dz;
 
-	this.l = obj.left;
-	this.r = obj.right;
-	this.b = obj.bottom;
-	this.t = obj.top;
+	this.l = obj.left;	// левая граница камеры
+	this.r = obj.right;	// правая граница камеры
+	this.b = obj.bottom;	// нижняя граница камеры
+	this.t = obj.top;	// верхняя граница камеры
 };
-Camera.prototype.setZoom = function (a) {
+Camera.prototype.setZoom = function (a) {	// установка масштабирования 
 	this.zoom = Math.max(Math.min(this.zoom * a, 40.0), 1.0);
 };
-Camera.prototype.getZoom = function (a) {
+Camera.prototype.getZoom = function (a) {	// получение текущего масштаба
 	return this.zoom;
 };
-Camera.prototype.setDxDz = function (a, b) {
+Camera.prototype.setDxDz = function (a, b) {	// установка смещения по осям
 	this.dx -= a;
 	this.dz -= b;
 };
-Camera.prototype.get = function () {
+Camera.prototype.get = function () {	// получение параметров камеры
 	return{
 		l: this.l*this.zoom + this.dx,
 		r: this.r*this.zoom + this.dx,
@@ -296,63 +290,66 @@ Camera.prototype.get = function () {
 	}
 };
 
+/** Выделение объектов */
 var Select = function () {
-	Select.counter = 0;
-	Select.list = {};
+	Select.counter = 0;	// счётчик выделенных объектов
+	Select.list = {};	// список выделенных объектов
 };
-Select.prototype.set = function (idItem) {
-	Select.list[Select.counter] = {id: idItem, flag: true};
+Select.prototype.set = function (idItem) {	// установка выделения
+	Select.list[Select.counter] = {id: idItem, flag: true};	// создание элемента в списке с идентификатором элемента
 	Select.counter++;
 };
-Select.prototype.get = function (idItem) {
-	if (idItem === undefined) {
+Select.prototype.get = function (idItem) {	// получение данных о выделенных элементах или элемента по id
+	if (idItem === undefined) {	// если идентификатор элемента не указан
 		return {
-			length: Select.counter,
-			list: Select.list
+			length: Select.counter,	// выводится длина списка
+			list: Select.list	// список элементов
 		};
 	} else {
-		return Select.list[idItem].id;
+		return Select.list[idItem].id;	// иначе функция возвращает идентификатор выделенного элемента
 	}
 };
-Select.prototype.setColor = function (color) {
-	if (color == 'error') {
-		this.color = [1.0, 0.0, 0.0, 1.0];
-	} else if (color == 'default' || color === undefined) {
-		this.color = [0.0, 1.0, 1.0, 1.0];
+Select.prototype.setColor = function (color) {	// установка цвета выделения
+	if (color == 'error') {	// если указано ключевое слово error
+		this.color = [1.0, 0.0, 0.0, 1.0];	// цвет выделения - красный
+	} else if (color == 'default' || color === undefined) {	// если указан default или не указан
+		this.color = [0.0, 1.0, 1.0, 1.0];	// цвет выделения бирюзовый
 	} else {
-		this.color = color;
+		this.color = color;	// иначе цвет равен указанному в RGBA виде
 	}
 };
-Select.prototype.getColor = function () {
-	return this.color;
+Select.prototype.getColor = function () {	// получение цвета
+	return this.color;	// функция возвращает текущий цвет
 };
-Select.prototype.reset = function () {
+Select.prototype.reset = function () {	// сброс выделения
 	for (var i in Select.list) {
-		delete Select.list[i];
+		delete Select.list[i];	// удаляются все элементы списка
 	}
-	Select.counter = 0;
+	Select.counter = 0;	// и обнуляется счётчик объектов
 };
 
+/** Прослушивание нажатий клавиш */
 var Keyboard = function () {
-	window.addEventListener('keydown', function (e) {
-		Keyboard.key = e.keyCode;
+	window.addEventListener('keydown', function (e) {	// определение нажатие клавиши
+		Keyboard.key = e.keyCode;	// сохранение кода нажатой клавиши
 	}, false);
-	window.addEventListener('keyup', function (e) {
-		Keyboard.key = undefined;
+	window.addEventListener('keyup', function (e) {	// определения поднятия клавиши
+		Keyboard.key = undefined;	// удаление ранее записанных данных
 	}, false);
 };
-Keyboard.prototype.getKeyCode = function () {
-	return Keyboard.key;
+Keyboard.prototype.getKeyCode = function () {	// получение кода клавиши
+	return Keyboard.key; // возвращает код клавиши или undefined
 };
 
+/**	Хранение/копирование элемента */
 var OldItem = function () {
-	this.oldItem = {};
+	this.oldItem = {};	// новый элемент
 };
-OldItem.prototype.setOldItem = function (item) {
+OldItem.prototype.setOldItem = function (item) {	// установка элемента
 	for (var i in item) {
-		this.oldItem[i] = item[i];
+		this.oldItem[i] = item[i];	// перезапись всех свойств входящего элемента в новый.
 	}
 };
-OldItem.prototype.getOldItem =  function () {
+OldItem.prototype.getOldItem =  function () {	// получение элемента
 	return this.oldItem;
 };
