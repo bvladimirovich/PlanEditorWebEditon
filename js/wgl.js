@@ -190,6 +190,7 @@ function initScene(elem) {
 	sel.setColor();
 	var key = new Keyboard();
 	var oldItem = new OldItem();
+	var graph = new Graph();
 	cam = new Camera({
 		zoom: 10.0,
 		dx: 0.0,
@@ -288,6 +289,7 @@ function initScene(elem) {
 							if (sel.get().length == 2 && sel.get(0) != item.id && item.type != 'door') {
 								var door = build.addDoor(build.getItem(sel.get(0)), item);
 								sel.set(door.id);
+								graph.add(door.id, sel.get(0), item.id);
 							} else {
 								sel.reset();
 								sel.set(item.id);
@@ -297,6 +299,11 @@ function initScene(elem) {
 							sel.set(item.id);
 						}
 						
+						// for (var i in graph.getGraph(item.id)) {
+							// console.log(graph.getGraph(item.id)[i]);
+							// sel.set(graph.getGraph(item.id)[i]);
+						// }
+
 						oldItem.setOldItem(item);
 					} else {
 						sel.reset();
@@ -309,6 +316,7 @@ function initScene(elem) {
 							lz = 2.0;
 						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
 					}
+					
 					
 					drawScene(cam, sel);
 				}
