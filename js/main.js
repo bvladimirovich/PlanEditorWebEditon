@@ -5,6 +5,7 @@ function initGraph () {
     g.add('b', 1, 3);
     g.add('c', 3, 4);
     g.add('d', 3, 5);
+	g.add('e', 2, 6);
     
     console.log(g.getEdge());
     console.log(g.getNode());
@@ -12,38 +13,37 @@ function initGraph () {
     console.log('Edge 3:', g.getEdge(3));
     console.log('Node "b":', g.getNode('b'));
 	
-	console.log('OppositeNode:', g.getOppositeNode(1));
+	console.log('OppositeNode:', g.getOppositeNode(1, 'b'));
 	
-	//console.log('---Обход по графу---');
-	//roundGraph(3, g);
+	console.log('---Обход по графу---');
+	console.log('set:', roundGraph(3, g));
+	console.log(g.getGraph(3));
 }
 
 function roundGraph(N, g) {
 	var set = new Set();
 	var tmp = new Set();
+	var tmp2 = new Set();
 	set.add(N);
 	tmp.add(N);
 	
-	// while (tmp.valueOf().length != 0) {
-		// for (var n in tmp.valueOf()) {
-			// for (var r in g.getEdge(set.valueOf()[n])) {
-				
-			// }
-		// }
-	// }
-	for (var i in set.valueOf()) {
-		console.log('set:', set.valueOf());
-		for (var e in g.getEdge(set.valueOf()[i])) {
-			console.log('e:', g.getEdge(set.valueOf()[i])[e]);
-			for (var j in g.getNode(g.getEdge(set.valueOf()[i])[e])) {
-				console.log('	j:', g.getNode(g.getEdge(set.valueOf()[i])[e])[j]);
-				set.add(g.getNode(g.getEdge(set.valueOf()[i])[e])[j]);
-				tmp.add(g.getNode(g.getEdge(set.valueOf()[i])[e])[j]);
+	while (tmp.valueOf().length != 0) {
+		for (var n in tmp.valueOf()) {
+			var n1 = tmp.valueOf()[n];	// вершина из списка
+			for (var r in g.getEdge(n1)) {				
+				var n2 = g.getOppositeNode(n1, g.getEdge(n1)[r]);
+				console.log(n1, g.getEdge(n1)[r], n2);	
+				if (set.has(n2) == false) {
+					set.add(n2);
+					tmp2.add(n2);
+				}
 			}
 		}
+		tmp = tmp2;
+		tmp2 = new Set();
 	}
-	console.log('set:', set.valueOf());
-	console.log('tmp:', tmp.valueOf());
+
+	return set.valueOf();
 }
 
 /* Граф */
@@ -66,22 +66,47 @@ Graph.prototype.getNode = function (idEdge) {	// получение вершин
 Graph.prototype.getEdge = function (idNode) {	// получение рёбер указанной вершины или списка всех рёбер
 	return idNode === undefined ? this.listOfEdges : this.listOfNodes[idNode];
 };
-Graph.prototype.getOppositeNode = function (idNode) {	// получение противоположных вершин указанной
-	var arr = [];	// массив вершин
+Graph.prototype.getOppositeNode = function (idNode, idEdge) {	// получение противоположных вершин указанной
+	var arr = undefined;	// список вершин
 	for (var n in this.listOfNodes) {	// обход по всем вершинам
 		if (idNode != n) continue;	// если входящая вершина не равна вершине из списка, выполняется переход к следующей
-		for (var ns in this.listOfEdges) {	// иначе выполняется обход по всем рёбрам графа
-			if (this.listOfEdges[ns][0] == idNode) {	// если вершина ребра равна входящей вершине
-				arr.push(this.listOfEdges[ns][1]);	// то вершина с другого конца ребра добавляется в массив
-			} else if (this.listOfEdges[ns][1] == idNode) {
-				arr.push(this.listOfEdges[ns][0]);
+		for (var e in this.listOfEdges) {	// иначе выполняется обход по всем рёбрам графа
+			if (idEdge != e) continue;	// если входящее ребро не равно ребру из списка, выполняется переход к следующему
+			if (this.listOfEdges[e][0] == idNode) {	// если вершина ребра равна входящей вершине
+				arr = this.listOfEdges[e][1];	// то вершина с другого конца ребра добавляется в массив
+			} else if (this.listOfEdges[e][1] == idNode) {
+				arr = this.listOfEdges[e][0];
 			}
 		}
 	}
 	return arr;	// функция возвращает массив
 };
+Graph.prototype.getGraph = function (N) {
+	var set = new Set();
+	var tmp = new Set();
+	var tmp2 = new Set();
+	set.add(N);
+	tmp.add(N);
+	
+	while (tmp.valueOf().length != 0) {
+		for (var n in tmp.valueOf()) {
+			var n1 = tmp.valueOf()[n];	// вершина из списка
+			for (var r in this.listOfEdges) {
+				var n2 = this.getOppositeNode(n1, r);
+				if (set.has(n2) == false && n2 !== undefined) {
+					set.add(n2);
+					tmp2.add(n2);
+				}
+			}
+		}
+		tmp = tmp2;
+		tmp2 = new Set();
+	}
 
-/* Множество не повторяющихся элементов */
+	return set.valueOf();
+}
+
+/* Множество неповторяющихся элементов */
 var Set = function () {
 	this.set = [];
 };
