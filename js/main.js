@@ -12,7 +12,7 @@ function initGraph () {
     console.log('Edge 3:', g.getEdge(3));
     console.log('Node "b":', g.getNode('b'));
 	
-	console.log('OppositeNode:', g.getOppositeNode(2));
+	console.log('OppositeNode:', g.getOppositeNode(1));
 	
 	//console.log('---Обход по графу---');
 	//roundGraph(3, g);
@@ -46,80 +46,77 @@ function roundGraph(N, g) {
 	console.log('tmp:', tmp.valueOf());
 }
 
+/* Граф */
 var Graph = function () {
-    this.listOfNodes = {};
-    this.listOfEdges = {};
+    this.listOfNodes = {};	// список вершин с рёбрами
+    this.listOfEdges = {};	// список рёбер с вершинами
 };
-Graph.prototype.add = function (edge, node1, node2) {
-	if (typeof arguments[0] != 'string' || 
-		typeof arguments[1] != 'number' || 
-		typeof arguments[2] != 'number') return false;
-	
-    this.listOfEdges[edge] = [node1, node2];
+Graph.prototype.add = function (edge, node1, node2) {	// добавление ребра и его вершин в граф
+    this.listOfEdges[edge] = [node1, node2];	// помещение ребра с его вершинами в список 
 
-    this.listOfNodes[node1] = this.listOfNodes[node1] || [];
+    this.listOfNodes[node1] = this.listOfNodes[node1] || [];	// если массив вершин не создан, то создаётся
     this.listOfNodes[node2] = this.listOfNodes[node2] || [];
     
-    this.listOfNodes[node1].push(edge);    
+    this.listOfNodes[node1].push(edge);		// добавление ребра к списку вершин
     this.listOfNodes[node2].push(edge);
 };
-Graph.prototype.getNode = function (idEdge) {
+Graph.prototype.getNode = function (idEdge) {	// получение вершин указанного ребра или списка всех вершин
 	return idEdge === undefined ? this.listOfNodes : this.listOfEdges[idEdge];
 };
-Graph.prototype.getEdge = function (idNode) {
+Graph.prototype.getEdge = function (idNode) {	// получение рёбер указанной вершины или списка всех рёбер
 	return idNode === undefined ? this.listOfEdges : this.listOfNodes[idNode];
 };
-Graph.prototype.getOppositeNode = function (idNode) {
-	var arr = [];
-	for (var n in this.listOfNodes) {
-		if (idNode != n) continue;
-		for (var ns in this.listOfEdges) {
-			if (this.listOfEdges[ns][0] == idNode) {
-				arr.push(this.listOfEdges[ns][1]);
+Graph.prototype.getOppositeNode = function (idNode) {	// получение противоположных вершин указанной
+	var arr = [];	// массив вершин
+	for (var n in this.listOfNodes) {	// обход по всем вершинам
+		if (idNode != n) continue;	// если входящая вершина не равна вершине из списка, выполняется переход к следующей
+		for (var ns in this.listOfEdges) {	// иначе выполняется обход по всем рёбрам графа
+			if (this.listOfEdges[ns][0] == idNode) {	// если вершина ребра равна входящей вершине
+				arr.push(this.listOfEdges[ns][1]);	// то вершина с другого конца ребра добавляется в массив
 			} else if (this.listOfEdges[ns][1] == idNode) {
 				arr.push(this.listOfEdges[ns][0]);
 			}
 		}
 	}
-	return arr;
+	return arr;	// функция возвращает массив
 };
 
-
+/* Множество не повторяющихся элементов */
 var Set = function () {
 	this.set = [];
 };
-Set.prototype.add = function (N) {
-	if (this.set.length == 0) {
-		this.set.push(N);
-	} else {
-		var c = 0;
-		for (var i = 0; i < this.set.length; i++) {
-			if (N == this.set[i]) {
-				c++;
+Set.prototype.add = function (N) {	// добавление элементов во множество
+	if (this.set.length == 0) { // если длина массива равна нулю
+		this.set.push(N);	// добавляется первый элемент
+		return true;	// и функция возвращает true
+	} else {	// если длина массива больше нуля
+		for (var i = this.set.length; --i >= 0;) {	// выполняется обход массива
+			if (N == this.set[i]) {	// если какой-то элемент массива равен новому
+				return false;	// функция возвращает false и элемент не попадает в массив
 			}
 		}
-		if (c == 0) {
-			this.set.push(N);
-		}
+		this.set.push(N);	// если новый элемент не равен ни одному из существующих, он добавляется в массив
+		return true;	// и функция возвращает true
 	}
 };
-Set.prototype.delete = function (N) {
+Set.prototype.delete = function (N) {	// удаление элемента массива, где N - элемент.
 	for (var i in this.set) {
 		if (N == this.set[i]) {
 			this.set.splice(i, 1);	
 		}
 	}
 };
-Set.prototype.has = function (N) {
+Set.prototype.has = function (N) {	// проверка на присутствие элемента в массиве
 	for (var i in this.set) {
-		if (N == this.set[i]) {
-			return true;
+		if (N == this.set[i]) {	// если элемент существует
+			return true;	// возвращается true
 		}
 	}
+	return false; // иначе - false
 };
-Set.prototype.clear = function (N) {
+Set.prototype.clear = function (N) {	// очистка массива
 	this.set = [];
 };
-Set.prototype.valueOf = function () {
+Set.prototype.valueOf = function () {	// получение всего массива
 	return this.set;
 };
