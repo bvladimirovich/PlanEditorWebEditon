@@ -190,49 +190,43 @@ Building.prototype.addRoom = function (x,y,z,lx,ly,lz) {
  @param {number} lx,ly,lz - размеры комнаты
  @returns экземпляр класса 'Struct'
 */
-Building.prototype.addDoor = function(a, b, lx, ly, lz){
-	if (a.type == 'door' || b.type == 'door') {
-		return false;
+Building.prototype.addDoor = function(a, b, lx, ly, lz){	// добавление двери
+	if (a.type == 'door' || b.type == 'door') {	// если элементы, между которыми нужно создать дверь, являются дверями
+		return false;	// функция возвращает false
 	}
 	
-	var c = new Section().get(a, b, Building.list);
+	var c = new Section().get(a, b, Building.list);	// определение пространства между выбранными элементами
 	lx = lx || c.lx;
 	ly = ly || c.ly;
 	lz = lz || c.lz;
-	var q = new Struct().set(Building.ID, 'door', c.x, c.y, c.z, lx, ly, lz);
+	var q = new Struct().set(Building.ID, 'door', c.x, c.y, c.z, lx, ly, lz);	// создание нового элемента с типом дверь
 
-  /** Проверка на отсутствие ошибок*/
-  /*** TODO - Применить Error и try/catch **/
-  if (c.info == 0) {
-	if (q.lx <= c.lx && q.ly <= c.ly && q.lz <= c.lz) {
-	  Building.list[Building.ID] = q;
-	  Building.ID++
-      return q;
-	} else {
-	  throw 'Невозможно установить размеры двери';
+	/** Проверка на отсутствие ошибок*/
+	/*** TODO - Применить Error и try/catch **/
+	if (c.info == 0) {
+		if (q.lx <= c.lx && q.ly <= c.ly && q.lz <= c.lz) {	// проверка размеров нового элемента, 
+															// чтоб они не превышали размеров свободного пространства 
+															// между выделенными элементами
+			Building.list[Building.ID] = q;	// добавление элемента в список
+			Building.ID++
+			return q;	// возврат нового элемента
+		} else {
+			throw 'Невозможно установить размеры двери';
+		}
+	} else if (c.info == 1) {
+		throw 'Невозможно добавить дверь. Элементы не скрещиваются';
+	} else if (c.info == 2) {
+		throw 'Невозможно добавить дверь. Расстояние между элементами равно нулю';
+	} else if (c.info == 3) {
+		throw 'Невозможно добавить дверь. Между элементами находится другой элемент';
 	}
-  } else if (c.info == 1) {
-    throw 'Невозможно добавить дверь. Элементы не скрещиваются';
-  } else if (c.info == 2) {
-    throw 'Невозможно добавить дверь. Расстояние между элементами равно нулю';
-  } else if (c.info == 3) {
-    throw 'Невозможно добавить дверь. Между элементами находится другой элемент';
-  }
 }
-/**
- Метод удаления элемента.
- @param {number} id - идентификатор объекта
- @returns удалённый объект
-*/
-Building.prototype.removeItem = function(id){
+Building.prototype.removeItem = function(id){	// удаление элемента по его идентификатору
 	var i = Building.list[id];
-	delete Building.list[id];
-	return i;
+	delete Building.list[id]; // удаляет
+	return i;	// и возвращает удалённый элемент
 }
-/**
- Метод возвращает количество существующих элементов
-*/
-Building.prototype.numberOfItems = function(){
+Building.prototype.numberOfItems = function(){	// общее количество элементов 
 	var counter = 0;
 	for (var i in Building.list) {
 		counter++;
@@ -240,7 +234,7 @@ Building.prototype.numberOfItems = function(){
 	return counter;
 }
 Building.prototype.getItem = function(idItem){	// получение списка элементов или одного по id
-  return idItem === undefined ? Building.list : Building.list[idItem];
+	return idItem === undefined ? Building.list : Building.list[idItem];
 }
 Building.prototype.updateItem = function (item) {	// обновление параметров элементов
 	Building.list[item.id] = new Struct().set(item.id, item.type, item.x, item.y, item.z, item.lx, item.ly, item.lz);
