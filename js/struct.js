@@ -387,7 +387,6 @@ Graph.prototype.getOppositeNode = function (idNode, idEdge) {	// получен�
 };
 Graph.prototype.getGraph = function (N) {
 	var set = new Set();
-	var ed = new Set();
 	var tmp = new Set();
 	var tmp2 = new Set();
 	set.add(N);
@@ -401,7 +400,6 @@ Graph.prototype.getGraph = function (N) {
 				if (set.has(n2) == false && n2 !== undefined) {
 					set.add(n2);
 					tmp2.add(n2);
-					ed.add(r);
 				}
 			}
 		}
@@ -409,10 +407,7 @@ Graph.prototype.getGraph = function (N) {
 		tmp2 = new Set();
 	}
 
-	return {
-		nodes: set.valueOf(),
-		edges: ed.valueOf(),
-	};
+	return set.valueOf()
 }
 
 /** Множество неповторяющихся элементов */

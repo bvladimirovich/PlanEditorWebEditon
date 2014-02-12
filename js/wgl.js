@@ -188,9 +188,6 @@ function initScene(elem) {
 	
 	sel = new Select();
 	sel.setColor();
-	var key = new Keyboard();
-	var oldItem = new OldItem();
-	var graph = new Graph();
 	cam = new Camera({
 		zoom: 10.0,
 		dx: 0.0,
@@ -249,6 +246,11 @@ function initScene(elem) {
 			}
 		}
 		
+		var key = new Keyboard();
+		var oldItem = new OldItem();
+		var graph = new Graph();
+		var NOMIVE = [];
+		
 		function Draggable() {
 			var drag = false,
 				move = false,
@@ -271,43 +273,6 @@ function initScene(elem) {
 					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
 						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
 					
-					item = findElement(x, z, build.getItem());
-					if (item != false) {
-						move = true;
-						prevXm = x - item.x; // координаты мышки на элементе
-						prevZm = z - item.z;
-					
-						var r = findBorder(x, z, build.getItem(item.id), cam.getZoom());
-						if (r != undefined) {
-							resize = r;
-							move = false;
-						}
-						
-						//sel.set(item.id);
-						
-						// if (key.getKeyCode() == SHIFT && build.getItem(sel.get(0)).type != 'door') {
-							// if (sel.get().length == 2 && sel.get(0) != item.id && item.type != 'door') {
-								// var door = build.addDoor(build.getItem(sel.get(0)), item);
-								// sel.set(door.id);
-								// graph.add(door.id, sel.get(0), item.id);
-							// } else {
-								// //sel.reset();
-								// sel.set(item.id);
-							// }
-						// } else { // if (sel.get().length != 0) {
-							// sel.reset();
-							// sel.set(item.id);
-						// }
-						
-						// console.log(sel.get());
-						// for (var i in graph.getGraph(item.id)) {
-							// console.log(graph.getGraph(item.id)[i]);
-							// sel.set(graph.getGraph(item.id)[i]);
-						// }
-						
-						oldItem.setOldItem(item);
-					}
-					
 					if (key.getKeyCode() == CTRL) {
 						move = false;
 						var lx = 2.0,
@@ -315,40 +280,60 @@ function initScene(elem) {
 							lz = 2.0;
 						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
 					}
-					
-					if (item !== false) {
+
+					item = findElement(x, z, build.getItem());
+					if (item != false) {
+						isMoveItem();
+						isResizeItem();
+						oldItem.setOldItem(item);
+						
 						if (key.getKeyCode() == SHIFT) {
-							if (sel.get().length < 2) {
-								sel.set(item.id);
-								
-								var door = build.addDoor(build.getItem(sel.get(0)), item);
-								if (!door) return;
-								sel.set(door.id);
-								graph.add(door.id, sel.get(0), item.id);
-							}
-							console.log('С шифтом', '| numberOf:', sel.get().length, '| ID0:', sel.get(0), '| ID1:',item.id);
+							sel.set(item.id);
+							var door = build.addDoor(build.getItem(sel.get(0)), item);
+							if (!door) return;
+							sel.set(door.id);
+							graph.add(door.id, sel.get(0), item.id);
 						} else {
 							if (sel.get().length > 0) {
 								sel.reset();
 							}
 							sel.set(item.id);
 							
-							if (graph.getGraph(item.id).nodes.length > 1) {
-								for (var i in graph.getGraph(item.id).nodes) {
-									sel.set(graph.getGraph(item.id).nodes[i]);
+							if (graph.getGraph(item.id).length > 1 || item.type === 'door') {
+								for (var j in graph.getNode(item.id)) {
+									if (graph.getGraph(graph.getNode(item.id)[j]).length > 1) {
+										for (var i in graph.getGraph(graph.getNode(item.id)[j])) {
+											sel.set(graph.getGraph(graph.getNode(item.id)[j])[i]);
+											sel.set(graph.getEdge(graph.getGraph(graph.getNode(item.id)[j])[i]));
+										}
+									}
 								}
-								for (var j in graph.getGraph(item.id).edges) {
-									sel.set(graph.getGraph(item.id).edges[j]);
+								for (var i in graph.getGraph(item.id)) {
+									sel.set(graph.getGraph(item.id)[i]);
+									sel.set(graph.getEdge(graph.getGraph(item.id)[i]));
 								}
+								move = false;
 							}
-							console.log('Без шифта', '| numberOf:', sel.get().length, '| ID0:', item.id);
-							console.log('Граф:', graph.getGraph(item.id));
 						}
 					} else {
 						sel.reset();
 					}
 					
 					drawScene(cam, sel);
+					
+					function isMoveItem () {
+						move = true;
+						prevXm = x - item.x; // координаты мышки на элементе
+						prevZm = z - item.z;
+					}
+					
+					function isResizeItem () {
+						var r = findBorder(x, z, build.getItem(item.id), cam.getZoom());
+						if (r != undefined) {
+							resize = r;
+							move = false;
+						}
+					}
 				}
 			}
 			this.mousemove = function (ev) {
