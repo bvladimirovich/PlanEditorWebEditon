@@ -87,16 +87,18 @@ Section.prototype.get = function(a, b, arr){
   /* Определение координат и размеров общей зоны */
   overlap(a, b, c);
   for (var i in c) {
-    if(c[i]==-1) overlap(b, a, c);
+    if(c[i] == -1) overlap(b, a, c);
   }
+  
   for (var i in c) {
     /* Элементы не скрещиваются */
-    if(c[i]==-1) c.info=1;
+    if(c[i] == -1) c.info = 1;
 	/* Расстояние между элементами равно нулю */
-	if(c.lx==0 || c.ly==0 || c.lz==0) c.info=2;
+	if(c.lx == 0 || c.ly == 0 || c.lz == 0) c.info = 2;
   }
+  
   for (var k in arr) {
-	if (arr[k].id!=a.id&&arr[k].id!=b.id)
+	if (arr[k].id != a.id && arr[k].id != b.id)
 	if (isIntersects(c, arr[k])) {
 	  /* Расстояние между элементами занято другим элементом */
 	  c.info=3;
@@ -191,7 +193,7 @@ Building.prototype.addRoom = function (x,y,z,lx,ly,lz) {
  @returns экземпляр класса 'Struct'
 */
 Building.prototype.addDoor = function(a, b, lx, ly, lz){	// добавление двери
-	if (a.type == 'door' || b.type == 'door') {	// если элементы, между которыми нужно создать дверь, являются дверями
+	if (a.type == 'door' || b.type == 'door' || a.id == b.id) {	// если элементы, между которыми нужно создать дверь, являются дверями
 		return false;	// функция возвращает false
 	}
 	
@@ -385,6 +387,7 @@ Graph.prototype.getOppositeNode = function (idNode, idEdge) {	// получен�
 };
 Graph.prototype.getGraph = function (N) {
 	var set = new Set();
+	var ed = new Set();
 	var tmp = new Set();
 	var tmp2 = new Set();
 	set.add(N);
@@ -398,6 +401,7 @@ Graph.prototype.getGraph = function (N) {
 				if (set.has(n2) == false && n2 !== undefined) {
 					set.add(n2);
 					tmp2.add(n2);
+					ed.add(r);
 				}
 			}
 		}
@@ -405,7 +409,10 @@ Graph.prototype.getGraph = function (N) {
 		tmp2 = new Set();
 	}
 
-	return set.valueOf();
+	return {
+		nodes: set.valueOf(),
+		edges: ed.valueOf(),
+	};
 }
 
 /** Множество неповторяющихся элементов */
