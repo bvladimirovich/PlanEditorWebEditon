@@ -153,7 +153,7 @@ function drawScene(cam, sel) {
 		
 		if (sel.get().length != 0) {
 			for (var k in sel.get().list) {
-				if (sel.get(k) == item.id) {
+				if (sel.get().list[k].id !== undefined && sel.get(k) == item.id) {
 					mat4.identity(mMatrix);
 					mat4.translate(mMatrix, [dx, -0.1, dz]);
 					mat4.scale(mMatrix, [sx, 1.0, sz]);
@@ -283,30 +283,29 @@ function initScene(elem) {
 							move = false;
 						}
 						
-						sel.set(item.id);
+						//sel.set(item.id);
 						
-						if (key.getKeyCode() == SHIFT && build.getItem(sel.get(0)).type != 'door') {
-							if (sel.get().length == 2 && sel.get(0) != item.id && item.type != 'door') {
-								var door = build.addDoor(build.getItem(sel.get(0)), item);
-								sel.set(door.id);
-								graph.add(door.id, sel.get(0), item.id);
-							} else {
-								sel.reset();
-								sel.set(item.id);
-							}
-						} else if (sel.get().length != 0) {
-							sel.reset();
-							sel.set(item.id);
-						}
+						// if (key.getKeyCode() == SHIFT && build.getItem(sel.get(0)).type != 'door') {
+							// if (sel.get().length == 2 && sel.get(0) != item.id && item.type != 'door') {
+								// var door = build.addDoor(build.getItem(sel.get(0)), item);
+								// sel.set(door.id);
+								// graph.add(door.id, sel.get(0), item.id);
+							// } else {
+								// //sel.reset();
+								// sel.set(item.id);
+							// }
+						// } else { // if (sel.get().length != 0) {
+							// sel.reset();
+							// sel.set(item.id);
+						// }
 						
+						// console.log(sel.get());
 						// for (var i in graph.getGraph(item.id)) {
 							// console.log(graph.getGraph(item.id)[i]);
 							// sel.set(graph.getGraph(item.id)[i]);
 						// }
-
+						
 						oldItem.setOldItem(item);
-					} else {
-						sel.reset();
 					}
 					
 					if (key.getKeyCode() == CTRL) {
@@ -317,6 +316,37 @@ function initScene(elem) {
 						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
 					}
 					
+					if (item !== false) {
+						if (key.getKeyCode() == SHIFT) {
+							if (sel.get().length < 2) {
+								sel.set(item.id);
+								
+								var door = build.addDoor(build.getItem(sel.get(0)), item);
+								if (!door) return;
+								sel.set(door.id);
+								graph.add(door.id, sel.get(0), item.id);
+							}
+							console.log('С шифтом', '| numberOf:', sel.get().length, '| ID0:', sel.get(0), '| ID1:',item.id);
+						} else {
+							if (sel.get().length > 0) {
+								sel.reset();
+							}
+							sel.set(item.id);
+							
+							if (graph.getGraph(item.id).nodes.length > 1) {
+								for (var i in graph.getGraph(item.id).nodes) {
+									sel.set(graph.getGraph(item.id).nodes[i]);
+								}
+								for (var j in graph.getGraph(item.id).edges) {
+									sel.set(graph.getGraph(item.id).edges[j]);
+								}
+							}
+							console.log('Без шифта', '| numberOf:', sel.get().length, '| ID0:', item.id);
+							console.log('Граф:', graph.getGraph(item.id));
+						}
+					} else {
+						sel.reset();
+					}
 					
 					drawScene(cam, sel);
 				}
