@@ -286,42 +286,15 @@ Camera.prototype.get = function () {	// получение параметров 
 	}
 };
 
-/** Выделение объектов */
-var Select = function () {
-	Select.counter = 0;	// счётчик выделенных объектов
-	Select.list = {};	// список выделенных объектов
+/** Управление цветом */
+var Color = function () {
+	this.color = undefined;
 };
-Select.prototype.set = function (idItem) {	// установка выделения
-	Select.list[Select.counter] = {id: idItem, flag: true};	// создание элемента в списке с идентификатором элемента
-	Select.counter++;
+Color.prototype.set = function (color) {	// установка цвета выделения
+	this.color = color
 };
-Select.prototype.get = function (idItem) {	// получение данных о выделенных элементах или элемента по id
-	if (idItem === undefined) {	// если идентификатор элемента не указан
-		return {
-			length: Select.counter,	// выводится длина списка
-			list: Select.list	// список элементов
-		};
-	} else {
-		return Select.list[idItem].id;	// иначе функция возвращает идентификатор выделенного элемента
-	}
-};
-Select.prototype.setColor = function (color) {	// установка цвета выделения
-	if (color == 'error') {	// если указано ключевое слово error
-		this.color = [1.0, 0.0, 0.0, 1.0];	// цвет выделения - красный
-	} else if (color == 'default' || color === undefined) {	// если указан default или не указан
-		this.color = [0.0, 1.0, 1.0, 1.0];	// цвет выделения бирюзовый
-	} else {
-		this.color = color;	// иначе цвет равен указанному в RGBA виде
-	}
-};
-Select.prototype.getColor = function () {	// получение цвета
-	return this.color;	// функция возвращает текущий цвет
-};
-Select.prototype.reset = function () {	// сброс выделения
-	for (var i in Select.list) {
-		delete Select.list[i];	// удаляются все элементы списка
-	}
-	Select.counter = 0;	// и обнуляется счётчик объектов
+Color.prototype.get = function () {	// получение цвета
+	return this.color;
 };
 
 /** Прослушивание нажатий клавиш */
