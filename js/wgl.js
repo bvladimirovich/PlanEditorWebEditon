@@ -116,7 +116,7 @@ function initBuffersBorder() {
 	borderVertexPositionBuffer.numItems = 5;
 }
 
-function drawScene(cam, sel) {
+function drawScene(cam, selectedItems, highlightColor) {
 	if (cam.constructor != Camera) {
 		throw new Error('Входящий параметр не верного типа. Ожидался экземпляр класса Camera.');
 	}
@@ -151,20 +151,19 @@ function drawScene(cam, sel) {
 		gl.uniform4fv(shaderProgram.uColor, uColor);
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
 		
-		if (sel.get().length != 0) {
-			for (var k in sel.get().list) {
-				if (sel.get().list[k].id !== undefined && sel.get(k) == item.id) {
-					mat4.identity(mMatrix);
-					mat4.translate(mMatrix, [dx, -0.1, dz]);
-					mat4.scale(mMatrix, [sx, 1.0, sz]);
-					
-					gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
-					gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, borderVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-					gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
-					gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
-					gl.uniform4fv(shaderProgram.uColor, sel.getColor());
-					gl.drawArrays(gl.LINE_STRIP, 0, borderVertexPositionBuffer.numItems);
-				}
+		if (selectedItems.valueOf().length > 0) {
+			if (selectedItems.has(item.id)) {
+				mat4.identity(mMatrix);
+				mat4.translate(mMatrix, [dx, -0.1, dz]);
+				mat4.scale(mMatrix, [sx, 1.0, sz]);
+				
+				gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
+				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, borderVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+				gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
+				gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
+				gl.uniform4fv(shaderProgram.uColor, highlightColor.get());
+				gl.drawArrays(gl.LINE_STRIP, 0, borderVertexPositionBuffer.numItems);
+			
 			}
 		}
 	}
@@ -180,14 +179,16 @@ function drawScene(cam, sel) {
 	Функция drawScene(cam) отрисовывает сцену. Входной параметр - объект класса Camera.
 */
 var cam;
-var sel;
+var selectedItems;
+var highlightColor;
 var build;
 function initScene(elem) {
+	console.time('Загрузка initScene()');
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
 	
-	sel = new Select();
-	sel.setColor();
+	selectedItems = new Set();
+	highlightColor = new Color();
 	cam = new Camera({
 		zoom: 10.0,
 		dx: 0.0,
@@ -206,7 +207,7 @@ function initScene(elem) {
 	
 	wheelListener(elem);
 	mouseListener(elem);
-	drawScene(cam, sel);
+	drawScene(cam, selectedItems, highlightColor);
 	
 	function wheelListener (elem){
 		if (elem.addEventListener) {
@@ -225,11 +226,11 @@ function initScene(elem) {
 			e = e || window.event;
 			var delta = e.deltaY || e.detail || e.wheelDelta;
 			cam.setZoom((delta > 0) ? 1.1 : 0.9);
-			drawScene(cam, sel);
+			drawScene(cam, selectedItems, highlightColor);
 			e.preventDefault ? e.preventDefault() : (e.returnValue = false);
 		}
 	}
-		
+	
 	function mouseListener(elem) {
 		var selector = '#canvas';
 		$(selector).on("mousedown", s);
@@ -247,10 +248,14 @@ function initScene(elem) {
 		}
 		
 		var key = new Keyboard();
-		var oldItem = new OldItem();
-		var graph = new Graph();
-		var NOMIVE = [];
+		console.assert(key.constructor === Keyboard);
 		
+		var oldItem = new OldItem();
+		console.assert(oldItem.constructor === OldItem);
+		
+		var graph = new Graph();
+		console.assert(graph.constructor === Graph);
+
 		function Draggable() {
 			var drag = false,
 				move = false,
@@ -260,18 +265,26 @@ function initScene(elem) {
 				prevZd,
 				prevXm,
 				prevZm;
-			
+				
 			var SHIFT = 16,
 				CTRL = 17;
 				
+			var color = {
+				RED: [1.0, 0.0, 0.0, 1.0],
+				TURQUOISE: [0.0, 1.0, 1.0, 1.0]
+			};
+			highlightColor.set(color.TURQUOISE);
+			
 			this.mousedown = function (ev) {
 				if (fixWhich(ev)) {
 					prevXd = fs(ev, 'x');
 					prevZd = gl.viewportHeight - fs(ev, 'z');
 					drag = true;
+					console.info('Перемещение поля ПКМ - OK');
 				} else {
 					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
 						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
+					console.info('Клик в рабочем пространстве', 'x:', x.toFixed(2), 'z:', z.toFixed(2));
 					
 					if (key.getKeyCode() == CTRL) {
 						move = false;
@@ -280,46 +293,39 @@ function initScene(elem) {
 							lz = 2.0;
 						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
 					}
-
+					
+					console.log(build.getItem());
 					item = findElement(x, z, build.getItem());
+					
+					console.assert(item === false, 'Элемент найден');
+					console.warn('Количество выделенных элементов на входе', selectedItems.valueOf().length);
 					if (item != false) {
 						isMoveItem();
 						isResizeItem();
 						oldItem.setOldItem(item);
 						
 						if (key.getKeyCode() == SHIFT) {
-							sel.set(item.id);
-							var door = build.addDoor(build.getItem(sel.get(0)), item);
-							if (!door) return;
-							sel.set(door.id);
-							graph.add(door.id, sel.get(0), item.id);
-						} else {
-							if (sel.get().length > 0) {
-								sel.reset();
-							}
-							sel.set(item.id);
+							selectedItems.add(item.id);
+							var door = build.addDoor(build.getItem(selectedItems.valueOf()[0]), item);
 							
-							if (graph.getGraph(item.id).length > 1 || item.type === 'door') {
-								for (var j in graph.getNode(item.id)) {
-									if (graph.getGraph(graph.getNode(item.id)[j]).length > 1) {
-										for (var i in graph.getGraph(graph.getNode(item.id)[j])) {
-											sel.set(graph.getGraph(graph.getNode(item.id)[j])[i]);
-											sel.set(graph.getEdge(graph.getGraph(graph.getNode(item.id)[j])[i]));
-										}
-									}
-								}
-								for (var i in graph.getGraph(item.id)) {
-									sel.set(graph.getGraph(item.id)[i]);
-									sel.set(graph.getEdge(graph.getGraph(item.id)[i]));
-								}
-								move = false;
+							if (!door) return;
+							selectedItems.add(door.id);
+							graph.add(door.id, build.getItem(selectedItems.valueOf()[0]).id, item.id);
+						} else {
+							if (selectedItems.valueOf().length > 0) {
+								selectedItems.clear();
 							}
+
+							selectedItems.add(item.id);
+							console.warn('Количество выделенных элементов после нажатия на элемент', selectedItems.valueOf().length);
+							
+							selectedGraph(item, graph);
 						}
 					} else {
-						sel.reset();
+						selectedItems.clear();
 					}
 					
-					drawScene(cam, sel);
+					drawScene(cam, selectedItems, highlightColor);
 					
 					function isMoveItem () {
 						move = true;
@@ -333,6 +339,33 @@ function initScene(elem) {
 							resize = r;
 							move = false;
 						}
+					}
+				
+					function selectedGraph (item, graph) {
+						console.time('TimeWork');
+						var id = item.id;
+						if (item.type == 'door') {
+							id = graph.getNode(id)[0];
+						}
+						var g = graph.getGraph(id);
+						if (g.length > 1) {
+							for (var i = g.length; --i >= 0;) {
+								if (!selectedItems.has(g[i])) {
+									selectedItems.add(g[i]);
+								}
+							}
+							for (var i = g.length; --i >= 0;) {
+								var e = graph.getEdge(g[i]);
+								for (var j in e) {
+									if (!selectedItems.has(e[j])) {
+										selectedItems.add(e[j]);
+									}
+								}
+							}
+							move = false;
+						}
+						console.timeEnd('TimeWork');
+						console.error('Длина графа', graph.getGraph(id).length);
 					}
 				}
 			}
@@ -348,12 +381,16 @@ function initScene(elem) {
 					cam.setDxDz((nX-prevXd)/k, (nZ-prevZd)/k);
 					prevXd = nX;
 					prevZd = nZ;
-					drawScene(cam, sel);
+					drawScene(cam, selectedItems, highlightColor);
 				} else if (move) {
 					item.x = x - prevXm,
 					item.z = z - prevZm;
-					sel.setColor(build.updateItem(item) ? 'error' : 'default');
-					drawScene(cam, sel);
+					if (build.updateItem(item)) {
+						highlightColor.set(color.RED);
+					} else {
+						highlightColor.set(color.TURQUOISE);
+					}
+					drawScene(cam, selectedItems, highlightColor);
 				} else if (resize != undefined) {
 					var minSize = {
 						lx: 0.6,
@@ -429,11 +466,22 @@ function initScene(elem) {
 							}
 							break;
 					}
-					sel.setColor(build.updateItem(item) ? 'error' : 'default');
-					drawScene(cam, sel);
+					if (build.updateItem(item)) {
+						highlightColor.set(color.RED);
+					} else {
+						highlightColor.set(color.TURQUOISE);
+					}
+					drawScene(cam, selectedItems, highlightColor);
 				} else {
-					if (sel.get().length > 0) {
-						findBorder(x, z, build.getItem(sel.get(sel.get().length-1)), cam.getZoom());
+					if (selectedItems.valueOf().length > 0) {
+						item = findElement(x, z, build.getItem());
+						if (item != false) {
+							if (selectedItems.has(item.id)) {
+								findBorder(x, z, build.getItem(item.id), cam.getZoom());
+							}
+						} else {
+							findBorder(x, z, build.getItem(selectedItems.valueOf()[0]), cam.getZoom());
+						}
 					}
 				}
 			}
@@ -444,15 +492,15 @@ function initScene(elem) {
 					move = false;
 					if (build.updateItem(item)) {
 						build.updateItem(oldItem.getOldItem());
-						sel.setColor('default');
-						drawScene(cam, sel);
+						highlightColor.set(color.TURQUOISE);
+						drawScene(cam, selectedItems, highlightColor);
 					}
 				} else if (resize != undefined) {
 					resize = undefined;
 					if (build.updateItem(item)) {
 						build.updateItem(oldItem.getOldItem());
-						sel.setColor('default');
-						drawScene(cam, sel);
+						highlightColor.set(color.TURQUOISE);
+						drawScene(cam, selectedItems, highlightColor);
 					}
 				}
 			}
@@ -527,4 +575,5 @@ function initScene(elem) {
 			}
 		}
 	}
+	console.timeEnd('Загрузка initScene()');
 }
