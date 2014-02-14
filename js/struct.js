@@ -388,17 +388,11 @@ var Set = function () {
 	this.set = [];
 };
 Set.prototype.add = function (N) {	// добавление элементов во множество
-	if (this.set.length == 0) { // если длина массива равна нулю
-		this.set.push(N);	// добавляется первый элемент
-		return true;	// и функция возвращает true
-	} else {	// если длина массива больше нуля
-		for (var i = this.set.length; --i >= 0;) {	// выполняется обход массива
-			if (N == this.set[i]) {	// если какой-то элемент массива равен новому
-				return false;	// функция возвращает false и элемент не попадает в массив
-			}
-		}
-		this.set.push(N);	// если новый элемент не равен ни одному из существующих, он добавляется в массив
-		return true;	// и функция возвращает true
+	if (this.has(N)) {
+		return false;
+	} else {
+		this.set.push(N);
+		return true;
 	}
 };
 Set.prototype.delete = function (N) {	// удаление элемента массива, где N - элемент.
