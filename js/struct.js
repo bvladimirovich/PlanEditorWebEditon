@@ -70,74 +70,95 @@ var isIntersects = function (a, b){
 var Section = function(){};
 /* Поиск плоскости перекрытия элементов */
 Section.prototype.get = function(a, b, arr){
-  if(isIntersects(a, b)) return;
-  /* Дальняя координата */
-  a.x1 = a.x + a.lx;
-  a.z1 = a.z + a.lz;
-  a.y1 = a.y + a.ly;
-  b.x1 = b.x + b.lx;
-  b.z1 = b.z + b.lz;
-  b.y1 = b.y + b.ly;
-  /* default value */
-  var c = {
-    x:-1, y:-1, z:-1,
-	lx:-1, ly:-1, lz:-1,
-	info:0
-  };
-  /* Определение координат и размеров общей зоны */
-  overlap(a, b, c);
-  for (var i in c) {
-    if(c[i] == -1) overlap(b, a, c);
-  }
-  
-  for (var i in c) {
-    /* Элементы не скрещиваются */
-    if(c[i] == -1) c.info = 1;
-	/* Расстояние между элементами равно нулю */
-	if(c.lx == 0 || c.ly == 0 || c.lz == 0) c.info = 2;
-  }
-  
-  for (var k in arr) {
-	if (arr[k].id != a.id && arr[k].id != b.id)
-	if (isIntersects(c, arr[k])) {
-	  /* Расстояние между элементами занято другим элементом */
-	  c.info=3;
-	  /* Возвращается идентификатор инородного элемента */
-	  c.intersectsID = arr[k].id;
+	var distanceBox = {
+		x: new Set(),
+		y: new Set(),
+		z: new Set()
 	}
-  }
+	/* default value */
+	var c = {
+		x:-1, y:-1, z:-1,
+		lx:-1, ly:-1, lz:-1,
+		info:0
+	};
+	
+	/* Определение координат и размеров общей зоны */
+	overlap(a, b, c);
+	for (var i in c) {
+		if(c[i] == -1) overlap(b, a, c);
+	}
   
-  /**
-   Функция определения общего пространства между двумя элементами
-   @param {Struct} a,b
-   @returns {Object} c - с параметрами общей зоны
-  */
-  function overlap(a,b,c){
-    /* Расстояние между элементами */
-    c.distance = {
-      x: 0, y:0, z:0
-    };
-    for (var m in c.distance) {
-  	  if ( (a[m]<=b[m] && b[m]<=a[m+'1'] && b[m+'1']>=a[m+'1']) || 
-  	    (a[m]>=b[m] && b[m+'1']<=a[m+'1'] && b[m+'1']>=a[m]) || 
-  	    (a[m]<=b[m] && a[m+'1']>=b[m+'1']) || 
-  	    (a[m]>=b[m] && a[m+'1']<=b[m+'1']) ) {
-  	    c[m] = Math.max(b[m], a[m]);
-  	    c['l'+m] = Math.pow(Math.pow(Math.min(b[m+'1'], a[m+'1'])-c[m],2.0),0.5);
-  	  } else {
-  	    if(a[m+'1']<b[m]){
-  	      c.distance[m] = c['l'+m] = Math.pow(Math.pow(b[m]-a[m+'1'],2.0),0.5);
-  	      c[m] = a[m+'1'];
-  	    }else if(a[m]<b[m+'1']){
-  	      c.distance[m] = c['l'+m] = Math.pow(Math.pow(a[m]-b[m+'1'],2.0),0.5);
-  	      c[m] = b[m+'1'];
-  	    }else if(a[m+'1']==b[m] || a[m]==b[m+'1']){
-  	      c.distance[m] = c['l'+m] = 0;
-  	      c[m] = Math.max(a[m],b[m]);
-  	    }
-  	  }
-    }
-  }
+	for (var i in c) {
+		/* Элементы не скрещиваются */
+		if(c[i] == -1) c.info = 1;
+		/* Расстояние между элементами равно нулю */
+		if(c.lx == 0 || c.ly == 0 || c.lz == 0) c.info = 2;
+	}
+  
+	for (var k in arr) {
+		if (arr[k].id != a.id && arr[k].id != b.id) {
+			if (isIntersects(c, arr[k])) {
+				/* Расстояние между элементами занято другим элементом */
+				c.info=3;
+				/* Возвращается идентификатор инородного элемента */
+				c.intersectsID = arr[k].id;
+			}
+		}
+	}
+	
+	var count = 0;
+	for (var i in distanceBox) {
+		if (distanceBox[i].valueOf().length > 1) {
+			count++;
+		}
+	}
+	if (count > 1) {
+		c.info = 1;	// Элементы не скрещиваются
+	}
+  
+	/**
+	Функция определения общего пространства между двумя элементами
+	@param {Struct} a,b
+	@returns {Object} c - с параметрами общей зоны
+	*/
+	function overlap(a,b,c){
+		/* Дальняя координата */
+		a.x1 = a.x + a.lx;
+		a.z1 = a.z + a.lz;
+		a.y1 = a.y + a.ly;
+		b.x1 = b.x + b.lx;
+		b.z1 = b.z + b.lz;
+		b.y1 = b.y + b.ly;
+		
+		/* Расстояние между элементами */
+		c.distance = {
+		x: 0, y:0, z:0
+		};
+		for (var m in c.distance) {
+			if ( (a[m] <= b[m] && b[m] <= a[m+'1'] && b[m+'1'] >= a[m+'1']) || 
+				(a[m] >= b[m] && b[m+'1'] <= a[m+'1'] && b[m+'1'] >= a[m]) || 
+				(a[m] <= b[m] && a[m+'1'] >= b[m+'1']) || 
+				(a[m] >= b[m] && a[m+'1'] <= b[m+'1']) ) {
+				
+				c[m] = Math.max(b[m], a[m]);
+				c['l'+m] = Math.pow(Math.pow(Math.min(b[m+'1'], a[m+'1']) - c[m],2.0),0.5);
+			} else {
+				if (a[m+'1'] < b[m]) {
+					c.distance[m] = c['l'+m] = Math.pow(Math.pow(b[m] - a[m+'1'],2.0),0.5);
+					c[m] = a[m+'1'];
+				}else if (a[m] < b[m+'1']) {
+					c.distance[m] = c['l'+m] = Math.pow(Math.pow(a[m] - b[m+'1'],2.0),0.5);
+					c[m] = b[m+'1'];
+				}else if (a[m+'1'] == b[m] || a[m] == b[m+'1']) {
+					c.distance[m] = c['l'+m] = 0;
+					c[m] = Math.max(a[m],b[m]);
+				}
+			}
+		}
+		distanceBox.x.add(c.distance.x);
+		distanceBox.y.add(c.distance.y);
+		distanceBox.z.add(c.distance.z);
+	}
   
   return c;
 }
