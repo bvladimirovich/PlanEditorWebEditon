@@ -36,28 +36,38 @@ Struct.prototype.set = function(id,type,x,y,z,lx,ly,lz){
  @returns false - нет пересечения, true - есть пересечение.
 */
 var isIntersects = function (a, b){
-  /* Координаты центра входящих элементов */
-  a.center = {
-    x: a.x + a.lx/2.0,
-	y: a.y + a.ly/2.0,
-	z: a.z + a.lz/2.0
-  };
-  b.center = {
-    x: b.x + b.lx/2.0,
-	y: b.y + b.ly/2.0,
-	z: b.z + b.lz/2.0
-  };
-  /* Расстояние между центрами элементов */
-  var dx = a.center.x - b.center.x,
-      dy = a.center.y - b.center.y,
-      dz = a.center.z - b.center.z;
-  if (dx < 0.0) dx *= -1.0;
-  if (dy < 0.0) dy *= -1.0;
-  if (dz < 0.0) dz *= -1.0;
-  
-  return (dx < (a.lx/2.0 + b.lx/2.0)) &&
-		 (dy < (a.ly/2.0 + b.ly/2.0)) &&
-		 (dz < (a.lz/2.0 + b.lz/2.0));
+	/* Координаты центра входящих элементов */
+	a.center = {
+		x: a.x + a.lx/2.0,
+		y: a.y + a.ly/2.0,
+		z: a.z + a.lz/2.0
+	};
+	b.center = {
+		x: b.x + b.lx/2.0,
+		y: b.y + b.ly/2.0,
+		z: b.z + b.lz/2.0
+	};
+	/* Расстояние между центрами элементов */
+	var dx = a.center.x - b.center.x,
+		dy = a.center.y - b.center.y,
+		dz = a.center.z - b.center.z;
+	if (dx < 0.0) dx *= -1.0;
+	if (dy < 0.0) dy *= -1.0;
+	if (dz < 0.0) dz *= -1.0;
+
+	return	(dx < (a.lx/2.0 + b.lx/2.0)) &&
+			(dy < (a.ly/2.0 + b.ly/2.0)) &&
+			(dz < (a.lz/2.0 + b.lz/2.0));
+}
+
+var Message = {
+	SUCCESS: [100, 'Completed successfully.'],
+	ERROR: {
+		GENERAL: [200, 'General error.'],
+		TOUCH_LEMENTS: [201, 'There is no distance between the elements.'],
+		OBSTACLE: [202, 'Between the elements is the obstacle.'], 
+		INTERSECTION: [203, 'The selected items are not crossed.']
+	}
 }
 
 /**
@@ -75,45 +85,42 @@ Section.prototype.get = function(a, b, arr){
 		y: new Set(),
 		z: new Set()
 	}
-	/* default value */
-	var c = {
+	var c = {	// default value
 		x:-1, y:-1, z:-1,
 		lx:-1, ly:-1, lz:-1,
-		info:0
+		info: Message.SUCCESS[0]
 	};
 	
 	/* Определение координат и размеров общей зоны */
 	overlap(a, b, c);
 	for (var i in c) {
-		if(c[i] == -1) overlap(b, a, c);
+		if (c[i] == -1) {
+			overlap(b, a, c);
+		}
 	}
-  
-	for (var i in c) {
-		/* Элементы не скрещиваются */
-		if(c[i] == -1) c.info = 1;
-		/* Расстояние между элементами равно нулю */
-		if(c.lx == 0 || c.ly == 0 || c.lz == 0) c.info = 2;
+	
+	var distance = 0.3;	// минимальное расстояние между дверями
+	if (c.lx <= distance || c.ly <= distance || c.lz <= distance) {
+		c.info = Message.ERROR.TOUCH_LEMENTS[0];
 	}
-  
+
 	for (var k in arr) {
 		if (arr[k].id != a.id && arr[k].id != b.id) {
 			if (isIntersects(c, arr[k])) {
-				/* Расстояние между элементами занято другим элементом */
-				c.info=3;
-				/* Возвращается идентификатор инородного элемента */
-				c.intersectsID = arr[k].id;
+				c.info = Message.ERROR.OBSTACLE[0];	// Расстояние между элементами занято другим элементом
+				c.intersectsID = arr[k].id;	// Возвращается идентификатор инородного элемента
 			}
 		}
 	}
 	
 	var count = 0;
 	for (var i in distanceBox) {
-		if (distanceBox[i].valueOf().length > 1) {
+		if (distanceBox[i].valueOf().length > 1 || distanceBox[i].valueOf()[0] != 0) {
 			count++;
 		}
 	}
 	if (count > 1) {
-		c.info = 1;	// Элементы не скрещиваются
+		c.info = Message.ERROR.INTERSECTION[0];	// Элементы не скрещиваются
 	}
   
 	/**
@@ -132,7 +139,7 @@ Section.prototype.get = function(a, b, arr){
 		
 		/* Расстояние между элементами */
 		c.distance = {
-		x: 0, y:0, z:0
+			x: 0, y:0, z:0
 		};
 		for (var m in c.distance) {
 			if ( (a[m] <= b[m] && b[m] <= a[m+'1'] && b[m+'1'] >= a[m+'1']) || 
@@ -160,7 +167,7 @@ Section.prototype.get = function(a, b, arr){
 		distanceBox.z.add(c.distance.z);
 	}
   
-  return c;
+	return c;
 }
 
 /**
@@ -173,8 +180,7 @@ Section.prototype.get = function(a, b, arr){
 */
 var Building = function(){
   Building.ID = 0;
-  /* Список всех элементов */
-  Building.list = {};
+  Building.list = {};	// список элементов
 }
 /**
  Метод добавления комнаты.
@@ -222,11 +228,13 @@ Building.prototype.addDoor = function(a, b, lx, ly, lz){	// добавление
 	lx = lx || c.lx;
 	ly = ly || c.ly;
 	lz = lz || c.lz;
-	var q = new Struct().set(Building.ID, 'door', c.x, c.y, c.z, lx, ly, lz);	// создание нового элемента с типом дверь
+	
+	var q = undefined;
+	q = new Struct().set(Building.ID, 'door', c.x, c.y, c.z, lx, ly, lz);	// создание нового элемента с типом дверь
 
-	/** Проверка на отсутствие ошибок*/
+	/** Проверка на отсутствие ошибок */
 	/*** TODO - Применить Error и try/catch **/
-	if (c.info == 0) {
+	if (c.info == Message.SUCCESS[0]) {
 		if (q.lx <= c.lx && q.ly <= c.ly && q.lz <= c.lz) {	// проверка размеров нового элемента, 
 															// чтоб они не превышали размеров свободного пространства 
 															// между выделенными элементами
@@ -234,14 +242,14 @@ Building.prototype.addDoor = function(a, b, lx, ly, lz){	// добавление
 			Building.ID++
 			return q;	// возврат нового элемента
 		} else {
-			throw 'Невозможно установить размеры двери';
+			throw Message.ERROR.GENERAL[1];
 		}
-	} else if (c.info == 1) {
-		throw 'Невозможно добавить дверь. Элементы не скрещиваются';
-	} else if (c.info == 2) {
-		throw 'Невозможно добавить дверь. Расстояние между элементами равно нулю';
-	} else if (c.info == 3) {
-		throw 'Невозможно добавить дверь. Между элементами находится другой элемент';
+	} else if (c.info == Message.ERROR.OBSTACLE[0]) {
+		throw Message.ERROR.OBSTACLE[1];
+	} else if (c.info == Message.ERROR.TOUCH_LEMENTS[0]) {
+		throw Message.ERROR.TOUCH_LEMENTS[1];
+	} else if (c.info == Message.ERROR.INTERSECTION[0]) {
+		throw Message.ERROR.INTERSECTION[1];
 	}
 }
 Building.prototype.removeItem = function(id){	// удаление элемента по его идентификатору
@@ -404,9 +412,9 @@ Graph.prototype.getGraph = function (N) {
 	return set.valueOf()
 }
 
-/** Множество неповторяющихся элементов */
+/** Множество не повторяющихся элементов */
 var Set = function () {
-	this.set = [];
+	this.set = [];	// множество элементов
 };
 Set.prototype.add = function (N) {	// добавление элементов во множество
 	if (this.has(N)) {

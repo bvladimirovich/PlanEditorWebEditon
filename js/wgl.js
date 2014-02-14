@@ -200,15 +200,18 @@ function initScene(elem) {
 	});
 	
 	build = new Building();
-	build.addRoom(0.0,0.0,0.0, 2.0,0.1,2.0);
-	build.addRoom(5.0,0.0,0.0, 2.0,0.1,2.0);
-	build.addRoom(0.0,0.0,5.0, 2.0,0.1,2.0);
-	build.addRoom(5.0,0.0,5.0, 2.0,0.1,2.0);
+	build.addRoom(0.0,0.1,0.0, 2.0,1.0,2.0);
+	build.addRoom(5.0,0.1,0.0, 2.0,1.0,2.0);
+	build.addRoom(0.0,0.1,5.0, 2.0,1.0,2.0);
+	build.addRoom(5.0,0.1,5.0, 2.0,1.0,2.0);
+	
+	var key = new Keyboard();
 	
 	wheelListener(elem);
 	mouseListener(elem);
+	//keyListener();
 	drawScene(cam, selectedItems, highlightColor);
-	
+
 	function wheelListener (elem){
 		if (elem.addEventListener) {
 			if ('onwheel' in document) {
@@ -247,19 +250,13 @@ function initScene(elem) {
 			}
 		}
 		
-		var key = new Keyboard();
-		console.assert(key.constructor === Keyboard);
-		
 		var oldItem = new OldItem();
-		console.assert(oldItem.constructor === OldItem);
-		
 		var graph = new Graph();
-		console.assert(graph.constructor === Graph);
 
 		function Draggable() {
 			var drag = false,
 				move = false,
-				resize = undefined,
+				resize = false,
 				item,
 				prevXd,
 				prevZd,
@@ -280,45 +277,41 @@ function initScene(elem) {
 					prevXd = fs(ev, 'x');
 					prevZd = gl.viewportHeight - fs(ev, 'z');
 					drag = true;
-					console.info('Перемещение поля ПКМ - OK');
 				} else {
 					var x = fs(ev, 'x')*(cam.get().r-cam.get().l)/gl.viewportWidth + cam.get().l,
 						z = (gl.viewportWidth-fs(ev, 'z'))*(cam.get().b-cam.get().t)/gl.viewportHeight - cam.get().b;
-					console.info('Клик в рабочем пространстве', 'x:', x.toFixed(2), 'z:', z.toFixed(2));
 					
 					if (key.getKeyCode() == CTRL) {
 						move = false;
 						var lx = 2.0,
-							ly = 0.1,
+							ly = 1.0,
 							lz = 2.0;
-						build.addRoom(x-lx/2.0,0.0,z-lz/2.0, lx, ly, lz);
+						build.addRoom(x-lx/2.0,0.1,z-lz/2.0, lx, ly, lz);
 					}
 					
-					console.log(build.getItem());
 					item = findElement(x, z, build.getItem());
 					
-					console.assert(item === false, 'Элемент найден');
-					console.warn('Количество выделенных элементов на входе', selectedItems.valueOf().length);
-					if (item != false) {
+					if (item !== undefined) {
 						isMoveItem();
 						isResizeItem();
 						oldItem.setOldItem(item);
 						
 						if (key.getKeyCode() == SHIFT) {
+							move = false;
+							resize = false;
 							selectedItems.add(item.id);
 							var door = build.addDoor(build.getItem(selectedItems.valueOf()[0]), item);
 							
-							if (!door) return;
-							selectedItems.add(door.id);
-							graph.add(door.id, build.getItem(selectedItems.valueOf()[0]).id, item.id);
+							if (door !== undefined) {
+								selectedItems.add(door.id);
+								graph.add(door.id, build.getItem(selectedItems.valueOf()[0]).id, item.id);
+							}
 						} else {
 							if (selectedItems.valueOf().length > 0) {
 								selectedItems.clear();
 							}
 
-							selectedItems.add(item.id);
-							console.warn('Количество выделенных элементов после нажатия на элемент', selectedItems.valueOf().length);
-							
+							selectedItems.add(item.id);							
 							selectedGraph(item, graph);
 						}
 					} else {
@@ -342,7 +335,7 @@ function initScene(elem) {
 					}
 				
 					function selectedGraph (item, graph) {
-						console.time('TimeWork');
+						console.time('TimeWorkGraph');
 						var id = item.id;
 						if (item.type == 'door') {
 							id = graph.getNode(id)[0];
@@ -364,8 +357,7 @@ function initScene(elem) {
 							}
 							move = false;
 						}
-						console.timeEnd('TimeWork');
-						console.error('Длина графа', graph.getGraph(id).length);
+						console.timeEnd('TimeWorkGraph');
 					}
 				}
 			}
@@ -391,11 +383,12 @@ function initScene(elem) {
 						highlightColor.set(color.TURQUOISE);
 					}
 					drawScene(cam, selectedItems, highlightColor);
-				} else if (resize != undefined) {
+				} else if (resize) {
 					var minSize = {
 						lx: 0.6,
 						lz: 0.6
-					}, dlx, dlz;
+					};
+					var dlx, dlz;
 					switch (resize) {
 						case 'left': // изменяем размер влево
 							dlx = item.lx + (item.x - x);
@@ -465,6 +458,8 @@ function initScene(elem) {
 								item.z1 = z;
 							}
 							break;
+						default:
+							break;
 					}
 					if (build.updateItem(item)) {
 						highlightColor.set(color.RED);
@@ -473,11 +468,11 @@ function initScene(elem) {
 					}
 					drawScene(cam, selectedItems, highlightColor);
 				} else {
-					if (selectedItems.valueOf().length > 0) {
+					if (selectedItems.valueOf().length > 0 && key.getKeyCode() === undefined) {
 						item = findElement(x, z, build.getItem());
-						if (item != false) {
+						if (item !== undefined) {
 							if (selectedItems.has(item.id)) {
-								findBorder(x, z, build.getItem(item.id), cam.getZoom());
+								findBorder(x, z, item, cam.getZoom());
 							}
 						} else {
 							findBorder(x, z, build.getItem(selectedItems.valueOf()[0]), cam.getZoom());
@@ -490,17 +485,17 @@ function initScene(elem) {
 					drag = false;
 				} else if (move) {
 					move = false;
+					restoreFormerStatus();
+				} else if (resize) {
+					resize = false;
+					restoreFormerStatus();
+				}
+				drawScene(cam, selectedItems, highlightColor);
+				
+				function restoreFormerStatus () {
 					if (build.updateItem(item)) {
 						build.updateItem(oldItem.getOldItem());
 						highlightColor.set(color.TURQUOISE);
-						drawScene(cam, selectedItems, highlightColor);
-					}
-				} else if (resize != undefined) {
-					resize = undefined;
-					if (build.updateItem(item)) {
-						build.updateItem(oldItem.getOldItem());
-						highlightColor.set(color.TURQUOISE);
-						drawScene(cam, selectedItems, highlightColor);
 					}
 				}
 			}
@@ -536,7 +531,7 @@ function initScene(elem) {
 				return e;
 			}
 		  }
-		  return false;
+		  return undefined;
 		}
 		
 		function findBorder(x, y, e, zoom) {
