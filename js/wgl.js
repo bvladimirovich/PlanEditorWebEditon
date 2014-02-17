@@ -117,10 +117,6 @@ function initBuffersBorder() {
 }
 
 function drawScene(cam, selectedItems, highlightColor) {
-	if (cam.constructor != Camera) {
-		throw new Error('Входящий параметр не верного типа. Ожидался экземпляр класса Camera.');
-	}
-	
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	
@@ -151,20 +147,17 @@ function drawScene(cam, selectedItems, highlightColor) {
 		gl.uniform4fv(shaderProgram.uColor, uColor);
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
 		
-		if (selectedItems.valueOf().length > 0) {
-			if (selectedItems.has(item.id)) {
-				mat4.identity(mMatrix);
-				mat4.translate(mMatrix, [dx, -0.1, dz]);
-				mat4.scale(mMatrix, [sx, 1.0, sz]);
-				
-				gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
-				gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, borderVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-				gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
-				gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
-				gl.uniform4fv(shaderProgram.uColor, highlightColor.get());
-				gl.drawArrays(gl.LINE_STRIP, 0, borderVertexPositionBuffer.numItems);
+		if (selectedItems.has(item.id)) {
+			mat4.identity(mMatrix);
+			mat4.translate(mMatrix, [dx, -0.1, dz]);
+			mat4.scale(mMatrix, [sx, 1.0, sz]);
 			
-			}
+			gl.bindBuffer(gl.ARRAY_BUFFER, borderVertexPositionBuffer);
+			gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, borderVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+			gl.uniformMatrix4fv(shaderProgram.pvMatrixUniform, false, pvMatrix);
+			gl.uniformMatrix4fv(shaderProgram.mMatrixUniform, false, mMatrix);
+			gl.uniform4fv(shaderProgram.uColor, highlightColor.get());
+			gl.drawArrays(gl.LINE_STRIP, 0, borderVertexPositionBuffer.numItems);
 		}
 	}
 }
@@ -200,8 +193,8 @@ function initScene(elem) {
 	});
 	
 	build = new Building();
-	build.addRoom(0.0,0.1,0.0, 2.0,1.0,2.0);
-	build.addRoom(5.0,0.1,0.0, 2.0,1.0,2.0);
+	build.addRoom(0.0,0.1,0.0, 0.6,1.0,0.6);
+	build.addRoom(5.0,0.1,0.0, 0.6,1.0,0.6);
 	build.addRoom(0.0,0.1,5.0, 2.0,1.0,2.0);
 	build.addRoom(5.0,0.1,5.0, 2.0,1.0,2.0);
 	
@@ -209,7 +202,6 @@ function initScene(elem) {
 	
 	wheelListener(elem);
 	mouseListener(elem);
-	//keyListener();
 	drawScene(cam, selectedItems, highlightColor);
 
 	function wheelListener (elem){
@@ -254,17 +246,21 @@ function initScene(elem) {
 		var graph = new Graph();
 
 		function Draggable() {
+			var	item;
+			
 			var drag = false,
 				move = false,
 				resize = false,
-				item,
-				prevXd,
+				attachment = false;
+			
+			var prevXd,
 				prevZd,
 				prevXm,
 				prevZm;
 				
 			var SHIFT = 16,
-				CTRL = 17;
+				CTRL = 17,
+				ALT = 18;
 				
 			var color = {
 				RED: [1.0, 0.0, 0.0, 1.0],
@@ -306,6 +302,16 @@ function initScene(elem) {
 								selectedItems.add(door.id);
 								graph.add(door.id, build.getItem(selectedItems.valueOf()[0]).id, item.id);
 							}
+						}else if (key.getKeyCode() == ALT){
+							// отключить перемещение
+							// отключить изменение размеров
+							// выделить элемент
+							// получить предыдущий выделенный элемент (теперь у нас выделено два элемента - две комнаты)
+							// получить общую зону между этими элементами
+								// получить расстояние между элементами
+								// пододвинуть последний выделенный элемент к первому на расстояние общей зоны
+								// изменить положение второго элемента
+							// добавить в граф идентификатор невидимого ребра между элементами (невидимая дверь)
 						} else {
 							if (selectedItems.valueOf().length > 0) {
 								selectedItems.clear();
@@ -485,14 +491,14 @@ function initScene(elem) {
 					drag = false;
 				} else if (move) {
 					move = false;
-					restoreFormerStatus();
+					returnPreviousValue();
 				} else if (resize) {
 					resize = false;
-					restoreFormerStatus();
+					returnPreviousValue();
 				}
 				drawScene(cam, selectedItems, highlightColor);
 				
-				function restoreFormerStatus () {
+				function returnPreviousValue () {
 					if (build.updateItem(item)) {
 						build.updateItem(oldItem.getOldItem());
 						highlightColor.set(color.TURQUOISE);
