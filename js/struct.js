@@ -143,8 +143,8 @@ Section.prototype.get = function(a, b, arr) {	// поиск общей зоны 
 		b.z1 = b.z + b.lz;
 		b.y1 = b.y + b.ly;
 		
-		c.distance = { 	// расстояние между элементами по осям
-			x: 0, y: 0, z: 0
+		c.distance = { 	// расстояние между элементами по оси
+			x: 0, y: 0, z: 0	// после работы функции не равным нулю должен быть только один параметр
 		};
 		for (var m in c.distance) {
 			if ( (a[m] <= b[m] && b[m] <= a[m+'1'] && b[m+'1'] >= a[m+'1']) || 
@@ -167,7 +167,7 @@ Section.prototype.get = function(a, b, arr) {	// поиск общей зоны 
 				}
 			}
 		}
-		distanceBox.x.add(c.distance.x);
+		distanceBox.x.add(c.distance.x);	// заполнение массива (сет) значениями расстояния между элементами
 		distanceBox.y.add(c.distance.y);
 		distanceBox.z.add(c.distance.z);
 	}
@@ -189,18 +189,19 @@ var Building = function(){
 	Building.list = {};	// список элементов
 }
 /**
- Метод добавления комнаты.
- @param {number} x,y,z,lx,ly,lz - координаты и размеры комнаты
- @returns экземпляр класса 'Struct'
+	Метод добавления комнаты.
+	@param {number} x,y,z,lx,ly,lz - координаты и размеры комнаты
+	@returns экземпляр класса 'Struct'
+	
+	Создаёт новый экземпляр класса Struct с указанными параметрами
+	Помещает этот элемент в список элементов, если он ни с кем не пересекается
 */
 Building.prototype.addRoom = function (x, y, z, lx, ly, lz) {
 	var b = new Struct().set(Building.ID,'room',x,y,z,lx,ly,lz);	// инициализация нового объекта класса Struct
 	if (Building.ID == 0) {
-		Building.list[Building.ID] = b;
+		Building.list[Building.ID] = b;		// помещение объекта в список
 		Building.ID++;
 		return b;
-	/* Если имеется хотя бы один, проверяется пересечение с существующими */
-	/** TODO - Добавить генерацию ошибок */
 	} else if (Building.ID > 0) {
 		var isIntersect = false;
 		for (var i in Building.list) {
@@ -237,8 +238,6 @@ Building.prototype.addDoor = function(a, b, lx, ly, lz){	// добавление
 	var q = undefined;
 	q = new Struct().set(Building.ID, 'door', c.x, c.y, c.z, lx, ly, lz);	// создание нового элемента с типом дверь
 
-	/** Проверка на отсутствие ошибок */
-	/*** TODO - Применить Error и try/catch **/
 	if (c.info == Message.SUCCESS[0]) {
 		if (q.lx <= c.lx && q.ly <= c.ly && q.lz <= c.lz) {	// проверка размеров нового элемента, 
 															// чтоб они не превышали размеров свободного пространства 
@@ -259,7 +258,7 @@ Building.prototype.addDoor = function(a, b, lx, ly, lz){	// добавление
 }
 Building.prototype.removeItem = function(id){	// удаление элемента по его идентификатору
 	var i = Building.list[id];
-	delete Building.list[id]; // удаляет
+	delete Building.list[id];
 	return i;	// и возвращает удалённый элемент
 }
 Building.prototype.numberOfItems = function(){	// общее количество элементов 
@@ -275,7 +274,8 @@ Building.prototype.getItem = function(idItem){	// получение списк�
 Building.prototype.updateItem = function (item) {	// обновление параметров элементов
 	Building.list[item.id] = new Struct().set(item.id, item.type, item.x, item.y, item.z, item.lx, item.ly, item.lz);
 	for (var i in Building.list) {
-		if (item.id != i && isIntersects(item, Building.list[i])) {	// проверка, не создаёт ли помех элемент с новыми параметрами существующим
+		if (item.id != i && isIntersects(item, Building.list[i])) {	// проверка, не создаёт ли помех элемент с новыми параметрами	
+																	// существующим
 			return true; // возвращает true, если элемент создаёт помехи
 		}
 	}
@@ -292,9 +292,9 @@ Building.prototype.updateItem = function (item) {	// обновление пар
 	Метод update() возвращает параметры положения центра координатной системы.
 */
 var Camera = function (obj) {
-	this.zoom = obj.zoom;
-	this.dx = obj.dx;
-	this.dz = obj.dz;
+	this.zoom = obj.zoom;	// масштабирование
+	this.dx = obj.dx;	// смещение по оси X
+	this.dz = obj.dz;	// смещение по оси Y
 
 	this.l = obj.left;	// левая граница камеры
 	this.r = obj.right;	// правая граница камеры
@@ -380,11 +380,11 @@ Graph.prototype.getEdge = function (idNode) {	// получение рёбер �
 Graph.prototype.getOppositeNode = function (idNode, idEdge) {	// получение противоположных вершин указанной
 	var arr = undefined;	// список вершин
 	for (var n in this.listOfNodes) {	// обход по всем вершинам
-		if (idNode != n) continue;	// если входящая вершина не равна вершине из списка, выполняется переход к следующей
+		if (idNode != n) continue;		// если входящая вершина не равна вершине из списка, выполняется переход к следующей
 		for (var e in this.listOfEdges) {	// иначе выполняется обход по всем рёбрам графа
-			if (idEdge != e) continue;	// если входящее ребро не равно ребру из списка, выполняется переход к следующему
+			if (idEdge != e) continue;		// если входящее ребро не равно ребру из списка, выполняется переход к следующему
 			if (this.listOfEdges[e][0] == idNode) {	// если вершина ребра равна входящей вершине
-				arr = this.listOfEdges[e][1];	// то вершина с другого конца ребра добавляется в массив
+				arr = this.listOfEdges[e][1];		// то вершина с другого конца ребра добавляется в массив
 			} else if (this.listOfEdges[e][1] == idNode) {
 				arr = this.listOfEdges[e][0];
 			}
@@ -392,7 +392,7 @@ Graph.prototype.getOppositeNode = function (idNode, idEdge) {	// получен�
 	}
 	return arr;	// функция возвращает массив
 };
-Graph.prototype.getGraph = function (N) {
+Graph.prototype.getGraph = function (N) {	// получение графа из вершины
 	var set = new Set();
 	var tmp = new Set();
 	var tmp2 = new Set();
@@ -401,7 +401,7 @@ Graph.prototype.getGraph = function (N) {
 	
 	while (tmp.valueOf().length != 0) {
 		for (var n in tmp.valueOf()) {
-			var n1 = tmp.valueOf()[n];	// вершина из списка
+			var n1 = tmp.valueOf()[n];	// вершина из списка пройденных 
 			for (var r in this.listOfEdges) {
 				var n2 = this.getOppositeNode(n1, r);
 				if (set.has(n2) == false && n2 !== undefined) {
@@ -414,7 +414,7 @@ Graph.prototype.getGraph = function (N) {
 		tmp2 = new Set();
 	}
 
-	return set.valueOf()
+	return set.valueOf()	// возвращает список вершин в графе
 }
 
 /** Множество не повторяющихся элементов */
