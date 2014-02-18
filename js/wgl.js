@@ -318,8 +318,6 @@ function initScene(elem) {
 									} else if (spaceBetweenRooms.distance[i] >= MAX_SIZE_DOOR[i]) {
 										msg = 'Размер двери не соответствует требованиям. Расстояние между комнатами больше '+ MAX_SIZE_DOOR[i];
 										break;
-									} else {
-										console.error('Непредвиденная ошибка!');
 									}
 								}
 								if (msg === null) {
@@ -423,8 +421,17 @@ function initScene(elem) {
 						case 'left': // изменяем размер влево
 							dlx = item.lx + (item.x - x);
 							if (dlx > minSize.lx) {
-								item.lx = dlx;
-								item.x = x;
+								if (item.type == 'door') {
+									var e = graph.getNode(item.id);
+									var borderDoor = new Section().get(e[0], e[1], build.getItem());
+									if (dlx <= borderDoor.lx) {
+										item.lx = dlx;
+										item.x = x;
+									}
+								} else {
+									item.lx = dlx;
+									item.x = x;
+								}
 							}
 							break;
 						case 'right': // изменяем размер вправо
