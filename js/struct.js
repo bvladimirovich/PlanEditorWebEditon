@@ -91,7 +91,6 @@ Section.prototype.get = function(a, b, arr) {	// поиск общей зоны 
 		z: new Set()
 	}
 	
-	/** Переместить переменную в конструктор overlap */
 	var c = {	// задание значений по умолчанию для нового элемента 
 		x:-1, y:-1, z:-1,
 		lx:-1, ly:-1, lz:-1,
@@ -105,7 +104,7 @@ Section.prototype.get = function(a, b, arr) {	// поиск общей зоны 
 		}
 	}
 	
-	var distance = 0.3;	// минимальное расстояние между дверями
+	var distance = 0.0;	// минимальное расстояние между комнатами
 	if (c.lx <= distance || c.ly <= distance || c.lz <= distance) {
 		c.info = Message.ERROR.TOUCH_LEMENTS[0];
 	}

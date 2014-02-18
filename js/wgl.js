@@ -123,8 +123,9 @@ function drawScene(cam, selectedItems, highlightColor) {
     mat4.ortho(cam.get().l, cam.get().r, cam.get().b, cam.get().t, 0.1, 100.0, pvMatrix);
 	mat4.rotateX(pvMatrix, Math.PI/2.0);
 	
-	for (var i = 0; i < build.numberOfItems(); i++){
+	for (var i in build.getItem()){
 		var item = build.getItem(i);
+		if (item === undefined) continue;
 		var	dx = item.x + item.lx * 0.5,
 			dz = item.z + item.lz * 0.5,
 			sx = item.lx * 0.5,
@@ -293,25 +294,48 @@ function initScene(elem) {
 						oldItem.setOldItem(item);
 						
 						if (key.getKeyCode() == SHIFT) {
+							if (selectedItems.valueOf().length == 0) return;
+							
 							move = false;
 							resize = false;
-							selectedItems.add(item.id);
-							var door = build.addDoor(build.getItem(selectedItems.valueOf()[0]), item);
 							
-							if (door !== undefined) {
-								selectedItems.add(door.id);
-								graph.add(door.id, build.getItem(selectedItems.valueOf()[0]).id, item.id);
+							var item0 = build.getItem(selectedItems.valueOf()[0]);
+							var spaceBetweenRooms = new Section().get(item0, item, build.getItem());
+							
+							if (spaceBetweenRooms !== undefined) {
+								var msg = null;
+								var MIN_SIZE_DOOR = {
+									x: 0.5, y: 0.5, z: 0.5
+								};
+								var MAX_SIZE_DOOR = {
+									x: 3.0, y: 3.0, z: 3.0
+								};
+								
+								for (var i in spaceBetweenRooms.distance) {
+									if (spaceBetweenRooms['l'+i] < MIN_SIZE_DOOR[i]) {
+										msg = 'Размер двери не соответствует требованиям. l' + i + ' меньше '+ MIN_SIZE_DOOR[i];
+										break;
+									} else if (spaceBetweenRooms.distance[i] >= MAX_SIZE_DOOR[i]) {
+										msg = 'Размер двери не соответствует требованиям. Расстояние между комнатами больше '+ MAX_SIZE_DOOR[i];
+										break;
+									} else {
+										console.error('Непредвиденная ошибка!');
+									}
+								}
+								if (msg === null) {
+									var door = build.addDoor(item0, item);
+									selectedItems.add(door.id);
+									graph.add(door.id, item0.id, item.id);
+								} else {
+									selectedItems.clear();
+									console.error(msg);
+								}
+								selectedItems.add(item.id);
+							} else {
+								console.error('Непредвиденная ошибка!. spaceBetweenRooms == undefined');
 							}
-						}else if (key.getKeyCode() == ALT){
-							// отключить перемещение
-							// отключить изменение размеров
-							// выделить элемент
-							// получить предыдущий выделенный элемент (теперь у нас выделено два элемента - две комнаты)
-							// получить общую зону между этими элементами
-								// получить расстояние между элементами
-								// пододвинуть последний выделенный элемент к первому на расстояние общей зоны
-								// изменить положение второго элемента
-							// добавить в граф идентификатор невидимого ребра между элементами (невидимая дверь)
+						} else if (key.getKeyCode() == ALT){
+							// прилипание комнат
 						} else {
 							if (selectedItems.valueOf().length > 0) {
 								selectedItems.clear();
