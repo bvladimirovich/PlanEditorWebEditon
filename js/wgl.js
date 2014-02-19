@@ -261,7 +261,8 @@ function initScene(elem) {
 				
 			var SHIFT = 16,
 				CTRL = 17,
-				ALT = 18;
+				ALT = 18,
+				DELETE = 46;
 				
 			var color = {
 				RED: [1.0, 0.0, 0.0, 1.0],
@@ -332,8 +333,38 @@ function initScene(elem) {
 							} else {
 								console.error('Непредвиденная ошибка!. spaceBetweenRooms == undefined');
 							}
-						} else if (key.getKeyCode() == ALT){
-							// прилипание комнат
+						} else if (key.getKeyCode() == ALT){	// прилипание комнат
+							if (selectedItems.valueOf().length == 0) return;
+							
+							move = false;
+							resize = false;
+							
+							var item0 = build.getItem(selectedItems.valueOf()[0]);
+							var spaceBetweenRooms = new Section().get(item0, item, build.getItem());
+							
+							if (spaceBetweenRooms !== undefined) {
+								var msg = null;
+								var MAX_SIZE_DOOR = {
+									x: 0.3, y: 0.3, z: 0.3
+								};
+								
+								for (var i in spaceBetweenRooms.distance) {
+									if (spaceBetweenRooms.distance[i] >= MAX_SIZE_DOOR[i]) {
+										msg = 'Размер двери не соответствует требованиям. Расстояние между комнатами больше '+ MAX_SIZE_DOOR[i];
+										break;
+									}
+								}
+								
+								if (msg === null) {
+									var door = build.addDoor(item0, item);
+									selectedItems.add(door.id);
+									graph.add(door.id, item0.id, item.id);
+								} else {
+									selectedItems.clear();
+									console.error(msg);
+								}
+								selectedItems.add(item.id);
+							}
 						} else {
 							if (selectedItems.valueOf().length > 0) {
 								selectedItems.clear();
@@ -365,7 +396,7 @@ function initScene(elem) {
 					function selectedGraph (item, graph) {
 						console.time('TimeWorkGraph');
 						var id = item.id;
-						if (item.type == 'door') {
+						if (graph.isEdge(id)) {
 							id = graph.getNode(id)[0];
 						}
 						var g = graph.getGraph(id);
@@ -568,7 +599,20 @@ function initScene(elem) {
 					resize = false;
 					returnPreviousValue();
 				}
+				
+				if (key.getKeyCode() == DELETE) {
+					if (item !== undefined) {
+						var deletedItem = build.removeItem(item.id);
+						if (graph.remove(item.id)) {
+							console.info('Удален элеменет "' + deletedItem.type + '"', deletedItem);
+						}
+					}
+				} 
+				
 				drawScene(cam, selectedItems, highlightColor);
+				
+				//var str = JSON.stringify(build.getItem(), "", 4);
+				//console.log(str);
 				
 				function returnPreviousValue () {
 					if (build.updateItem(item)) {
@@ -578,7 +622,7 @@ function initScene(elem) {
 				}
 			}
 		}
-		
+			
 		/* Функция определения координат мыши на холсте */
 		function fs(ev, p) {
 		  return (p=='x') ? ev.pageX-elem.offsetLeft : ev.pageY-elem.offsetTop;
