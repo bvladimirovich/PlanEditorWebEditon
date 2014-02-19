@@ -422,11 +422,13 @@ function initScene(elem) {
 							dlx = item.lx + (item.x - x);
 							if (dlx > minSize.lx) {
 								if (item.type == 'door') {
-									var e = graph.getNode(item.id);
-									var borderDoor = new Section().get(e[0], e[1], build.getItem());
-									if (dlx <= borderDoor.lx) {
-										item.lx = dlx;
-										item.x = x;
+									var borderDoor = getSpaceBetweenRooms(item.id, graph, build);
+									console.log(borderDoor.distance.x);
+									if (borderDoor.distance.x == 0) {
+										if (x > borderDoor.x) {
+											item.x = x;
+											item.lx = dlx;
+										}
 									}
 								} else {
 									item.lx = dlx;
@@ -437,65 +439,104 @@ function initScene(elem) {
 						case 'right': // изменяем размер вправо
 							dlx = item.lx + (x - item.x1);
 							if (dlx > minSize.lx) {
-								item.lx = dlx;
-								item.x1 = x;
+								if (item.type == 'door') {
+									var borderDoor = getSpaceBetweenRooms(item.id, graph, build);
+									if (borderDoor.distance.x == 0) {
+										if (x < borderDoor.x + borderDoor.lx) {
+											item.lx = dlx;
+											item.x1 = x;
+										}
+									}
+								} else {
+									item.lx = dlx;
+									item.x1 = x;
+								}
 							}
 							break;
 						case 'top': // изменяем размер вверх
 							dlz = item.lz + (item.z - z);
 							if (dlz > minSize.lz) {
-								item.lz = dlz;
-								item.z = z;
+								if (item.type == 'door') {
+									var borderDoor = getSpaceBetweenRooms(item.id, graph, build);
+									if (borderDoor.distance.z == 0) {
+										if (z > borderDoor.z) {
+											item.lz = dlz;
+											item.z = z;
+										}
+									}
+								} else {
+									item.lz = dlz;
+									item.z = z;
+								}
 							}
 							break;
 						case 'bottom': // изменяем размер вниз
 							dlz = item.lz + (z - item.z1);
 							if (dlz > minSize.lz) {
-								item.lz = dlz;
-								item.z1 = z;
+								if (item.type == 'door') {
+									var borderDoor = getSpaceBetweenRooms(item.id, graph, build);
+									if (borderDoor.distance.z == 0) {
+										if (z < borderDoor.z + borderDoor.lz) {
+											item.lz = dlz;
+											item.z1 = z;
+										}
+									}
+								} else {
+									item.lz = dlz;
+									item.z1 = z;
+								}
 							}
 							break;
 						case 'topLeft':
 							dlx = item.lx + (item.x - x);
 							dlz = item.lz + (item.z - z);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
-								item.lx = dlx;
-								item.lz = dlz;
-								item.x = x;
-								item.z = z;
+								if (item.type != 'door') {
+									item.lx = dlx;
+									item.lz = dlz;
+									item.x = x;
+									item.z = z;
+								}
 							}
 							break;
 						case 'bottomLeft':
 							dlx = item.lx + (item.x - x);
 							dlz = item.lz + (z - item.z1);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
-								item.lx = dlx;
-								item.lz = dlz;
-								item.x = x;
-								item.z1 = z;
+								if (item.type != 'door') {
+									item.lx = dlx;
+									item.lz = dlz;
+									item.x = x;
+									item.z1 = z;
+								}
 							}
 							break;
 						case 'topRight':
 							dlx = item.lx + (x - item.x1);
 							dlz = item.lz + (item.z - z);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
-								item.lx = dlx;
-								item.lz = dlz;
-								item.x1 = x;
-								item.z = z;
+								if (item.type != 'door') {
+									item.lx = dlx;
+									item.lz = dlz;
+									item.x1 = x;
+									item.z = z;
+								}
 							}
 							break;
 						case 'bottomRight':
 							dlx = item.lx + (x - item.x1);
 							dlz = item.lz + (z - item.z1);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
-								item.lx = dlx;
-								item.lz = dlz;
-								item.x1 = x;
-								item.z1 = z;
+								if (item.type != 'door') {
+									item.lx = dlx;
+									item.lz = dlz;
+									item.x1 = x;
+									item.z1 = z;
+								}
 							}
 							break;
 						default:
+							console.log('Непонятки');
 							break;
 					}
 					if (build.updateItem(item)) {
@@ -605,6 +646,14 @@ function initScene(elem) {
 				elem.style.cursor = 'default';
 				return undefined;
 			}
+		}
+		
+		function getSpaceBetweenRooms(itemId, graph, build) {
+			var e = graph.getNode(itemId);
+			var item0 = build.getItem(e[0]);
+			var item1 = build.getItem(e[1]);
+			var borderDoor = new Section().get(item0, item1, build.getItem());
+			return borderDoor;
 		}
 	}
 	console.timeEnd('Загрузка initScene()');
