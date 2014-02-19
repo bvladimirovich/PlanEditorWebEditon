@@ -427,6 +427,37 @@ Graph.prototype.getGraph = function (N) {	// получение графа из 
 
 	return set.valueOf()	// возвращает список вершин в графе
 }
+Graph.prototype.isEdge = function (N) {
+	var isEdge = false;
+	for (var i in this.listOfEdges) {
+		if (N == i) {
+			isEdge = true;
+			break;
+		}
+	}
+	return isEdge;
+}
+Graph.prototype.isNode = function (N) {
+	var isNode = false;
+	for (var i in this.listOfNodes) {
+		if (N == i) {
+			isNode = true;
+			break;
+		}
+	}
+	return isNode;
+}
+Graph.prototype.remove = function (N) {
+	var result = false;
+	if (this.isNode(N)) {
+		delete this.listOfNodes[N];
+		result = true;
+	} else if (this.isEdge(N)) {
+		delete this.listOfEdges[N];
+		result = true;
+	}
+	return result;
+}
 
 /** Множество не повторяющихся элементов */
 var Set = function () {
