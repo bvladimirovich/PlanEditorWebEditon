@@ -492,3 +492,42 @@ Set.prototype.clear = function (N) {	// очистка массива
 Set.prototype.valueOf = function () {	// получение всего массива
 	return this.set;
 };
+
+var Item = function () {
+	this.item = undefined;
+};
+Item.prototype.add = function (i) {
+	this.item = i;
+};
+Item.prototype.get = function () {
+	if (!this.is) {
+		console.error('Элемент еще не существует');
+	}
+	return this.item;
+};
+Item.prototype.remove = function () {
+	if (!this.is) {
+		console.error('Элемент еще не существует');
+	}
+	this.item = undefined;
+};
+Item.prototype.change = function () {
+	if (!this.is) {
+		console.error('Элемент еще не существует');
+	}
+	return {
+		x: function (x) {this.item.x = x},
+		y: function (y) {this.item.y = y},
+		z: function (z) {this.item.z = z},
+		lx: function (lx) {this.item.lx = lx},
+		ly: function (ly) {this.item.ly = ly},
+		lz: function (lz) {this.item.lz = lz},
+	};
+};
+Item.prototype.is = function () {
+	if (this.item === undefined) {
+		return false;
+	} else {
+		return true;
+	}
+};
