@@ -199,6 +199,14 @@ function initScene(elem) {
 	build.addRoom(0.0,0.1,5.0, 2.0,1.0,2.0);
 	build.addRoom(5.0,0.1,5.0, 2.0,1.0,2.0);
 	
+	var build_1 = new Building();
+	build_1.addRoom(0.0,0.1,0.0, 1.6,1.0,1.6);
+	build_1.addRoom(5.0,0.1,0.0, 1.6,1.0,1.6);
+	build_1.addRoom(0.0,0.1,5.0, 2.0,1.0,2.0);
+	build_1.addRoom(5.0,0.1,5.0, 2.0,1.0,2.0);
+	
+	build = build_1;
+	
 	var key = new Keyboard();
 	
 	wheelListener(elem);
@@ -247,7 +255,7 @@ function initScene(elem) {
 		var graph = new Graph();
 
 		function Draggable() {
-			var	item;
+			var	item = new Item();
 			
 			var drag = false,
 				move = false,
@@ -287,12 +295,12 @@ function initScene(elem) {
 						build.addRoom(x-lx/2.0,0.1,z-lz/2.0, lx, ly, lz);
 					}
 					
-					item = findElement(x, z, build.getItem());
+					item.set(findElement(x, z, build.getItem()));
 					
-					if (item !== undefined) {
+					if (item.is()) {
 						isMoveItem();
 						isResizeItem();
-						oldItem.setOldItem(item);
+						oldItem.setOldItem(item.get());
 						
 						if (key.getKeyCode() == SHIFT) {
 							if (selectedItems.valueOf().length == 0) return;
@@ -301,7 +309,7 @@ function initScene(elem) {
 							resize = false;
 							
 							var item0 = build.getItem(selectedItems.valueOf()[0]);
-							var spaceBetweenRooms = new Section().get(item0, item, build.getItem());
+							var spaceBetweenRooms = new Section().get(item0, item.get(), build.getItem());
 							
 							if (spaceBetweenRooms !== undefined) {
 								var msg = null;
@@ -322,61 +330,61 @@ function initScene(elem) {
 									}
 								}
 								if (msg === null) {
-									var door = build.addDoor(item0, item);
+									var door = build.addDoor(item0, item.get());
 									selectedItems.add(door.id);
-									graph.add(door.id, item0.id, item.id);
+									graph.add(door.id, item0.id, item.get().id);
 								} else {
 									selectedItems.clear();
 									console.error(msg);
 								}
-								selectedItems.add(item.id);
+								selectedItems.add(item.get().id);
 							} else {
 								console.error('Непредвиденная ошибка!. spaceBetweenRooms == undefined');
 							}
 						} else if (key.getKeyCode() == ALT){	// прилипание комнат
-							if (selectedItems.valueOf().length == 0) return;
+							// if (selectedItems.valueOf().length == 0) return;
 							
-							move = false;
-							resize = false;
+							// move = false;
+							// resize = false;
 							
-							var item0 = build.getItem(selectedItems.valueOf()[0]);
-							var spaceBetweenRooms = new Section().get(item0, item, build.getItem());
+							// var item0 = build.getItem(selectedItems.valueOf()[0]);
+							// var spaceBetweenRooms = new Section().get(item0, item, build.getItem());
 							
-							if (spaceBetweenRooms !== undefined) {
-								var msg = null;
-								var MAX_SIZE_DOOR = {
-									x: 0.3, y: 0.3, z: 0.3
-								};
+							// if (spaceBetweenRooms !== undefined) {
+								// var msg = null;
+								// var MAX_SIZE_DOOR = {
+									// x: 0.3, y: 0.3, z: 0.3
+								// };
 								
-								for (var i in spaceBetweenRooms.distance) {
-									if (spaceBetweenRooms.distance[i] >= MAX_SIZE_DOOR[i]) {
-										msg = 'Размер двери не соответствует требованиям. Расстояние между комнатами больше '+ MAX_SIZE_DOOR[i];
-										break;
-									}
-								}
+								// for (var i in spaceBetweenRooms.distance) {
+									// if (spaceBetweenRooms.distance[i] >= MAX_SIZE_DOOR[i]) {
+										// msg = 'Размер двери не соответствует требованиям. Расстояние между комнатами больше '+ MAX_SIZE_DOOR[i];
+										// break;
+									// }
+								// }
 								
-								if (msg === null) {
-									var door = build.addDoor(item0, item);
-									selectedItems.add(door.id);
-									graph.add(door.id, item0.id, item.id);
-								} else {
-									selectedItems.clear();
-									console.error(msg);
-								}
-								selectedItems.add(item.id);
-							}
+								// if (msg === null) {
+									// var door = build.addDoor(item0, item);
+									// selectedItems.add(door.id);
+									// graph.add(door.id, item0.id, item.id);
+								// } else {
+									// selectedItems.clear();
+									// console.error(msg);
+								// }
+								// selectedItems.add(item.id);
+							// }
 						} else {
 							if (selectedItems.valueOf().length > 0) {
 								selectedItems.clear();
 							}
 
-							selectedItems.add(item.id);							
-							selectedGraph(item, graph);
+							selectedItems.add(item.get().id);							
+							selectedGraph(item.get(), graph);
 						}
 						
-						$("#lx").val(item.lx);
-						$("#ly").val(item.ly);
-						$("#lz").val(item.lz);
+						$("#lx").val(item.get().lx);
+						$("#ly").val(item.get().ly);
+						$("#lz").val(item.get().lz);
 						
 					} else {
 						selectedItems.clear();
@@ -386,12 +394,12 @@ function initScene(elem) {
 					
 					function isMoveItem () {
 						move = true;
-						prevXm = x - item.x; // координаты мышки на элементе
-						prevZm = z - item.z;
+						prevXm = x - item.get().x; // координаты мышки на элементе
+						prevZm = z - item.get().z;
 					}
 					
 					function isResizeItem () {
-						var r = findBorder(x, z, build.getItem(item.id), cam.getZoom());
+						var r = findBorder(x, z, build.getItem(item.get().id), cam.getZoom());
 						if (r != undefined) {
 							resize = r;
 							move = false;
@@ -442,24 +450,15 @@ function initScene(elem) {
 					prevZd = nZ;
 					drawScene(cam, selectedItems, highlightColor);
 				} else if (move) {
-					item.x = x - prevXm,
-					item.z = z - prevZm;
-					if (build.updateItem(item)) {
+					item.change('x', x - prevXm);
+					item.change('z', z - prevZm);
+					if (build.updateItem(item.get())) {
 						highlightColor.set(color.RED);
 					} else {
 						highlightColor.set(color.TURQUOISE);
 					}
 					drawScene(cam, selectedItems, highlightColor);
 				} else if (resize) {
-					$("#lx").change(function () {
-						item.lx = $("#lx").val();
-					});
-					$("#ly").change(function () {
-						item.ly = $("#ly").val();
-					});
-					$("#lz").change(function () {
-						item.lz = $("#lz").val();
-					});
 					var minSize = {
 						lx: 0.6,
 						lz: 0.6
@@ -467,119 +466,119 @@ function initScene(elem) {
 					var dlx, dlz;
 					switch (resize) {
 						case 'left': // изменяем размер влево
-							dlx = item.lx + (item.x - x);
+							dlx = item.get().lx + (item.get().x - x);
 							if (dlx > minSize.lx) {
-								if (item.type == 'door') {
-									var borderDoor = getSpaceBetweenRooms(item.id, graph, build);
+								if (item.get().type == 'door') {
+									var borderDoor = getSpaceBetweenRooms(item.get().id, graph, build);
 									console.log(borderDoor.distance.x);
 									if (borderDoor.distance.x == 0) {
 										if (x > borderDoor.x) {
-											item.x = x;
-											item.lx = dlx;
+											item.change('x', x);
+											item.change('lx', dlx);
 										}
 									}
 								} else {
-									item.lx = dlx;
-									item.x = x;
+									item.change('x', x);
+									item.change('lx', dlx);
 								}
 							}
 							break;
 						case 'right': // изменяем размер вправо
-							dlx = item.lx + (x - item.x1);
+							dlx = item.get().lx + (x - item.get().x1);
 							if (dlx > minSize.lx) {
-								if (item.type == 'door') {
-									var borderDoor = getSpaceBetweenRooms(item.id, graph, build);
+								if (item.get().type == 'door') {
+									var borderDoor = getSpaceBetweenRooms(item.get().id, graph, build);
 									if (borderDoor.distance.x == 0) {
 										if (x < borderDoor.x + borderDoor.lx) {
-											item.lx = dlx;
-											item.x1 = x;
+											item.change('x1', x);
+											item.change('lx', dlx);
 										}
 									}
 								} else {
-									item.lx = dlx;
-									item.x1 = x;
+									item.change('x1', x);
+									item.change('lx', dlx);
 								}
 							}
 							break;
 						case 'top': // изменяем размер вверх
-							dlz = item.lz + (item.z - z);
+							dlz = item.get().lz + (item.get().z - z);
 							if (dlz > minSize.lz) {
 								if (item.type == 'door') {
-									var borderDoor = getSpaceBetweenRooms(item.id, graph, build);
+									var borderDoor = getSpaceBetweenRooms(item.get().id, graph, build);
 									if (borderDoor.distance.z == 0) {
 										if (z > borderDoor.z) {
-											item.lz = dlz;
-											item.z = z;
+											item.change('z', z);
+											item.change('lz', dlz);
 										}
 									}
 								} else {
-									item.lz = dlz;
-									item.z = z;
+									item.change('z', z);
+									item.change('lz', dlz);
 								}
 							}
 							break;
 						case 'bottom': // изменяем размер вниз
-							dlz = item.lz + (z - item.z1);
+							dlz = item.get().lz + (z - item.get().z1);
 							if (dlz > minSize.lz) {
 								if (item.type == 'door') {
-									var borderDoor = getSpaceBetweenRooms(item.id, graph, build);
+									var borderDoor = getSpaceBetweenRooms(item.get().id, graph, build);
 									if (borderDoor.distance.z == 0) {
 										if (z < borderDoor.z + borderDoor.lz) {
-											item.lz = dlz;
-											item.z1 = z;
+											item.change('z1', z);
+											item.change('lz', dlz);
 										}
 									}
 								} else {
-									item.lz = dlz;
-									item.z1 = z;
+									item.change('z1', z);
+									item.change('lz', dlz);
 								}
 							}
 							break;
 						case 'topLeft':
-							dlx = item.lx + (item.x - x);
-							dlz = item.lz + (item.z - z);
+							dlx = item.get().lx + (item.get().x - x);
+							dlz = item.get().lz + (item.get().z - z);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
 								if (item.type != 'door') {
-									item.lx = dlx;
-									item.lz = dlz;
-									item.x = x;
-									item.z = z;
+									item.change('x', x);
+									item.change('lx', dlx);
+									item.change('z', z);
+									item.change('lz', dlz);
 								}
 							}
 							break;
 						case 'bottomLeft':
-							dlx = item.lx + (item.x - x);
-							dlz = item.lz + (z - item.z1);
+							dlx = item.get().lx + (item.get().x - x);
+							dlz = item.get().lz + (z - item.get().z1);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
 								if (item.type != 'door') {
-									item.lx = dlx;
-									item.lz = dlz;
-									item.x = x;
-									item.z1 = z;
+									item.change('x', x);
+									item.change('lx', dlx);
+									item.change('z1', z);
+									item.change('lz', dlz);
 								}
 							}
 							break;
 						case 'topRight':
-							dlx = item.lx + (x - item.x1);
-							dlz = item.lz + (item.z - z);
+							dlx = item.get().lx + (x - item.get().x1);
+							dlz = item.get().lz + (item.get().z - z);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
 								if (item.type != 'door') {
-									item.lx = dlx;
-									item.lz = dlz;
-									item.x1 = x;
-									item.z = z;
+									item.change('x1', x);
+									item.change('lx', dlx);
+									item.change('z', z);
+									item.change('lz', dlz);
 								}
 							}
 							break;
 						case 'bottomRight':
-							dlx = item.lx + (x - item.x1);
-							dlz = item.lz + (z - item.z1);
+							dlx = item.get().lx + (x - item.get().x1);
+							dlz = item.get().lz + (z - item.get().z1);
 							if (dlx > minSize.lx && dlz > minSize.lz) {
 								if (item.type != 'door') {
-									item.lx = dlx;
-									item.lz = dlz;
-									item.x1 = x;
-									item.z1 = z;
+									item.change('x1', x);
+									item.change('lx', dlx);
+									item.change('z1', z);
+									item.change('lz', dlz);
 								}
 							}
 							break;
@@ -587,28 +586,30 @@ function initScene(elem) {
 							console.log('Непонятки');
 							break;
 					}
-					if (build.updateItem(item)) {
+					if (build.updateItem(item.get())) {
 						highlightColor.set(color.RED);
 					} else {
 						highlightColor.set(color.TURQUOISE);
 					}
 					
-					$("#lx").val(item.lx);
-					$("#ly").val(item.ly);
-					$("#lz").val(item.lz);
-					
 					drawScene(cam, selectedItems, highlightColor);
 				} else {
 					if (selectedItems.valueOf().length > 0 && key.getKeyCode() === undefined) {
-						item = findElement(x, z, build.getItem());
-						if (item !== undefined) {
-							if (selectedItems.has(item.id)) {
-								findBorder(x, z, item, cam.getZoom());
+						item.set(findElement(x, z, build.getItem()));
+						if (item.is()) {
+							if (selectedItems.has(item.get().id)) {
+								findBorder(x, z, item.get(), cam.getZoom());
 							}
 						} else {
 							findBorder(x, z, build.getItem(selectedItems.valueOf()[0]), cam.getZoom());
 						}
 					}
+				}
+				
+				if (move || resize) {
+					$("#lx").val(item.get().lx);
+					$("#ly").val(item.get().ly);
+					$("#lz").val(item.get().lz);
 				}
 			}
 			this.mouseup = function (ev) {
@@ -623,9 +624,9 @@ function initScene(elem) {
 				}
 				
 				if (key.getKeyCode() == DELETE) {
-					if (item !== undefined) {
-						var deletedItem = build.removeItem(item.id);
-						if (graph.remove(item.id)) {
+					if (item.is()) {
+						var deletedItem = build.removeItem(item.get().id);
+						if (graph.remove(item.get().id)) {
 							console.info('Удален элеменет "' + deletedItem.type + '"', deletedItem);
 						}
 					}
@@ -637,14 +638,14 @@ function initScene(elem) {
 				//console.log(str);
 				
 				function returnPreviousValue () {
-					if (build.updateItem(item)) {
+					if (build.updateItem(item.get())) {
 						build.updateItem(oldItem.getOldItem());
 						highlightColor.set(color.TURQUOISE);
 					}
 				}
 			}
 		}
-			
+		
 		/* Функция определения координат мыши на холсте */
 		function fs(ev, p) {
 		  return (p=='x') ? ev.pageX-elem.offsetLeft : ev.pageY-elem.offsetTop;
@@ -723,4 +724,15 @@ function initScene(elem) {
 		}
 	}
 	console.timeEnd('Загрузка initScene()');
+}
+
+function ititFile() {
+	// Check for the various File API support.
+	if (window.File && window.FileReader && window.FileList && window.Blob) {
+		// Great success! All the File APIs are supported.
+		console.info('FileAPI O\'k');
+	} else {
+		alert('The File APIs are not fully supported in this browser.');
+		console.error('FileAPI No');
+	}
 }
