@@ -494,35 +494,30 @@ Set.prototype.valueOf = function () {	// получение всего масс�
 };
 
 var Item = function () {
-	this.item = undefined;
+	this.item = {};
 };
-Item.prototype.add = function (i) {
-	this.item = i;
+Item.prototype.set = function (i) {
+	for (var j in i) {
+		this.item[j] = i[j];
+	}
 };
 Item.prototype.get = function () {
-	if (!this.is) {
-		console.error('Элемент еще не существует');
+	if (!this.is()) {
+		console.error('Элемент не существует. Ошибка при вызове метода get()');
 	}
 	return this.item;
 };
 Item.prototype.remove = function () {
-	if (!this.is) {
-		console.error('Элемент еще не существует');
+	if (!this.is()) {
+		console.error('Элемент не существует. Ошибка при вызове метода remove()');
 	}
-	this.item = undefined;
+	this.item = {};
 };
-Item.prototype.change = function () {
-	if (!this.is) {
-		console.error('Элемент еще не существует');
+Item.prototype.change = function (key, val) {
+	if (!this.is()) {
+		console.error('Элемент не существует. Ошибка при вызове метода change()');
 	}
-	return {
-		x: function (x) {this.item.x = x},
-		y: function (y) {this.item.y = y},
-		z: function (z) {this.item.z = z},
-		lx: function (lx) {this.item.lx = lx},
-		ly: function (ly) {this.item.ly = ly},
-		lz: function (lz) {this.item.lz = lz},
-	};
+	this.item[key] = val;
 };
 Item.prototype.is = function () {
 	if (this.item === undefined) {
