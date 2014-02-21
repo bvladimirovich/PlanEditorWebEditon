@@ -257,7 +257,7 @@ function initScene(elem) {
 			var prevXd,
 				prevZd,
 				prevXm,
-				prevZm;
+				prevZm; 
 				
 			var SHIFT = 16,
 				CTRL = 17,
