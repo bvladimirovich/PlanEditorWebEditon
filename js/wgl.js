@@ -373,11 +373,6 @@ function initScene(elem) {
 							selectedItems.add(item.id);							
 							selectedGraph(item, graph);
 						}
-						
-						$("#lx").val(item.lx);
-						$("#ly").val(item.ly);
-						$("#lz").val(item.lz);
-						
 					} else {
 						selectedItems.clear();
 					}
@@ -402,13 +397,10 @@ function initScene(elem) {
 						console.time('TimeWorkGraph');
 						var id = item.id;
 						if (graph.isEdge(id)) {
-							id = graph.getNode(id)[1];
-							if (graph.getGraph(id).length == 1) {
-								id = graph.getNode(id)[0];
-							}
+							id = graph.getNode(id)[0];
 						}
 						var g = graph.getGraph(id);
-						if (g.length != 1) {
+						if (g.length > 1) {
 							for (var i = g.length; --i >= 0;) {
 								if (!selectedItems.has(g[i])) {
 									selectedItems.add(g[i]);
@@ -451,15 +443,6 @@ function initScene(elem) {
 					}
 					drawScene(cam, selectedItems, highlightColor);
 				} else if (resize) {
-					$("#lx").change(function () {
-						item.lx = $("#lx").val();
-					});
-					$("#ly").change(function () {
-						item.ly = $("#ly").val();
-					});
-					$("#lz").change(function () {
-						item.lz = $("#lz").val();
-					});
 					var minSize = {
 						lx: 0.6,
 						lz: 0.6
@@ -592,11 +575,6 @@ function initScene(elem) {
 					} else {
 						highlightColor.set(color.TURQUOISE);
 					}
-					
-					$("#lx").val(item.lx);
-					$("#ly").val(item.ly);
-					$("#lz").val(item.lz);
-					
 					drawScene(cam, selectedItems, highlightColor);
 				} else {
 					if (selectedItems.valueOf().length > 0 && key.getKeyCode() === undefined) {
@@ -629,7 +607,7 @@ function initScene(elem) {
 							console.info('Удален элеменет "' + deletedItem.type + '"', deletedItem);
 						}
 					}
-				}
+				} 
 				
 				drawScene(cam, selectedItems, highlightColor);
 				
